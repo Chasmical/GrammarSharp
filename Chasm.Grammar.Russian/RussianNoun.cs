@@ -76,12 +76,15 @@ namespace Chasm.Grammar.Russian
                 int lastVowelIndex = res.Stem.LastIndexOfAny(Vowels);
                 if (lastVowelIndex == -1) throw new InvalidOperationException();
 
-                // Nominative case is unchanged (and accusative for inanimate nouns too)
-                if (info.Case == RussianCase.Nominative || info.Case == RussianCase.Accusative && !info.IsAnimate)
-                    return;
-                // fem 8* nouns in singular count and instrumental case are unchanged (ending with 'ью')
-                if (info.Gender == RussianGender.Feminine && !info.IsPlural && info.Case == RussianCase.Instrumental)
-                    return;
+                if (!info.IsPlural)
+                {
+                    // Singular count nominative case is unchanged (and accusative for inanimate nouns too)
+                    if (info.Case == RussianCase.Nominative || info.Case == RussianCase.Accusative && !info.IsAnimate)
+                        return;
+                    // Special exception: fem 8* nouns in instrumental case are unchanged (ending with 'ью')
+                    if (info.Gender == RussianGender.Feminine && info.Case == RussianCase.Instrumental)
+                        return;
+                }
 
                 switch (res.Buffer[lastVowelIndex])
                 {
@@ -125,7 +128,7 @@ namespace Chasm.Grammar.Russian
                 // B) type only affects plural count and genitive case (and accusative for animate nouns too)
                 if (
                     info.IsPlural &&
-                    info.Case == RussianCase.Genitive || info.Case == RussianCase.Accusative && info.IsAnimate
+                    (info.Case == RussianCase.Genitive || info.Case == RussianCase.Accusative && info.IsAnimate)
                 )
                 {
                     // TODO: Wiktionary: skip b)1) for 2*b and 2*f?
