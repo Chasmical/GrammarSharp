@@ -1,4 +1,6 @@
-﻿namespace Chasm.Grammar.Russian
+﻿using System;
+
+namespace Chasm.Grammar.Russian
 {
     public readonly struct RussianNounInfo
     {
@@ -40,6 +42,12 @@
             int pluralFlag = IsTantum ? _data & 0b_000_10_000 : plural ? 0b_000_10_000 : 0;
             int data = (_data & 0b_000_00_111) | pluralFlag | ((int)@case << 5);
             return new RussianNounInfo((byte)data);
+        }
+
+        public static RussianNounInfo Parse(ReadOnlySpan<char> text)
+        {
+            // TODO
+            return new RussianNounInfo(text[0], text.Length > 1 && text[1] == 'о');
         }
 
     }

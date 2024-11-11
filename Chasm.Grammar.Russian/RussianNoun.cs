@@ -19,15 +19,6 @@ namespace Chasm.Grammar.Russian
             Declension = declension;
         }
 
-        public string DebugToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendJoin(", ", Enumerable.Range(0, 6).Select(i => Decline((RussianCase)i, false)));
-            sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 6).Select(i => Decline((RussianCase)i, true)));
-            return sb.ToString();
-        }
-
         public string Decline(RussianCase @case, bool plural)
         {
             // Prepare the noun's information for declension:
