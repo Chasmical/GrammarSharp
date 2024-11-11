@@ -1,0 +1,78 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Project Properties -->
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <Authors>Chasmical</Authors>
+    <Company>$(Authors)</Company>
+    <Copyright>Copyright © Chasmical 2024</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <!-- Targets -->
+    <TargetFrameworks>
+      net9.0;
+      netcoreapp3.1;
+      netstandard2.1;
+    </TargetFrameworks>
+
+    <!-- Repository -->
+    <PackageProjectUrl>https://github.com/Chasmical/Chasm.Grammar</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Chasmical/Chasm.Grammar.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryBranch>main</RepositoryBranch>
+
+    <!-- Wanna support as many target frameworks as possible -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <CheckNotRecommendedTargetFramework>false</CheckNotRecommendedTargetFramework>
+    <NuGetAudit>false</NuGetAudit>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Global packages (all private assets) -->
+    <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" PrivateAssets="all" />
+    <PackageReference Include="JetBrains.dotCover.MSBuild" Version="1.0.5-alpha" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug' or '$(TargetFramework)'!='net8.0'">
+    <NoWarn>$(NoWarn),1591</NoWarn> <!-- Suppress the 'Missing XML Documentation' warning -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'!='net8.0'">
+    <!-- Suppress the 'XML comment has cref attribute that could not be resolved' warning -->
+    <!-- Suppress the 'Incorrect signature in XML comment' warning -->
+    <NoWarn>$(NoWarn),1574,1580</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+    <!-- Some code analysis warnings don't work with netcoreapp3.1 as the target for some reason -->
+    <NoWarn>$(NoWarn),IDE0079</NoWarn> <!-- Suppress the 'Remove unnecessary suppression' message -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net35' or '$(TargetFramework)'=='net40'">
+    <!-- We use a custom MethodImplAttribute on older targets to enforce aggressive inlining in CIL -->
+    <NoWarn>$(NoWarn),CS0436</NoWarn> <!-- Suppress the 'The type conflicts with imported type in mscorlib' warning -->
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(WorkflowPublishingPackage)'==''">
+    <DefineConstants>$(DefineConstants);NOT_PUBLISHING_PACKAGE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(WorkflowPublishingPackage)'!=''">
+    <DefineConstants>$(DefineConstants);PUBLISHING_PACKAGE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))'=='.NETFramework'">
+    <!-- The oldest .NET Framework target in SDK-style projects is v2.0 -->
+    <!-- So we'll need to add the symbol NET11_OR_GREATER manually -->
+    <DefineConstants>$(DefineConstants);NET11_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <!-- Conceal the path to .pdb file in the build directory -->
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+
+</Project>

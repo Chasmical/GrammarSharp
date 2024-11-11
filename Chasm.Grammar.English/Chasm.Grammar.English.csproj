@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Project Properties -->
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <TargetFrameworks>
+      net9.0;
+      netcoreapp3.0;
+      netstandard2.1;
+    </TargetFrameworks>
+    <!--
+      |       Target Frameworks (-excluded)        | - Justification
+      |================|=================|=========|==============================
+      | net9.0         |                 |         | - latest API, for use in IDE
+      | netcoreapp3.0  | netstandard2.1  |         | - lowest supported API, Extension attribute
+    -->
+
+    <!-- Header -->
+    <AssemblyName>Chasm.Grammar.English</AssemblyName>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Version>1.0.0</Version>
+
+    <!-- Title, Description, Tags -->
+    <Title>$(AssemblyName)</Title>
+    <Description>
+
+    </Description>
+    <PackageTags>grammar english linguistics</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Include the required shims/polyfills -->
+    <Folder Include="Shims/" />
+    <Compile Include="../Shared/Guard.cs" Link="Shims/Guard.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Chasm.Grammar.English.csproj.DotSettings" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="CHANGELOG.md" Pack="true" PackagePath="\" />
+    <InternalsVisibleTo Include="Chasm.Grammar.Tests" />
+    <ProjectReference Include="..\Chasm.Grammar\Chasm.Grammar.csproj" />
+  </ItemGroup>
+
+</Project>
