@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
 
 namespace Chasm.Grammar.Russian
 {
@@ -66,8 +64,7 @@ namespace Chasm.Grammar.Russian
         private const string HissingConsonants = "шжчщ";
         private const string Sibilants = "шжчщц";
 
-        private static void ProcessVowelAlternation(
-            RussianNounDeclension declension, RussianNounInfo info, ref DeclensionResults res)
+        private static void ProcessVowelAlternation(RussianNounDeclension declension, RussianNounInfo info, ref DeclensionResults res)
         {
             if (info.Gender == RussianGender.Masculine || info.Gender == RussianGender.Feminine && declension.Digit == 8)
             {
@@ -140,6 +137,13 @@ namespace Chasm.Grammar.Russian
                         // 1) stem's ending 'ь' is replaced with 'е' or 'и'
                         res.Stem[^1] = IsAccentOnEnding(declension, info) ? 'е' : 'и';
                         return;
+                    }
+                    // Special exception for feminine 2*a nouns ending with 'ня' - remove ending 'ь'.
+                    // Note: for nouns matching B) type, only 2*a nouns can have 'ь' as an ending.
+                    if (info.Gender == RussianGender.Feminine && res.Ending is ['ь'])
+                    {
+                        // Remove 'ь' from the result
+                        res.ResultLength--;
                     }
 
                     int lastConsonantIndex = res.Stem.LastIndexOfAny(Consonants);
