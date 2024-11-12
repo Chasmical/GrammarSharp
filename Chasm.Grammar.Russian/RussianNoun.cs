@@ -46,7 +46,7 @@ namespace Chasm.Grammar.Russian
             DeclensionResults res = new(buffer, stem.Length, stem.Length + ending.Length);
 
             // Replace 'я' in endings with 'а', if it's after a hissing consonant
-            if (declension.Digit == 8 && ending.StartsWith('я') && HissingConsonants.Contains(stem[^1]))
+            if (declension.Digit == 8 && ending.StartsWith('я') && RussianLowerCase.IsHissingConsonant(stem[^1]))
                 res.Ending[0] = 'а';
 
             // If declension has a star, figure out the vowel and where to place it
@@ -60,19 +60,13 @@ namespace Chasm.Grammar.Russian
             return res.Result.ToString();
         }
 
-        private const string Vowels = "аеёиоуыэюя";
-        private const string Consonants = "бвгджзйклмнпрстфхцчшщ";
-        private const string NonSibilantConsonants = "бвгдзйклмнпрстфх";
-        private const string HissingConsonants = "шжчщ";
-        private const string Sibilants = "шжчщц";
-
         private static void ProcessVowelAlternation(RussianNounDeclension declension, RussianNounInfo info, ref DeclensionResults res)
         {
             if (info.Gender == RussianGender.Masculine || info.Gender == RussianGender.Feminine && declension.Digit == 8)
             {
                 // A) vowel alternation type (masc any / fem 8*)
 
-                int lastVowelIndex = res.Stem.LastIndexOfAny(Vowels);
+                int lastVowelIndex = RussianLowerCase.LastIndexOfVowel(res.Stem);
                 if (lastVowelIndex == -1) throw new InvalidOperationException();
 
                 if (!info.IsPlural)
@@ -93,7 +87,7 @@ namespace Chasm.Grammar.Russian
                     case 'е' or 'ё':
                         char preceding = lastVowelIndex > 0 ? res.Buffer[lastVowelIndex - 1] : '\0';
 
-                        if (Vowels.Contains(preceding))
+                        if (RussianLowerCase.IsVowel(preceding))
                         {
                             // 1) is replaced with 'й', when after a vowel
                             res.Buffer[lastVowelIndex] = 'й';
@@ -102,7 +96,7 @@ namespace Chasm.Grammar.Russian
                             // 2)a) is *always* replaced with 'ь', when noun is masc 6*
                             declension.Digit == 6 ||
                             // 2)b) is replaced with 'ь', when noun is masc 3* and it's after a non-sibilant consonant
-                            declension.Digit == 3 && NonSibilantConsonants.Contains(preceding) ||
+                            declension.Digit == 3 && RussianLowerCase.IsNonSibilantConsonant(preceding) ||
                             // 2)c) is replaced with 'ь', when after 'л'
                             preceding == 'л'
                         )
@@ -151,7 +145,7 @@ namespace Chasm.Grammar.Russian
                         res.ResultLength--;
                     }
 
-                    int lastConsonantIndex = res.Stem.LastIndexOfAny(Consonants);
+                    int lastConsonantIndex = RussianLowerCase.LastIndexOfConsonant(res.Stem);
                     if (lastConsonantIndex < 1) throw new InvalidOperationException();
 
                     char preLastChar = res.Buffer[lastConsonantIndex - 1];
@@ -167,7 +161,7 @@ namespace Chasm.Grammar.Russian
                     // 3) in all other cases, insert 'о', 'е' or 'ё'
                     if (
                         preLastChar is 'к' or 'г' or 'х' ||
-                        lastChar is 'к' or 'г' or 'х' /* OR declension.Digit == 3 */ && !Sibilants.Contains(preLastChar)
+                        lastChar is 'к' or 'г' or 'х' /* OR declension.Digit == 3 */ && !RussianLowerCase.IsSibilantConsonant(preLastChar)
                     )
                     {
                         // 3)a) after 'к', 'г' or 'х' insert 'о'
@@ -179,7 +173,7 @@ namespace Chasm.Grammar.Russian
                     // 3)c) unaccented or before 'ц' - 'е', after hissing consonants - 'о', otherwise accented 'ё'
                     res.InsertBetweenTwoLastStemChars(
                         lastChar == 'ц' || !IsAccentOnEnding(declension, info) ? 'е'
-                        : HissingConsonants.Contains(preLastChar) ? 'о'
+                        : RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о'
                         : 'ё'
                     );
                 }

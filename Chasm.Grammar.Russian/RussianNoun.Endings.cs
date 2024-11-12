@@ -54,9 +54,9 @@ namespace Chasm.Grammar.Russian
                     switch (info.Gender)
                     {
                         case RussianGender.Neuter:
-                            return decl switch { 1 or 5 or 8 => "ы", 2 or 3 or 4 or 6 or 7 => "и" };
+                            return decl is 1 or 5 or 8 ? "ы" : "и";
                         case RussianGender.Masculine:
-                            return decl switch { 1 or 3 or 4 or 5 => "а", 2 or 6 or 7 or 8 => "я" };
+                            return decl is 1 or 3 or 4 or 5 ? "а" : "я";
                         case RussianGender.Feminine:
                             throw new InvalidOperationException();
                     }
@@ -73,11 +73,12 @@ namespace Chasm.Grammar.Russian
                             return decl switch
                             {
                                 1 or 3 or 8 => "ов",
-                                4 or 5 => IsAccentOnEnding(declension, info) ? "ов" : "ев",
-                                2 or 6 or 7 => IsAccentOnEnding(declension, info) ? "ёв" : "ев",
+                                4 or 5 when IsAccentOnEnding(declension, info) => "ов",
+                                2 or 6 or 7 when IsAccentOnEnding(declension, info) => "ёв",
+                                _ => "ев",
                             };
                         case RussianGender.Masculine:
-                            return decl switch { 1 or 3 or 4 or 5 => "", 2 or 6 or 7 or 8 => "ь" };
+                            return decl is 1 or 3 or 4 or 5 ? "" : "ь";
                         case RussianGender.Feminine:
                             return "ей";
                     }
