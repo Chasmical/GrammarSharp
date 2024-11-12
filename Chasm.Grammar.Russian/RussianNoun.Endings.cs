@@ -4,7 +4,7 @@ namespace Chasm.Grammar.Russian
 {
     public sealed partial class RussianNoun
     {
-        private static string FindNounEnding(RussianNounDeclension declension, RussianNounInfo info)
+        private static string FindNounEnding(RussianNounInfo info, RussianNounDeclension declension)
         {
             const RussianDeclensionFlags allCircledNumbers
                 = RussianDeclensionFlags.CircledOne |
@@ -14,21 +14,21 @@ namespace Chasm.Grammar.Russian
             // Handle ①②③ marks
             if ((declension.Flags & allCircledNumbers) != 0)
             {
-                string? res = GetCircledNumberOverrideEnding(declension, info);
+                string? res = GetCircledNumberOverrideEnding(info, declension);
                 if (res is not null) return res;
             }
 
             ReadOnlySpan<byte> lookup = NounEndingLookup;
 
             // Get indices of both unaccented and accented forms of endings (usually they're the same)
-            int index = ComposeEndingIndex(declension, info, info.Case);
+            int index = ComposeEndingIndex(info, declension, info.Case);
             int unAcIndex = lookup[index];
 
             // Accusative case usually uses either genitive's or nominative's ending, depending on animacy.
             // In such case, the lookup yields the index 0 (element = null). Don't confuse with "" ('null ending' in grammar).
             if (unAcIndex == 0)
             {
-                index = ComposeEndingIndex(declension, info, info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
+                index = ComposeEndingIndex(info, declension, info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
                 unAcIndex = lookup[index];
             }
             // Accented ending index is right next to the unaccented one's
@@ -36,12 +36,12 @@ namespace Chasm.Grammar.Russian
 
             // If the ending depends on the accent, determine the one needed here.
             // If the endings are the same, it doesn't matter which one is used.
-            bool accented = unAcIndex != acIndex && IsAccentOnEnding(declension, info);
+            bool accented = unAcIndex != acIndex && IsAccentOnEnding(info, declension);
 
             return NounEndingArray[accented ? acIndex : unAcIndex];
         }
 
-        private static string? GetCircledNumberOverrideEnding(RussianNounDeclension declension, RussianNounInfo info)
+        private static string? GetCircledNumberOverrideEnding(RussianNounInfo info, RussianNounDeclension declension)
         {
             if (info.IsPlural)
             {
@@ -73,8 +73,8 @@ namespace Chasm.Grammar.Russian
                             return decl switch
                             {
                                 1 or 3 or 8 => "ов",
-                                4 or 5 when IsAccentOnEnding(declension, info) => "ов",
-                                2 or 6 or 7 when IsAccentOnEnding(declension, info) => "ёв",
+                                4 or 5 when IsAccentOnEnding(info, declension) => "ов",
+                                2 or 6 or 7 when IsAccentOnEnding(info, declension) => "ёв",
                                 _ => "ев",
                             };
                         case RussianGender.Masculine:
@@ -95,7 +95,7 @@ namespace Chasm.Grammar.Russian
             return null;
         }
 
-        private static bool IsAccentOnEnding(RussianNounDeclension declension, RussianNounInfo info)
+        private static bool IsAccentOnEnding(RussianNounInfo info, RussianNounDeclension declension)
         {
             bool plural = info.IsPlural;
 
@@ -120,7 +120,7 @@ namespace Chasm.Grammar.Russian
             };
         }
 
-        private static int ComposeEndingIndex(RussianNounDeclension declension, RussianNounInfo info, RussianCase @case)
+        private static int ComposeEndingIndex(RussianNounInfo info, RussianNounDeclension declension, RussianCase @case)
         {
             // Context-dependent variables are more significant and come first, noun-dependent variables come next,
             // And finally, unaccented and accented forms are next to each other to make accent-checking simpler.

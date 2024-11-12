@@ -25,42 +25,45 @@ namespace Chasm.Grammar.Russian
             // - Use declension-specific gender/type
             RussianNounInfo info = Info.PrepareForDeclension(@case, plural);
 
-            return DeclineCore(Stem, Declension, info);
+            return DeclineCore(Stem, info, Declension);
         }
 
-        private static string DeclineCore(string stem, RussianNounDeclension declension, RussianNounInfo info)
+        private static string DeclineCore(string stem, RussianNounInfo info, RussianNounDeclension declension)
         {
             if (declension.IsZero) return stem;
-
-            // Find the appropriate noun ending
-            string ending = FindNounEnding(declension, info);
 
             // Allocate some memory for string manipulations
             const int extraCharCount = 8;
             Span<char> buffer = stackalloc char[stem.Length + extraCharCount];
+            DeclensionResults results = new(buffer);
 
+            // Find the appropriate noun ending
+            string ending = FindNounEnding(info, declension);
             // Write the stem and ending into the buffer
-            stem.AsSpan().CopyTo(buffer);
-            ending.AsSpan().CopyTo(buffer[stem.Length..]);
+            results.WriteInitialParts(stem, ending);
 
-            DeclensionResults res = new(buffer, stem.Length, stem.Length + ending.Length);
+            // If declension has a circle, apply the systematic alternation
+            if ((declension.Flags & RussianDeclensionFlags.Circle) != 0)
+                ProcessUniqueAlternation(info, declension, ref results);
 
             // Replace 'я' in endings with 'а', if it's after a hissing consonant
             if (declension.Digit == 8 && ending.StartsWith('я') && RussianLowerCase.IsHissingConsonant(stem[^1]))
-                res.Ending[0] = 'а';
+                results.Ending[0] = 'а';
 
             // If declension has a star, figure out the vowel and where to place it
             if ((declension.Flags & RussianDeclensionFlags.Star) != 0)
-                ProcessVowelAlternation(declension, info, ref res);
-
-            // TODO: if declension has a circle, figure out the systematic alternation here
+                ProcessVowelAlternation(info, declension, ref results);
 
             // TODO: [needs some research] figure out what to do with alternating ё
 
-            return res.Result.ToString();
+            return results.Result.ToString();
         }
 
-        private static void ProcessVowelAlternation(RussianNounDeclension declension, RussianNounInfo info, ref DeclensionResults res)
+        private static void ProcessUniqueAlternation(RussianNounInfo info, RussianNounDeclension declension, ref DeclensionResults res)
+        {
+        }
+
+        private static void ProcessVowelAlternation(RussianNounInfo info, RussianNounDeclension declension, ref DeclensionResults res)
         {
             if (info.Gender == RussianGender.Masculine || info.Gender == RussianGender.Feminine && declension.Digit == 8)
             {
@@ -134,7 +137,7 @@ namespace Chasm.Grammar.Russian
                     if (declension.Digit == 6 && res.Stem[^1] == 'ь')
                     {
                         // 1) stem's ending 'ь' is replaced with 'е' or 'и'
-                        res.Stem[^1] = IsAccentOnEnding(declension, info) ? 'е' : 'и';
+                        res.Stem[^1] = IsAccentOnEnding(info, declension) ? 'е' : 'и';
                         return;
                     }
                     // Special exception for feminine 2*a nouns ending with 'ня' - remove ending 'ь'.
@@ -142,7 +145,7 @@ namespace Chasm.Grammar.Russian
                     if (info.Gender == RussianGender.Feminine && res.Ending is ['ь'])
                     {
                         // Remove 'ь' from the result
-                        res.ResultLength--;
+                        res.RemoveEnding();
                     }
 
                     int lastConsonantIndex = RussianLowerCase.LastIndexOfConsonant(res.Stem);
@@ -154,7 +157,7 @@ namespace Chasm.Grammar.Russian
                     if (preLastChar is 'ь' or 'й')
                     {
                         // 2) if 'ь' or 'й' precedes the stem's last consonant, replace with 'ё' or 'е'
-                        res.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsAccentOnEnding(declension, info) ? 'ё' : 'е';
+                        res.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsAccentOnEnding(info, declension) ? 'ё' : 'е';
                         return;
                     }
 
@@ -172,7 +175,7 @@ namespace Chasm.Grammar.Russian
 
                     // 3)c) unaccented or before 'ц' - 'е', after hissing consonants - 'о', otherwise accented 'ё'
                     res.InsertBetweenTwoLastStemChars(
-                        lastChar == 'ц' || !IsAccentOnEnding(declension, info) ? 'е'
+                        lastChar == 'ц' || !IsAccentOnEnding(info, declension) ? 'е'
                         : RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о'
                         : 'ё'
                     );
@@ -182,20 +185,25 @@ namespace Chasm.Grammar.Russian
 
         private ref struct DeclensionResults
         {
-            public Span<char> Buffer;
-            public int StemLength;
-            public int ResultLength;
+            public readonly Span<char> Buffer;
+            private int StemLength;
+            private int ResultLength;
 
-            public DeclensionResults(Span<char> buffer, int stemLength, int resultLength)
-            {
-                Buffer = buffer;
-                StemLength = stemLength;
-                ResultLength = resultLength;
-            }
+            public DeclensionResults(Span<char> buffer)
+                => Buffer = buffer;
 
             public readonly Span<char> Stem => Buffer[..StemLength];
             public readonly Span<char> Ending => Buffer[StemLength..ResultLength];
             public readonly Span<char> Result => Buffer[..ResultLength];
+
+            public void WriteInitialParts(ReadOnlySpan<char> stem, ReadOnlySpan<char> ending)
+            {
+                StemLength = stem.Length;
+                ResultLength = StemLength + ending.Length;
+
+                stem.CopyTo(Buffer);
+                ending.CopyTo(Buffer[stem.Length..]);
+            }
 
             public void RemoveStemCharAt(int index)
             {
@@ -204,6 +212,9 @@ namespace Chasm.Grammar.Russian
                 StemLength--;
                 ResultLength--;
             }
+            public void RemoveEnding()
+                => ResultLength = StemLength;
+
             public void InsertBetweenTwoLastStemChars(char ch)
             {
                 for (int i = ResultLength; i >= StemLength; i--)
