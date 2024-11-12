@@ -40,18 +40,11 @@ namespace Chasm.Grammar.Russian
 
             while (parser.Skip('('))
             {
-                if (!parser.OnAsciiDigit) return ParseCode.Unknown;
-                int num = parser.Read() - '0';
-
-                if ((uint)(num - 1) <= '3' - '1') return ParseCode.Unknown;
+                char read = parser.Read();
+                if ((uint)(read - '1') > '3' - '1') return ParseCode.Unknown;
                 if (!parser.Skip(')')) return ParseCode.Unknown;
 
-                flags |= num switch
-                {
-                    1 => RussianDeclensionFlags.CircledOne,
-                    2 => RussianDeclensionFlags.CircledTwo,
-                    3 => RussianDeclensionFlags.CircledThree,
-                };
+                flags |= (RussianDeclensionFlags)((int)RussianDeclensionFlags.Circle << (read - '0'));
             }
 
             if (parser.Skip('①')) flags |= RussianDeclensionFlags.CircledOne;
