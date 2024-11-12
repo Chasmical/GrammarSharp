@@ -38,7 +38,7 @@ namespace Chasm.Grammar.Russian
             DeclensionResults results = new(buffer);
 
             // Find the appropriate noun ending
-            string ending = FindNounEnding(info, declension);
+            ReadOnlySpan<char> ending = DetermineNounEnding(info, declension);
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);
 
@@ -47,7 +47,7 @@ namespace Chasm.Grammar.Russian
                 ProcessUniqueAlternation(info, declension, ref results);
 
             // Replace 'я' in endings with 'а', if it's after a hissing consonant
-            if (declension.Digit == 8 && ending.StartsWith('я') && RussianLowerCase.IsHissingConsonant(stem[^1]))
+            if (declension.Digit == 8 && ending.Length > 0 && ending[0] == 'я' && RussianLowerCase.IsHissingConsonant(stem[^1]))
                 results.Ending[0] = 'а';
 
             // If declension has a star, figure out the vowel and where to place it
