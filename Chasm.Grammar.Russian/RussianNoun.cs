@@ -45,6 +45,10 @@ namespace Chasm.Grammar.Russian
 
             DeclensionResults res = new(buffer, stem.Length, stem.Length + ending.Length);
 
+            // Replace 'я' in endings with 'а', if it's after a hissing consonant
+            if (declension.Digit == 8 && ending.StartsWith('я') && HissingConsonants.Contains(stem[^1]))
+                res.Ending[0] = 'а';
+
             // If declension has a star, figure out the vowel and where to place it
             if ((declension.Flags & RussianDeclensionFlags.Star) != 0)
                 ProcessVowelAlternation(declension, info, ref res);
@@ -68,7 +72,7 @@ namespace Chasm.Grammar.Russian
         {
             if (info.Gender == RussianGender.Masculine || info.Gender == RussianGender.Feminine && declension.Digit == 8)
             {
-                // A) vowel alteration type (masc any / fem 8*)
+                // A) vowel alternation type (masc any / fem 8*)
 
                 int lastVowelIndex = res.Stem.LastIndexOfAny(Vowels);
                 if (lastVowelIndex == -1) throw new InvalidOperationException();
@@ -120,7 +124,7 @@ namespace Chasm.Grammar.Russian
             // TODO: Wiktionary: if ②, force B) type, while setting gender to neuter and forcing genitive-plural stem???
             else if (info.Gender is RussianGender.Neuter or RussianGender.Feminine)
             {
-                // B) vowel alteration type (neuter any / fem any, except for fem 8* which was processed earlier)
+                // B) vowel alternation type (neuter any / fem any, except for fem 8* which was processed earlier)
 
                 // B) type only affects plural count and genitive case (and accusative for animate nouns too)
                 if (
