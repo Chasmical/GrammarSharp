@@ -47,7 +47,7 @@ namespace Chasm.Grammar.Russian
         private static void ValidateNonZeroAccentLetter(RussianDeclensionAccent letter)
         {
             // Allow values A through F
-            if ((uint)(letter - RussianDeclensionAccent.A) < RussianDeclensionAccent.F - RussianDeclensionAccent.A) return;
+            if ((uint)(letter - RussianDeclensionAccent.A) <= RussianDeclensionAccent.F - RussianDeclensionAccent.A) return;
 
             // Throw on values outside the range and on a′, c′, e′ and c″ (not valid for nouns)
             if (letter > RussianDeclensionAccent.Fpp || ((int)letter & 1) == 0)
