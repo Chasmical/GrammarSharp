@@ -6,6 +6,18 @@ namespace Chasm.Grammar.Russian
     {
         private static string FindNounEnding(RussianNounDeclension declension, RussianNounInfo info)
         {
+            const RussianDeclensionFlags allCircledNumbers
+                = RussianDeclensionFlags.CircledOne |
+                  RussianDeclensionFlags.CircledTwo |
+                  RussianDeclensionFlags.CircledThree;
+
+            // Handle ①②③ marks
+            if ((declension.Flags & allCircledNumbers) != 0)
+            {
+                string? res = GetCircledNumberOverrideEnding(declension, info);
+                if (res is not null) return res;
+            }
+
             ReadOnlySpan<byte> lookup = NounEndingLookup;
 
             // Get indices of both unaccented and accented forms of endings (usually they're the same)
@@ -29,9 +41,61 @@ namespace Chasm.Grammar.Russian
             return NounEndingArray[accented ? acIndex : unAcIndex];
         }
 
+        private static string? GetCircledNumberOverrideEnding(RussianNounDeclension declension, RussianNounInfo info)
+        {
+            if (info.IsPlural)
+            {
+                if (
+                    (declension.Flags & RussianDeclensionFlags.CircledOne) != 0 &&
+                    (info.Case == RussianCase.Nominative || info.Case == RussianCase.Accusative && !info.IsAnimate)
+                )
+                {
+                    int decl = declension.Digit;
+                    switch (info.Gender)
+                    {
+                        case RussianGender.Neuter:
+                            return decl switch { 1 or 5 or 8 => "ы", 2 or 3 or 4 or 6 or 7 => "и" };
+                        case RussianGender.Masculine:
+                            return decl switch { 1 or 3 or 4 or 5 => "а", 2 or 6 or 7 or 8 => "я" };
+                        case RussianGender.Feminine:
+                            throw new InvalidOperationException();
+                    }
+                }
+                if (
+                    (declension.Flags & RussianDeclensionFlags.CircledTwo) != 0 &&
+                    (info.Case == RussianCase.Genitive || info.Case == RussianCase.Accusative && info.IsAnimate)
+                )
+                {
+                    int decl = declension.Digit;
+                    switch (info.Gender)
+                    {
+                        case RussianGender.Neuter:
+                            return decl switch
+                            {
+                                1 or 3 or 8 => "ов",
+                                4 or 5 => IsAccentOnEnding(declension, info) ? "ов" : "ев",
+                                2 or 6 or 7 => IsAccentOnEnding(declension, info) ? "ёв" : "ев",
+                            };
+                        case RussianGender.Masculine:
+                            return decl switch { 1 or 3 or 4 or 5 => "", 2 or 6 or 7 or 8 => "ь" };
+                        case RussianGender.Feminine:
+                            return "ей";
+                    }
+                }
+            }
+            else // if (info.IsSingular)
+            {
+                if ((declension.Flags & RussianDeclensionFlags.CircledThree) != 0 && declension.Digit == 7)
+                {
+                    if (info.Case == RussianCase.Prepositional || info.Gender == RussianGender.Feminine && info.Case == RussianCase.Dative)
+                        return "е";
+                }
+            }
+            return null;
+        }
+
         private static bool IsAccentOnEnding(RussianNounDeclension declension, RussianNounInfo info)
         {
-            // TODO: accent on adjectives and pronouns is different
             bool plural = info.IsPlural;
 
             // Accusative case's endings and accents depend on the noun's animacy.

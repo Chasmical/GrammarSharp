@@ -55,8 +55,6 @@ namespace Chasm.Grammar.Russian
 
             // TODO: if declension has a circle, figure out the systematic alteration here
 
-            // TODO: [needs some research] Figure out what to do with ①/②/③ for nouns
-
             // TODO: [needs some research] figure out what to do with alternating ё
 
             return res.Result.ToString();
@@ -132,9 +130,12 @@ namespace Chasm.Grammar.Russian
                     (info.Case == RussianCase.Genitive || info.Case == RussianCase.Accusative && info.IsAnimate)
                 )
                 {
-                    // TODO: Wiktionary: skip b)1) for 2*b and 2*f?
-                    // TODO: Wiktionary: skip b)2) for 2*②? (old was for 3*②, 5*② and 6*②)
-                    // TODO: Wiktionary: skip b)3) for neuter ②?
+                    // TODO: Wiktionary: skip B) for 2*b and 2*f?
+                    // TODO: Wiktionary: skip B) for 2*②? (old was for 3*②, 5*② and 6*②)
+                    // TODO: Wiktionary: skip B) for neuter ②?
+
+                    // Don't modify ones with ②. TODO: Why?
+                    if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0) return;
 
                     if (declension.Digit == 6 && res.Stem[^1] == 'ь')
                     {
