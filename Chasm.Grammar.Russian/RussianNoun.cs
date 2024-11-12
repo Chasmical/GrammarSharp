@@ -53,7 +53,7 @@ namespace Chasm.Grammar.Russian
             if ((declension.Flags & RussianDeclensionFlags.Star) != 0)
                 ProcessVowelAlternation(declension, info, ref res);
 
-            // TODO: if declension has a circle, figure out the systematic alteration here
+            // TODO: if declension has a circle, figure out the systematic alternation here
 
             // TODO: [needs some research] figure out what to do with alternating ё
 
@@ -193,9 +193,9 @@ namespace Chasm.Grammar.Russian
                 ResultLength = resultLength;
             }
 
-            public Span<char> Stem => Buffer[..StemLength];
-            public Span<char> Ending => Buffer[StemLength..ResultLength];
-            public Span<char> Result => Buffer[..ResultLength];
+            public readonly Span<char> Stem => Buffer[..StemLength];
+            public readonly Span<char> Ending => Buffer[StemLength..ResultLength];
+            public readonly Span<char> Result => Buffer[..ResultLength];
 
             public void RemoveStemCharAt(int index)
             {

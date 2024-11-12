@@ -67,6 +67,11 @@ namespace Chasm.Grammar.Russian
         [Pure] public override int GetHashCode()
             => _data;
 
+        [Pure] public static bool operator ==(RussianNounDeclension left, RussianNounDeclension right)
+            => left.Equals(right);
+        [Pure] public static bool operator !=(RussianNounDeclension left, RussianNounDeclension right)
+            => !(left == right);
+
         [Pure] public override string ToString()
         {
             if (_data < 0x0070)

@@ -41,8 +41,7 @@ namespace Chasm.Grammar.Russian
             while (parser.Skip('('))
             {
                 char read = parser.Read();
-                if ((uint)(read - '1') > '3' - '1') return ParseCode.Unknown;
-                if (!parser.Skip(')')) return ParseCode.Unknown;
+                if (!parser.Skip(')') || (uint)(read - '1') > '3' - '1') return ParseCode.Unknown;
 
                 flags |= (RussianDeclensionFlags)((int)RussianDeclensionFlags.Circle << (read - '0'));
             }
