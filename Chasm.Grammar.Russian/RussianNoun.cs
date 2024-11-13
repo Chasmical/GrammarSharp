@@ -65,35 +65,18 @@ namespace Chasm.Grammar.Russian
 
             switch (stem)
             {
-                // -анин/-янин unique stem alternation
-                case [.., 'а' or 'я', 'н', 'и', 'н']:
-                    if (info.IsPlural)
-                    {
-                        if (info.IsNominativeNormalized)
-                        {
-                            res.ShrinkStemAndReplaceEnding(2, 'е');
-                        }
-                        else
-                        {
-                            if (info.IsGenitiveNormalized) res.RemoveEnding();
-                            res.ShrinkStemBy(2);
-                        }
-                    }
-                    break;
-                // -ин unique stem alternation
+                // -ин (-анин/-янин) unique stem alternation
                 case [.., 'и', 'н']:
                     if (info.IsPlural)
                     {
+                        res.ShrinkStemBy(2);
+
                         if (info.IsNominativeNormalized)
                         {
-                            if ((declension.Flags & RussianDeclensionFlags.CircledOne) != 0) return;
-                            res.ShrinkStemAndReplaceEnding(2, 'е');
+                            if ((declension.Flags & RussianDeclensionFlags.CircledOne) == 0)
+                                res.ReplaceEnding('е');
                         }
-                        else
-                        {
-                            if (info.IsGenitiveNormalized) res.RemoveEnding();
-                            res.ShrinkStemBy(2);
-                        }
+                        else if (info.IsGenitiveNormalized) res.RemoveEnding();
                     }
                     break;
                 // -ёнок/-онок unique stem alternation
@@ -103,15 +86,9 @@ namespace Chasm.Grammar.Russian
                         stem[^4] = stem[^4] == 'ё' ? 'я' : 'а';
                         stem[^3] = 'т';
 
-                        if (info.IsNominativeNormalized)
-                        {
-                            res.ShrinkStemAndReplaceEnding(2, 'а');
-                        }
-                        else
-                        {
-                            if (info.IsGenitiveNormalized) res.RemoveEnding();
-                            res.ShrinkStemBy(2);
-                        }
+                        res.ShrinkStemBy(2);
+                        if (info.IsNominativeNormalized) res.ReplaceEnding('а');
+                        else if (info.IsGenitiveNormalized) res.RemoveEnding();
                     }
                     else
                     {
@@ -121,6 +98,23 @@ namespace Chasm.Grammar.Russian
                             if (lastVowelIndex < 0) throw new InvalidOperationException();
                             res.RemoveStemCharAt(lastVowelIndex);
                         }
+                    }
+                    break;
+                // -ок unique stem alternation
+                case [.., _, 'о', 'к']:
+                    if (info.IsPlural)
+                    {
+                        stem[^2] = RussianLowerCase.IsSibilantConsonant(stem[^3]) ? 'а' : 'я';
+                        stem[^1] = 'т';
+
+                        if (info.IsNominativeNormalized) res.ReplaceEnding('а');
+                        else if (info.IsGenitiveNormalized) res.RemoveEnding();
+                    }
+                    else
+                    {
+                        // Remove 'о' in the stem (vowel alternation)
+                        if (!info.IsNominativeNormalized)
+                            res.RemoveStemCharAt(res.StemLength - 2);
                     }
                     break;
                 // -ёночек/-оночек unique stem alternation
@@ -131,36 +125,27 @@ namespace Chasm.Grammar.Russian
                         stem[^5] = 'т';
                         stem[^4] = 'к';
 
+                        res.ShrinkStemBy(3);
                         if (info.IsNominativeNormalized)
+                            res.ReplaceEnding('и');
+                        else if (info.IsGenitiveNormalized)
                         {
-                            res.ShrinkStemAndReplaceEnding(3, 'и');
-                        }
-                        else
-                        {
-                            res.ShrinkStemBy(3);
-                            if (info.IsGenitiveNormalized)
-                            {
-                                res.RemoveEnding();
-                                res.InsertBetweenTwoLastStemChars('о');
-                            }
+                            res.RemoveEnding();
+                            res.InsertBetweenTwoLastStemChars('о');
                         }
                     }
                     else
                     {
+                        // Remove 'о' in the stem (vowel alternation)
                         if (!info.IsNominativeNormalized)
-                        {
-                            int lastVowelIndex = RussianLowerCase.LastIndexOfVowel(res.Stem);
-                            if (lastVowelIndex < 0) throw new InvalidOperationException();
-                            res.RemoveStemCharAt(lastVowelIndex);
-                        }
+                            res.RemoveStemCharAt(res.StemLength - 2);
                     }
                     break;
                 // -мя unique stem alternation
                 case [.., 'м'] when info.Gender == RussianGender.Neuter:
                     if (!info.IsNominativeNormalized || info.IsPlural)
-                    {
                         res.AppendToStem('е', 'н');
-                    }
+
                     if (!info.IsPlural)
                     {
                         switch (info.Case)
@@ -312,7 +297,7 @@ namespace Chasm.Grammar.Russian
         private ref struct DeclensionResults
         {
             public readonly Span<char> Buffer;
-            private int StemLength;
+            public int StemLength;
             private int ResultLength;
 
             public DeclensionResults(Span<char> buffer)
@@ -357,12 +342,6 @@ namespace Chasm.Grammar.Russian
 
             public void RemoveEnding()
                 => ResultLength = StemLength;
-            public void ShrinkStemAndReplaceEnding(int offset, char endingA)
-            {
-                ResultLength = StemLength + 1;
-                ShrinkStemBy(offset);
-                Buffer[StemLength] = endingA;
-            }
             public void ReplaceEnding(char a)
             {
                 Buffer[StemLength] = a;
