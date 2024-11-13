@@ -44,6 +44,23 @@ namespace Chasm.Grammar.Russian
             return new RussianNounInfo((byte)data);
         }
 
+        internal bool IsNominativeNormalized
+        {
+            get
+            {
+                RussianCase @case = Case;
+                return @case == RussianCase.Nominative || @case == RussianCase.Accusative && !IsAnimate;
+            }
+        }
+        internal bool IsGenitiveNormalized
+        {
+            get
+            {
+                RussianCase @case = Case;
+                return @case == RussianCase.Genitive || @case == RussianCase.Accusative && IsAnimate;
+            }
+        }
+
         public static RussianNounInfo Parse(ReadOnlySpan<char> text)
         {
             // TODO

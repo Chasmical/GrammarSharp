@@ -61,6 +61,132 @@ namespace Chasm.Grammar.Russian
 
         private static void ProcessUniqueAlternation(RussianNounInfo info, RussianNounDeclension declension, ref DeclensionResults res)
         {
+            Span<char> stem = res.Stem;
+
+            switch (stem)
+            {
+                // -анин/-янин unique stem alternation
+                case [.., 'а' or 'я', 'н', 'и', 'н']:
+                    if (info.IsPlural)
+                    {
+                        if (info.IsNominativeNormalized)
+                        {
+                            res.ShrinkStemAndReplaceEnding(2, 'е');
+                        }
+                        else
+                        {
+                            if (info.IsGenitiveNormalized) res.RemoveEnding();
+                            res.ShrinkStemBy(2);
+                        }
+                    }
+                    break;
+                // -ин unique stem alternation
+                case [.., 'и', 'н']:
+                    if (info.IsPlural)
+                    {
+                        if (info.IsNominativeNormalized)
+                        {
+                            if ((declension.Flags & RussianDeclensionFlags.CircledOne) != 0) return;
+                            res.ShrinkStemAndReplaceEnding(2, 'е');
+                        }
+                        else
+                        {
+                            if (info.IsGenitiveNormalized) res.RemoveEnding();
+                            res.ShrinkStemBy(2);
+                        }
+                    }
+                    break;
+                // -ёнок/-онок unique stem alternation
+                case [.., 'ё' or 'о', 'н', 'о', 'к']:
+                    if (info.IsPlural)
+                    {
+                        stem[^4] = stem[^4] == 'ё' ? 'я' : 'а';
+                        stem[^3] = 'т';
+
+                        if (info.IsNominativeNormalized)
+                        {
+                            res.ShrinkStemAndReplaceEnding(2, 'а');
+                        }
+                        else
+                        {
+                            if (info.IsGenitiveNormalized) res.RemoveEnding();
+                            res.ShrinkStemBy(2);
+                        }
+                    }
+                    else
+                    {
+                        if (!info.IsNominativeNormalized)
+                        {
+                            int lastVowelIndex = RussianLowerCase.LastIndexOfVowel(res.Stem);
+                            if (lastVowelIndex < 0) throw new InvalidOperationException();
+                            res.RemoveStemCharAt(lastVowelIndex);
+                        }
+                    }
+                    break;
+                // -ёночек/-оночек unique stem alternation
+                case [.., 'ё' or 'о', 'н', 'о', 'ч', 'е', 'к']:
+                    if (info.IsPlural)
+                    {
+                        stem[^6] = stem[^6] == 'ё' ? 'я' : 'а';
+                        stem[^5] = 'т';
+                        stem[^4] = 'к';
+
+                        if (info.IsNominativeNormalized)
+                        {
+                            res.ShrinkStemAndReplaceEnding(3, 'и');
+                        }
+                        else
+                        {
+                            res.ShrinkStemBy(3);
+                            if (info.IsGenitiveNormalized)
+                            {
+                                res.RemoveEnding();
+                                res.InsertBetweenTwoLastStemChars('о');
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!info.IsNominativeNormalized)
+                        {
+                            int lastVowelIndex = RussianLowerCase.LastIndexOfVowel(res.Stem);
+                            if (lastVowelIndex < 0) throw new InvalidOperationException();
+                            res.RemoveStemCharAt(lastVowelIndex);
+                        }
+                    }
+                    break;
+                // -мя unique stem alternation
+                case [.., 'м'] when info.Gender == RussianGender.Neuter:
+                    if (!info.IsNominativeNormalized || info.IsPlural)
+                    {
+                        res.AppendToStem('е', 'н');
+                    }
+                    if (!info.IsPlural)
+                    {
+                        switch (info.Case)
+                        {
+                            case RussianCase.Nominative:
+                                res.ReplaceEnding('я');
+                                break;
+                            case RussianCase.Genitive:
+                            case RussianCase.Dative:
+                            case RussianCase.Prepositional:
+                                res.ReplaceEnding('и');
+                                break;
+                            case RussianCase.Accusative:
+                                if (info.IsAnimate) goto case RussianCase.Genitive;
+                                goto case RussianCase.Nominative;
+                            case RussianCase.Instrumental:
+                                res.ReplaceEnding('е', 'м');
+                                break;
+                            default:
+                                throw new InvalidOperationException();
+                        }
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
         }
 
         private static void ProcessVowelAlternation(RussianNounInfo info, RussianNounDeclension declension, ref DeclensionResults res)
@@ -212,8 +338,42 @@ namespace Chasm.Grammar.Russian
                 StemLength--;
                 ResultLength--;
             }
+            public void ShrinkStemBy(int offset)
+            {
+                StemLength -= offset;
+                ResultLength -= offset;
+                for (int i = StemLength; i < ResultLength; i++)
+                    Buffer[i] = Buffer[i + offset];
+            }
+            public void AppendToStem(char a, char b)
+            {
+                for (int i = ResultLength - 1; i >= StemLength; i--)
+                    Buffer[i + 2] = Buffer[i];
+                Buffer[StemLength] = a;
+                Buffer[StemLength + 1] = b;
+                StemLength += 2;
+                ResultLength += 2;
+            }
+
             public void RemoveEnding()
                 => ResultLength = StemLength;
+            public void ShrinkStemAndReplaceEnding(int offset, char endingA)
+            {
+                ResultLength = StemLength + 1;
+                ShrinkStemBy(offset);
+                Buffer[StemLength] = endingA;
+            }
+            public void ReplaceEnding(char a)
+            {
+                Buffer[StemLength] = a;
+                ResultLength = StemLength + 1;
+            }
+            public void ReplaceEnding(char a, char b)
+            {
+                Buffer[StemLength] = a;
+                Buffer[StemLength + 1] = b;
+                ResultLength = StemLength + 2;
+            }
 
             public void InsertBetweenTwoLastStemChars(char ch)
             {
