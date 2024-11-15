@@ -29,6 +29,14 @@ namespace Chasm.Grammar.Russian
             return text.LastIndexOfAny(Vowels);
 #endif
         }
+        public static int IndexOfVowel(ReadOnlySpan<char> text)
+        {
+#if NET8_0_OR_GREATER
+            return text.IndexOfAny(VowelsSearch);
+#else
+            return text.IndexOfAny(Vowels);
+#endif
+        }
         public static int LastIndexOfConsonant(ReadOnlySpan<char> text)
         {
 #if NET8_0_OR_GREATER

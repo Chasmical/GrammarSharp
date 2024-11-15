@@ -54,7 +54,8 @@ namespace Chasm.Grammar.Russian
             if ((declension.Flags & RussianDeclensionFlags.Star) != 0)
                 ProcessVowelAlternation(info, declension, ref results);
 
-            // TODO: [needs some research] figure out what to do with alternating ё
+            if ((declension.Flags & RussianDeclensionFlags.AlternatingYo) != 0)
+                ProcessYoAlternation(info, declension, ref results);
 
             return results.Result.ToString();
         }
@@ -144,7 +145,11 @@ namespace Chasm.Grammar.Russian
                 // -мя unique stem alternation
                 case [.., 'м'] when info.Gender == RussianGender.Neuter:
                     if (!info.IsNominativeNormalized || info.IsPlural)
-                        res.AppendToStem('е', 'н');
+                    {
+                        bool useYo = (declension.Flags & RussianDeclensionFlags.AlternatingYo) != 0
+                                  && info.IsPlural && info.IsGenitiveNormalized;
+                        res.AppendToStem(useYo ? 'ё' : 'е', 'н');
+                    }
 
                     if (!info.IsPlural)
                     {
@@ -290,6 +295,42 @@ namespace Chasm.Grammar.Russian
                         : RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о'
                         : 'ё'
                     );
+                }
+            }
+        }
+
+        private static void ProcessYoAlternation(RussianNounInfo info, RussianNounDeclension declension, ref DeclensionResults res)
+        {
+            // Alternating ё is handled in the ° method
+            if ((declension.Flags & RussianDeclensionFlags.Circle) != 0) return;
+
+            int letterIndex = res.Stem.IndexOf('ё');
+            if (letterIndex >= 0)
+            {
+                if (IsAccentOnEnding(info, declension) && RussianLowerCase.LastIndexOfVowel(res.Ending) != -1)
+                {
+                    res.Buffer[letterIndex] = 'е';
+                }
+            }
+            else
+            {
+                ReadOnlySpan<char> stem = res.Stem;
+                // For stems with vowel alternation, cut off the last two letters (where an extra 'е' could appear)
+                if ((declension.Flags & RussianDeclensionFlags.Star) != 0)
+                    stem = stem[..^2];
+
+                letterIndex = stem.LastIndexOf('е');
+                if (letterIndex < 0) return; // Variable stem doesn't have a 'ё' at the moment
+
+                if (
+                    RussianLowerCase.LastIndexOfVowel(res.Ending) == -1 ||
+                    !IsAccentOnEnding(info, declension) && (
+                        declension.Letter is not RussianDeclensionAccent.F and not RussianDeclensionAccent.Fp and not RussianDeclensionAccent.Fpp ||
+                        letterIndex == RussianLowerCase.IndexOfVowel(res.Stem)
+                    )
+                )
+                {
+                    res.Buffer[letterIndex] = 'ё';
                 }
             }
         }
