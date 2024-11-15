@@ -191,7 +191,7 @@ namespace Chasm.Grammar.Russian
                 if (!info.IsPlural)
                 {
                     // Singular count nominative case is unchanged (and accusative for inanimate nouns too)
-                    if (info.Case == RussianCase.Nominative || info.Case == RussianCase.Accusative && !info.IsAnimate)
+                    if (info.IsNominativeNormalized)
                         return;
                     // Special exception: fem 8* nouns in instrumental case are unchanged (ending with 'ью')
                     if (info.Gender == RussianGender.Feminine && info.Case == RussianCase.Instrumental)
@@ -238,16 +238,14 @@ namespace Chasm.Grammar.Russian
                 // B) vowel alternation type (neuter any / fem any, except for fem 8* which was processed earlier)
 
                 // B) type only affects plural count and genitive case (and accusative for animate nouns too)
-                if (
-                    info.IsPlural &&
-                    (info.Case == RussianCase.Genitive || info.Case == RussianCase.Accusative && info.IsAnimate)
-                )
+                if (info.IsPlural && info.IsGenitiveNormalized)
                 {
-                    // TODO: Wiktionary: skip B) for 2*b and 2*f?
-                    // TODO: Wiktionary: skip B) for 2*②? (old was for 3*②, 5*② and 6*②)
-                    // TODO: Wiktionary: skip B) for neuter ②?
+                    // Undocumented exceptions to the rule (2*b, 2*f, 2*②, and neuter ②)
+                    if (declension.Digit == 2 && declension.Letter is RussianDeclensionAccent.B or RussianDeclensionAccent.F)
+                        return;
 
-                    // Don't modify ones with ②. TODO: Why?
+                    // If the noun is marked with ②, then it uses a different gender's endings,
+                    // and for some reason that also means that vowel alternation doesn't apply.
                     if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0) return;
 
                     if (declension.Digit == 6 && res.Stem[^1] == 'ь')

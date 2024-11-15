@@ -46,10 +46,7 @@ namespace Chasm.Grammar.Russian
         {
             if (info.IsPlural)
             {
-                if (
-                    (declension.Flags & RussianDeclensionFlags.CircledOne) != 0 &&
-                    (info.Case == RussianCase.Nominative || info.Case == RussianCase.Accusative && !info.IsAnimate)
-                )
+                if ((declension.Flags & RussianDeclensionFlags.CircledOne) != 0 && info.IsNominativeNormalized)
                 {
                     int decl = declension.Digit;
                     switch (info.Gender)
@@ -62,10 +59,7 @@ namespace Chasm.Grammar.Russian
                             throw new InvalidOperationException();
                     }
                 }
-                if (
-                    (declension.Flags & RussianDeclensionFlags.CircledTwo) != 0 &&
-                    (info.Case == RussianCase.Genitive || info.Case == RussianCase.Accusative && info.IsAnimate)
-                )
+                if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0 && info.IsGenitiveNormalized)
                 {
                     int decl = declension.Digit;
                     switch (info.Gender)
