@@ -71,6 +71,9 @@ namespace Chasm.Grammar.Tests
             New("девиц", "жо", "5a")
                 .Returns("девица, девицы, девице, девицу, девицей, девице")
                 .Returns("девицы, девиц, девицам, девиц, девицами, девицах");
+            New("лиц", "с", "5d")
+                .Returns("лицо, лица, лицу, лицо, лицом, лице")
+                .Returns("лица, лиц, лицам, лица, лицами, лицах");
 
             // Simple declension 6
             New("бо", "м", "6c")
@@ -79,6 +82,7 @@ namespace Chasm.Grammar.Tests
             New("ше", "ж", "6a")
                 .Returns("шея, шеи, шее, шею, шеей, шее")
                 .Returns("шеи, шей, шеям, шеи, шеями, шеях");
+            // Note: it appears that all neuter 6 have vowel alternations
 
             // Simple declension 7
             New("полони", "м", "7a")
@@ -101,6 +105,7 @@ namespace Chasm.Grammar.Tests
             New("бреш", "ж", "8a")
                 .Returns("брешь, бреши, бреши, брешь, брешью, бреши")
                 .Returns("бреши, брешей, брешам, бреши, брешами, брешах");
+            // Note: it appears that all neuter 8 have unique stem alternations
 
             #endregion
 
@@ -257,7 +262,9 @@ namespace Chasm.Grammar.Tests
                 .Returns("края, краёв, краям, края, краями, краях");
 
             // Circled two, ②
-            // TODO: neuter 1 or 3 or 8
+            New("облак", "с", "3c(2)")
+                .Returns("облако, облака, облаку, облако, облаком, облаке")
+                .Returns("облака, облаков, облакам, облака, облаками, облаках");
             New("оконц", "с", "5*a(2)")
                 .Returns("оконце, оконца, оконцу, оконце, оконцем, оконце")
                 .Returns("оконца, оконцев, оконцам, оконца, оконцами, оконцах");
@@ -273,7 +280,7 @@ namespace Chasm.Grammar.Tests
             New("байт", "м", "1a(2)")
                 .Returns("байт, байта, байту, байт, байтом, байте")
                 .Returns("байты, байт, байтам, байты, байтами, байтах");
-            // TODO: masc 2 or 6 or 7 or 8
+            // Note: there are no masculine nouns with ②, of type 2/6/7/8?
             New("ноздр", "ж", "2f(2)")
                 .Returns("ноздря, ноздри, ноздре, ноздрю, ноздрёй, ноздре")
                 .Returns("ноздри, ноздрей, ноздрям, ноздри, ноздрями, ноздрях");

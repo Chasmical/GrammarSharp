@@ -318,7 +318,6 @@ namespace Chasm.Grammar.Russian
                     stem = stem[..^2];
 
                 letterIndex = stem.LastIndexOf('е');
-                if (letterIndex < 0) return; // Variable stem doesn't have a 'ё' at the moment
 
                 if (
                     RussianLowerCase.LastIndexOfVowel(res.Ending) == -1 ||
