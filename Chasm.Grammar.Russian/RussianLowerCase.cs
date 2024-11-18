@@ -7,11 +7,12 @@ namespace Chasm.Grammar.Russian
 {
     internal static class RussianLowerCase
     {
-        private const string Vowels = "аеёиоуыэюя";
+        private const string Vowels = "аеиоуыэюяё";
         private const string Consonants = "бвгджзйклмнпрстфхцчшщ";
-        private const string HissingConsonants = "шжчщ";
-        private const string SibilantConsonants = "шжчщц";
+        private const string HissingConsonants = "жчшщ";
+        private const string SibilantConsonants = "жцчшщ";
         private const string NonSibilantConsonants = "бвгдзйклмнпрстфх";
+        private const string TrimNounStemChars = "аеийоуыьэюяё";
 
 #if NET8_0_OR_GREATER
         private static readonly SearchValues<char> VowelsSearch = SearchValues.Create(Vowels);
@@ -19,6 +20,7 @@ namespace Chasm.Grammar.Russian
         private static readonly SearchValues<char> HissingConsonantsSearch = SearchValues.Create(HissingConsonants);
         private static readonly SearchValues<char> SibilantConsonantsSearch = SearchValues.Create(SibilantConsonants);
         private static readonly SearchValues<char> NonSibilantConsonantsSearch = SearchValues.Create(NonSibilantConsonants);
+        private static readonly SearchValues<char> TrimNounStemCharsSearch = SearchValues.Create(TrimNounStemChars);
 #endif
 
         public static int LastIndexOfVowel(ReadOnlySpan<char> text)
@@ -76,6 +78,14 @@ namespace Chasm.Grammar.Russian
             return NonSibilantConsonantsSearch.Contains(ch);
 #else
             return NonSibilantConsonants.Contains(ch);
+#endif
+        }
+        public static bool IsTrimNounStemChar(char ch)
+        {
+#if NET8_0_OR_GREATER
+            return TrimNounStemCharsSearch.Contains(ch);
+#else
+            return TrimNounStemChars.Contains(ch);
 #endif
         }
 

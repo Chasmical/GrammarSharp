@@ -8,14 +8,17 @@ namespace Chasm.Grammar.Russian
         public RussianNounInfo Info { get; }
         public RussianNounDeclension Declension { get; }
 
-        public RussianNoun(string stem, RussianNounInfo info, RussianNounDeclension declension)
+        public RussianNoun(string word, RussianNounInfo info, RussianNounDeclension declension)
         {
-            Guard.ThrowIfNull(stem);
-
-            Stem = stem;
+            Stem = declension.IsZero ? word : ExtractStem(word);
             Info = info;
             Declension = declension;
         }
+
+        public static string ExtractStem(string word)
+            => RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
+        public static ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
+            => RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
 
         public string Decline(RussianCase @case, bool plural)
         {
@@ -24,13 +27,15 @@ namespace Chasm.Grammar.Russian
             // - Store @case in the structure
             // - Use declension-specific gender/type
             RussianNounInfo info = Info.PrepareForDeclension(@case, plural);
+            RussianNounDeclension declension = Declension;
 
-            return DeclineCore(Stem, info, Declension);
+            if (declension.IsZero) return Stem;
+            return DeclineCore(Stem, info, declension);
         }
 
-        private static string DeclineCore(string stem, RussianNounInfo info, RussianNounDeclension declension)
+        private static string DeclineCore(ReadOnlySpan<char> stem, RussianNounInfo info, RussianNounDeclension declension)
         {
-            if (declension.IsZero) return stem;
+            if (declension.IsZero) return stem.ToString();
 
             // Allocate some memory for string manipulations
             const int extraCharCount = 8;
