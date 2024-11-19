@@ -12,6 +12,9 @@
     <ProjectReference Include="..\Chasm.Grammar\Chasm.Grammar.csproj" />
     <ProjectReference Include="..\Chasm.Grammar.English\Chasm.Grammar.English.csproj" />
     <ProjectReference Include="..\Chasm.Grammar.Russian\Chasm.Grammar.Russian.csproj" />
+    <PackageReference Include="Chasm.Utilities" Version="2.5.1" />
+    <PackageReference Include="Chasm.Formatting" Version="2.3.5" />
+    <PackageReference Include="Chasm.Collections" Version="2.4.4" />
   </ItemGroup>
 
   <ItemGroup>

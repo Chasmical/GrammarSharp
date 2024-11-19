@@ -18,7 +18,7 @@
     <!-- Header -->
     <AssemblyName>Chasm.Grammar</AssemblyName>
     <PackageId>$(AssemblyName)</PackageId>
-    <Version>1.0.0</Version>
+    <Version>0.1.0</Version>
 
     <!-- Title, Description, Tags -->
     <Title>$(AssemblyName)</Title>
@@ -44,8 +44,6 @@
     <InternalsVisibleTo Include="Chasm.Grammar.Tests" />
     <PackageReference Include="Chasm.Utilities" Version="2.5.1" />
     <PackageReference Include="Chasm.Formatting" Version="2.3.5" />
-    <PackageReference Include="Chasm.Collections" Version="2.4.2" />
-    <PackageReference Include="Chasm.Compatibility" Version="2.6.1" />
   </ItemGroup>
 
 </Project>
