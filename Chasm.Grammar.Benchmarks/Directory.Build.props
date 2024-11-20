@@ -1,0 +1,15 @@
+<Project>
+
+  <!-- To prevent Directory.Build.props from leaking into compiled benchmarks' projects -->
+
+  <PropertyGroup>
+    <LangVersion>preview</LangVersion>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn),CA1822</NoWarn> <!-- Suppress the 'Member can be marked as static' message -->
+  </PropertyGroup>
+
+</Project>

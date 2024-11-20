@@ -42,6 +42,7 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="CHANGELOG.md" Pack="true" PackagePath="\" />
     <InternalsVisibleTo Include="Chasm.Grammar.Tests" />
+    <InternalsVisibleTo Include="Chasm.Grammar.Benchmarks" />
     <!-- <ProjectReference Include="..\Chasm.Grammar\Chasm.Grammar.csproj" /> -->
     <PackageReference Include="Chasm.Utilities" Version="2.5.1" />
     <PackageReference Include="Chasm.Formatting" Version="2.3.5" />
