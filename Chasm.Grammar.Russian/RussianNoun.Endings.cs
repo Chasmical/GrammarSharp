@@ -2,9 +2,12 @@
 
 namespace Chasm.Grammar.Russian
 {
+    using NounDecl = RussianNounDeclension;
+    using NounDeclInfo = RussianNounInfoForDeclension;
+
     public sealed partial class RussianNoun
     {
-        private static ReadOnlySpan<char> DetermineNounEnding(RussianNounInfo info, RussianNounDeclension declension)
+        private static ReadOnlySpan<char> DetermineNounEnding(NounDecl declension, NounDeclInfo info)
         {
             const RussianDeclensionFlags allCircledNumbers
                 = RussianDeclensionFlags.CircledOne |
@@ -14,21 +17,21 @@ namespace Chasm.Grammar.Russian
             // Handle ①②③ marks
             if ((declension.Flags & allCircledNumbers) != 0)
             {
-                string? res = GetCircledNumberOverrideEnding(info, declension);
+                string? res = GetCircledNumberOverrideEnding(declension, info);
                 if (res is not null) return res;
             }
 
             ReadOnlySpan<byte> lookup = NounEndingLookup;
 
             // Get indices of both unaccented and accented forms of endings (usually they're the same)
-            int lookupIndex = ComposeEndingIndex(info, declension, info.Case);
+            int lookupIndex = ComposeEndingIndex(declension, info, info.Case);
             int unAcIndex = lookup[lookupIndex];
 
             // Accusative case usually uses either genitive's or nominative's ending, depending on animacy.
             // In such case, the lookup yields the index 0 (element = null). Don't confuse with "" ('null ending' in grammar).
             if (unAcIndex == 0)
             {
-                lookupIndex = ComposeEndingIndex(info, declension, info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
+                lookupIndex = ComposeEndingIndex(declension, info, info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
                 unAcIndex = lookup[lookupIndex];
             }
             // Accented ending index is right next to the unaccented one's
@@ -36,13 +39,13 @@ namespace Chasm.Grammar.Russian
 
             // If the ending depends on the accent, determine the one needed here.
             // If the endings are the same, it doesn't matter which one is used.
-            bool accented = unAcIndex != acIndex && IsAccentOnEnding(info, declension);
+            bool accented = unAcIndex != acIndex && IsAccentOnEnding(declension, info);
 
             int spanPos = accented ? acIndex : unAcIndex;
             return NounEndingSpan.Slice(spanPos & 0x3F, spanPos >> 6);
         }
 
-        private static string? GetCircledNumberOverrideEnding(RussianNounInfo info, RussianNounDeclension declension)
+        private static string? GetCircledNumberOverrideEnding(NounDecl declension, NounDeclInfo info)
         {
             if (info.IsPlural)
             {
@@ -68,8 +71,8 @@ namespace Chasm.Grammar.Russian
                             return decl switch
                             {
                                 1 or 3 or 8 => "ов",
-                                4 or 5 when IsAccentOnEnding(info, declension) => "ов",
-                                2 or 6 or 7 when IsAccentOnEnding(info, declension) => "ёв",
+                                4 or 5 when IsAccentOnEnding(declension, info) => "ов",
+                                2 or 6 or 7 when IsAccentOnEnding(declension, info) => "ёв",
                                 _ => "ев",
                             };
                         case RussianGender.Masculine:
@@ -90,7 +93,7 @@ namespace Chasm.Grammar.Russian
             return null;
         }
 
-        private static bool IsAccentOnEnding(RussianNounInfo info, RussianNounDeclension declension)
+        private static bool IsAccentOnEnding(NounDecl declension, NounDeclInfo info)
         {
             bool plural = info.IsPlural;
 
@@ -115,7 +118,7 @@ namespace Chasm.Grammar.Russian
             };
         }
 
-        private static int ComposeEndingIndex(RussianNounInfo info, RussianNounDeclension declension, RussianCase @case)
+        private static int ComposeEndingIndex(NounDecl declension, NounDeclInfo info, RussianCase @case)
         {
             // Context-dependent variables are more significant and come first, noun-dependent variables come next,
             // And finally, unaccented and accented forms are next to each other to make accent-checking simpler.

@@ -5,24 +5,24 @@ namespace Chasm.Grammar.Russian
 {
     public readonly partial struct RussianNounDeclension : IEquatable<RussianNounDeclension>
     {
-        // Representation:
-        //   xxxx_xxxx_xxxx_1111 - word stem type (0000 - 0, 1000 - 8)
-        //   xxxx_xxxx_1111_xxxx - accenting type (see RussianDeclensionAccent enum)
-        //   1111_1111_xxxx_xxxx - various flags  (see RussianDeclensionFlags enum)
+        // Representation (_data field):
+        //   xxxx_1111 - word stem type (0000 - 0, 1000 - 8)
+        //   1111_xxxx - accenting type (see RussianDeclensionAccent enum)
         //
         // Examples:
-        //   xxxx_xxxx_0000_0000 - 0
-        //   xxxx_xxxx_0001_0001 - 1a
-        //   xxxx_xxxx_0001_1000 - 8a
-        //   xxxx_xxxx_0110_1000 - 8f
-        //   xxxx_xxxx_1110_1000 - 8f′
-        //   xxxx_xxxx_1111_1000 - 8f″
+        //   0000_0000 - 0
+        //   0001_0001 - 1a
+        //   0001_1000 - 8a
+        //   0110_1000 - 8f
+        //   1110_1000 - 8f′
+        //   1111_1000 - 8f″
         //
-        private readonly ushort _data;
+        private readonly byte _data;
+        private readonly byte _flags;
 
-        public int Digit => _data & 0x000F;
-        public RussianDeclensionAccent Letter => (RussianDeclensionAccent)((byte)_data >> 4);
-        public RussianDeclensionFlags Flags => (RussianDeclensionFlags)(_data >> 8);
+        public int Digit => _data & 0x0F;
+        public RussianDeclensionAccent Letter => (RussianDeclensionAccent)(_data >> 4);
+        public RussianDeclensionFlags Flags => (RussianDeclensionFlags)_flags;
 
         public bool IsZero => _data == 0;
 
@@ -35,13 +35,14 @@ namespace Chasm.Grammar.Russian
         {
             Guard.ThrowIfNotInRange(digit, 1, 8);
             Guard.ThrowIfNotInRange(letter, 'a', 'f');
-            _data = (ushort)(digit | ((letter - '`') << 4));
+            _data = (byte)(digit | ((letter - '`') << 4));
         }
         public RussianNounDeclension(int digit, RussianDeclensionAccent letter, RussianDeclensionFlags flags)
         {
             Guard.ThrowIfNotInRange(digit, 1, 8);
             ValidateNonZeroAccentLetter(letter);
-            _data = (ushort)(digit | ((int)letter << 4) | ((int)flags << 8));
+            _data = (byte)(digit | ((int)letter << 4));
+            _flags = (byte)flags;
         }
 
         private static void ValidateNonZeroAccentLetter(RussianDeclensionAccent letter)
@@ -79,10 +80,7 @@ namespace Chasm.Grammar.Russian
                 if (_data == 0) return "0";
 
                 // A common declension type - just the digit and the letter
-                Span<char> buffer = stackalloc char[2];
-                buffer[0] = (char)(Digit + '0');
-                buffer[1] = (char)((int)Letter + '`');
-                return buffer.ToString();
+                return ((Span<char>)[(char)(Digit + '0'), (char)((int)Letter + '`')]).ToString();
             }
             // A rarer declension type - with special symbols
             return ToStringRare();

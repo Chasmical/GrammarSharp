@@ -19,6 +19,13 @@ namespace Chasm.Grammar.Russian
         Feminine  = 0b_10,
         Common    = 0b_11,
     }
+    public enum RussianNounFlags
+    {
+        None = 0,
+
+        IsSingulareTantum = 0b_10,
+        IsPluraleTantum   = 0b_11,
+    }
     [Flags]
     public enum RussianDeclensionAccent
     {
@@ -56,5 +63,11 @@ namespace Chasm.Grammar.Russian
         CircledTwo    = 1 << 3,
         CircledThree  = 1 << 4,
         AlternatingYo = 1 << 5,
+    }
+    public enum RussianDeclensionType
+    {
+        Noun,
+        Adjective,
+        Pronoun,
     }
 }
