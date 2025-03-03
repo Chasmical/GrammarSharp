@@ -12,19 +12,18 @@ namespace Chasm.Grammar.Russian
         Instrumental,
         Prepositional,
     }
+    public enum RussianTense
+    {
+        Past,
+        Present,
+        Future,
+    }
     public enum RussianGender
     {
         Neuter    = 0b_00,
         Masculine = 0b_01,
         Feminine  = 0b_10,
         Common    = 0b_11,
-    }
-    public enum RussianNounFlags
-    {
-        None = 0,
-
-        IsSingulareTantum = 0b_10,
-        IsPluraleTantum   = 0b_11,
     }
     [Flags]
     public enum RussianStressPattern
@@ -52,6 +51,19 @@ namespace Chasm.Grammar.Russian
         Cpp = 0b_1110, // adjectives
         Fpp = 0b_1111, // nouns
     }
+    public enum RussianDeclensionType
+    {
+        Noun,
+        Adjective,
+        Pronoun,
+    }
+    public enum RussianNounFlags
+    {
+        None = 0,
+
+        IsSingulareTantum = 0b_10,
+        IsPluraleTantum   = 0b_11,
+    }
     [Flags]
     public enum RussianDeclensionFlags
     {
@@ -64,10 +76,34 @@ namespace Chasm.Grammar.Russian
         CircledThree  = 1 << 4,
         AlternatingYo = 1 << 5,
     }
-    public enum RussianDeclensionType
+    [Flags]
+    public enum RussianConjugationFlags
     {
-        Noun,
-        Adjective,
-        Pronoun,
+        None = 0,
+
+        Star          = 1 << 0,
+        Circle        = 1 << 1,
+        CircledOne    = 1 << 2,
+        CircledTwo    = 1 << 3,
+        CircledThree  = 1 << 4,
+        CircledFour   = 1 << 5,
+        CircledFive   = 1 << 6,
+        CircledSix    = 1 << 7,
+        CircledSeven  = 1 << 8,
+        CircledEight  = 1 << 9,
+        CircledNine   = 1 << 10,
+        AlternatingYo = 1 << 11,
+        AlternatingO  = 1 << 12,
+    }
+    [Flags]
+    public enum RussianVerbFlags
+    {
+        Perfective    = 1 << 0,
+        Imperfective  = 1 << 1,
+        Intransitive  = 1 << 2,
+        Reflexive     = 1 << 3, // TODO: is it really needed though? should it be processed automatically in ctor?
+        Impersonal    = 1 << 4,
+        Frequentative = 1 << 5,
+
     }
 }
