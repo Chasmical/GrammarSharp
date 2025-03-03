@@ -6,8 +6,8 @@ namespace Chasm.Grammar.Russian
     public readonly partial struct RussianNounDeclension : IEquatable<RussianNounDeclension>
     {
         // Representation (_data field):
-        //   xxxx_1111 - word stem type (0000 - 0, 1000 - 8)
-        //   1111_xxxx - accenting type (see RussianDeclensionAccent enum)
+        //   xxxx_1111 - stem type      (0000 - 0, 1000 - 8)
+        //   1111_xxxx - stress pattern (see RussianStressPattern enum)
         //
         // Examples:
         //   0000_0000 - 0
@@ -20,8 +20,8 @@ namespace Chasm.Grammar.Russian
         private readonly byte _data;
         private readonly byte _flags;
 
-        public int Digit => _data & 0x0F;
-        public RussianDeclensionAccent Letter => (RussianDeclensionAccent)(_data >> 4);
+        public int StemType => _data & 0x0F;
+        public RussianStressPattern Stress => (RussianStressPattern)(_data >> 4);
         public RussianDeclensionFlags Flags => (RussianDeclensionFlags)_flags;
 
         public bool IsZero => _data == 0;
@@ -31,33 +31,33 @@ namespace Chasm.Grammar.Russian
         public RussianNounDeclension(ReadOnlySpan<char> text)
             => this = Parse(text);
 
-        public RussianNounDeclension(int digit, char letter)
+        public RussianNounDeclension(int stemType, char stress)
         {
-            Guard.ThrowIfNotInRange(digit, 1, 8);
-            Guard.ThrowIfNotInRange(letter, 'a', 'f');
-            _data = (byte)(digit | ((letter - '`') << 4));
+            Guard.ThrowIfNotInRange(stemType, 1, 8);
+            Guard.ThrowIfNotInRange(stress, 'a', 'f');
+            _data = (byte)(stemType | ((stress - '`') << 4));
         }
-        public RussianNounDeclension(int digit, RussianDeclensionAccent letter, RussianDeclensionFlags flags)
+        public RussianNounDeclension(int stemType, RussianStressPattern stress, RussianDeclensionFlags flags)
         {
-            Guard.ThrowIfNotInRange(digit, 1, 8);
-            ValidateNonZeroAccentLetter(letter);
-            _data = (byte)(digit | ((int)letter << 4));
+            Guard.ThrowIfNotInRange(stemType, 1, 8);
+            ValidateNonZeroStressPattern(stress);
+            _data = (byte)(stemType | ((int)stress << 4));
             _flags = (byte)flags;
         }
 
-        private static void ValidateNonZeroAccentLetter(RussianDeclensionAccent letter)
+        private static void ValidateNonZeroStressPattern(RussianStressPattern stress)
         {
             // Allow values A through F
-            if ((uint)(letter - RussianDeclensionAccent.A) <= RussianDeclensionAccent.F - RussianDeclensionAccent.A) return;
+            if ((uint)(stress - RussianStressPattern.A) <= RussianStressPattern.F - RussianStressPattern.A) return;
 
             // Throw on values outside the range and on a′, c′, e′ and c″ (not valid for nouns)
-            if (letter > RussianDeclensionAccent.Fpp || ((int)letter & 1) == 0)
-                ThrowOutOfRange(letter);
+            if (stress > RussianStressPattern.Fpp || ((int)stress & 1) == 0)
+                ThrowOutOfRange(stress);
 
-            static void ThrowOutOfRange(RussianDeclensionAccent letter)
+            static void ThrowOutOfRange(RussianStressPattern stress)
             {
-                string msg = $"{nameof(letter)} ({(int)letter}) is not a valid declension accent letter.";
-                throw new ArgumentOutOfRangeException(nameof(letter), letter, msg);
+                string msg = $"{nameof(stress)} ({(int)stress}) is not a valid noun stress pattern.";
+                throw new ArgumentOutOfRangeException(nameof(stress), stress, msg);
             }
         }
 
@@ -79,8 +79,8 @@ namespace Chasm.Grammar.Russian
             {
                 if (_data == 0) return "0";
 
-                // A common declension type - just the digit and the letter
-                return ((Span<char>)[(char)(Digit + '0'), (char)((int)Letter + '`')]).ToString();
+                // A common declension type - just the stem type index and the stress pattern
+                return ((Span<char>)[(char)(StemType + '0'), (char)((int)Stress + '`')]).ToString();
             }
             // A rarer declension type - with special symbols
             return ToStringRare();
@@ -90,8 +90,8 @@ namespace Chasm.Grammar.Russian
             // Longest form (11 chars): 1*°f″①②③, ё
             Span<char> buffer = stackalloc char[16];
 
-            // Append the index digit
-            buffer[0] = (char)(Digit + '0');
+            // Append the stem type index
+            buffer[0] = (char)(StemType + '0');
             int i = 1;
 
             // Append the star and the circle
@@ -104,23 +104,23 @@ namespace Chasm.Grammar.Russian
                     buffer[i++] = '°';
             }
 
-            // Append the index letter
-            RussianDeclensionAccent letter = Letter;
-            if (letter < RussianDeclensionAccent.Ap)
+            // Append the stress pattern
+            RussianStressPattern stress = Stress;
+            if (stress < RussianStressPattern.Ap)
             {
-                // Regular letters: a = 1, f = 6
-                buffer[i++] = (char)((int)letter + '`');
+                // Regular stress patterns: a = 1, f = 6
+                buffer[i++] = (char)((int)stress + '`');
             }
-            else if (letter < RussianDeclensionAccent.Cpp)
+            else if (stress < RussianStressPattern.Cpp)
             {
-                // Single-prime letters: a′ = 8, b′ = 13
-                buffer[i++] = (char)((int)letter + ('a' - RussianDeclensionAccent.Ap));
+                // Single-prime stress patterns: a′ = 8, b′ = 13
+                buffer[i++] = (char)((int)stress + ('a' - RussianStressPattern.Ap));
                 buffer[i++] = '′';
             }
             else
             {
-                // Double-prime letters c and f: c″ = 14, f″ = 15
-                buffer[i++] = letter == RussianDeclensionAccent.Cpp ? 'c' : 'f';
+                // Double-prime stress patterns c and f: c″ = 14, f″ = 15
+                buffer[i++] = stress == RussianStressPattern.Cpp ? 'c' : 'f';
                 buffer[i++] = '″';
             }
 

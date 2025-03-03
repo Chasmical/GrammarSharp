@@ -13,14 +13,14 @@ namespace Chasm.Grammar.Tests
             DeclensionFixture New(string stem, string info, string declension)
                 => adapter.Add(new DeclensionFixture(stem, info, declension));
 
-            #region Simple declensions 0 through 8
+            #region Simple stem types 0 through 8
 
-            // Declension 0
+            // Stem type 0
             New("кофе", "с", "0")
                 .Returns("кофе, кофе, кофе, кофе, кофе, кофе")
                 .Returns("кофе, кофе, кофе, кофе, кофе, кофе");
 
-            // Simple declension 1
+            // Simple stem type 1
             New("топор", "м", "1b")
                 .Returns("топор, топора, топору, топор, топором, топоре")
                 .Returns("топоры, топоров, топорам, топоры, топорами, топорах");
@@ -31,7 +31,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("олово, олова, олову, олово, оловом, олове")
                 .Returns("олова, олов, оловам, олова, оловами, оловах");
 
-            // Simple declension 2
+            // Simple stem type 2
             New("искатель", "мо", "2a")
                 .Returns("искатель, искателя, искателю, искателя, искателем, искателе")
                 .Returns("искатели, искателей, искателям, искателей, искателями, искателях");
@@ -42,7 +42,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("поле, поля, полю, поле, полем, поле")
                 .Returns("поля, полей, полям, поля, полями, полях");
 
-            // Simple declension 3
+            // Simple stem type 3
             New("блинчик", "мо", "3a")
                 .Returns("блинчик, блинчика, блинчику, блинчика, блинчиком, блинчике")
                 .Returns("блинчики, блинчиков, блинчикам, блинчиков, блинчиками, блинчиках");
@@ -53,7 +53,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("войско, войска, войску, войско, войском, войске")
                 .Returns("войска, войск, войскам, войска, войсками, войсках");
 
-            // Simple declension 4
+            // Simple stem type 4
             New("калач", "м", "4b")
                 .Returns("калач, калача, калачу, калач, калачом, калаче")
                 .Returns("калачи, калачей, калачам, калачи, калачами, калачах");
@@ -64,7 +64,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("жилище, жилища, жилищу, жилище, жилищем, жилище")
                 .Returns("жилища, жилищ, жилищам, жилища, жилищами, жилищах");
 
-            // Simple declension 5
+            // Simple stem type 5
             New("кузнец", "мо", "5b")
                 .Returns("кузнец, кузнеца, кузнецу, кузнеца, кузнецом, кузнеце")
                 .Returns("кузнецы, кузнецов, кузнецам, кузнецов, кузнецами, кузнецах");
@@ -75,7 +75,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("лицо, лица, лицу, лицо, лицом, лице")
                 .Returns("лица, лиц, лицам, лица, лицами, лицах");
 
-            // Simple declension 6
+            // Simple stem type 6
             New("бой", "м", "6c")
                 .Returns("бой, боя, бою, бой, боем, бое")
                 .Returns("бои, боёв, боям, бои, боями, боях");
@@ -84,7 +84,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("шеи, шей, шеям, шеи, шеями, шеях");
             // Note: it appears that all neuter 6 have vowel alternations
 
-            // Simple declension 7
+            // Simple stem type 7
             New("полоний", "м", "7a")
                 .Returns("полоний, полония, полонию, полоний, полонием, полонии")
                 .Returns("полонии, полониев, полониям, полонии, полониями, полониях");
@@ -95,7 +95,7 @@ namespace Chasm.Grammar.Tests
                 .Returns("сложение, сложения, сложению, сложение, сложением, сложении")
                 .Returns("сложения, сложений, сложениям, сложения, сложениями, сложениях");
 
-            // Simple declension 8
+            // Simple stem type 8
             New("путь", "м", "8b")
                 .Returns("путь, пути, пути, путь, путём, пути")
                 .Returns("пути, путей, путям, пути, путями, путях");
@@ -177,7 +177,7 @@ namespace Chasm.Grammar.Tests
             New("кайма", "ж", "1*b")
                 .Returns("кайма, каймы, кайме, кайму, каймой, кайме")
                 .Returns("каймы, каём, каймам, каймы, каймами, каймах");
-            New("кольцо", "с", "5*d") // Note: anomalous accent in Genitive Plural form
+            New("кольцо", "с", "5*d") // Note: anomalous stress in Genitive Plural form
                 .Returns("кольцо, кольца, кольцу, кольцо, кольцом, кольце")
                 .Returns("кольца, колец, кольцам, кольца, кольцами, кольцах");
             New("кукла", "ж", "1*a")
@@ -201,7 +201,7 @@ namespace Chasm.Grammar.Tests
             New("кишка", "ж", "3*b")
                 .Returns("кишка, кишки, кишке, кишку, кишкой, кишке")
                 .Returns("кишки, кишок, кишкам, кишки, кишками, кишках");
-            New("овца", "жо", "5*d") // Note: anomalous accent in Genitive/Accusative Plural form
+            New("овца", "жо", "5*d") // Note: anomalous stress in Genitive/Accusative Plural form
                 .Returns("овца, овцы, овце, овцу, овцой, овце")
                 .Returns("овцы, овец, овцам, овец, овцами, овцах");
 

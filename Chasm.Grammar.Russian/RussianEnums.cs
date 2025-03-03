@@ -27,12 +27,12 @@ namespace Chasm.Grammar.Russian
         IsPluraleTantum   = 0b_11,
     }
     [Flags]
-    public enum RussianDeclensionAccent
+    public enum RussianStressPattern
     {
-        // 0 is reserved for 0 declension
+        // 0 is reserved for stem type 0, that doesn't have a stress pattern
         Zero = 0,
 
-        // Regular accent letters start from 1
+        // Regular stress patterns start from 1
         A = 0b_0001, // nouns, adjectives, pronouns
         B = 0b_0010, // nouns, adjectives, pronouns
         C = 0b_0011, // nouns, adjectives
@@ -41,7 +41,7 @@ namespace Chasm.Grammar.Russian
         F = 0b_0110, // nouns
         // (0b_0111 is unused)
 
-        // Single- and double-prime accent letters (a′, f″) start from 0
+        // Single- and double-prime stress patterns (a′, f″) start from 0
         Ap = 0b_1000, // adjectives
         Bp = 0b_1001, // nouns, adjectives
         Cp = 0b_1010, // adjectives

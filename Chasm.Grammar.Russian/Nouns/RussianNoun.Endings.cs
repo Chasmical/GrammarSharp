@@ -23,25 +23,25 @@ namespace Chasm.Grammar.Russian
 
             ReadOnlySpan<byte> lookup = NounEndingLookup;
 
-            // Get indices of both unaccented and accented forms of endings (usually they're the same)
+            // Get indices of both unstressed and stressed forms of endings (usually they're the same)
             int lookupIndex = ComposeEndingIndex(declension, info, info.Case);
-            int unAcIndex = lookup[lookupIndex];
+            int unStrIndex = lookup[lookupIndex];
 
             // Accusative case usually uses either genitive's or nominative's ending, depending on animacy.
             // In such case, the lookup yields the index 0 (element = null). Don't confuse with "" ('null ending' in grammar).
-            if (unAcIndex == 0)
+            if (unStrIndex == 0)
             {
                 lookupIndex = ComposeEndingIndex(declension, info, info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
-                unAcIndex = lookup[lookupIndex];
+                unStrIndex = lookup[lookupIndex];
             }
-            // Accented ending index is right next to the unaccented one's
-            int acIndex = lookup[lookupIndex + 1];
+            // Stressed ending index is right next to the unstressed one's
+            int strIndex = lookup[lookupIndex + 1];
 
-            // If the ending depends on the accent, determine the one needed here.
+            // If the ending depends on the stress, determine the one needed here.
             // If the endings are the same, it doesn't matter which one is used.
-            bool accented = unAcIndex != acIndex && IsAccentOnEnding(declension, info);
+            bool stressed = unStrIndex != strIndex && IsEndingStressed(declension, info);
 
-            int spanPos = accented ? acIndex : unAcIndex;
+            int spanPos = stressed ? strIndex : unStrIndex;
             return NounEndingSpan.Slice(spanPos & 0x3F, spanPos >> 6);
         }
 
@@ -51,7 +51,7 @@ namespace Chasm.Grammar.Russian
             {
                 if ((declension.Flags & RussianDeclensionFlags.CircledOne) != 0 && info.IsNominativeNormalized)
                 {
-                    int decl = declension.Digit;
+                    int decl = declension.StemType;
                     switch (info.Gender)
                     {
                         case RussianGender.Neuter:
@@ -64,15 +64,15 @@ namespace Chasm.Grammar.Russian
                 }
                 if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0 && info.IsGenitiveNormalized)
                 {
-                    int decl = declension.Digit;
+                    int decl = declension.StemType;
                     switch (info.Gender)
                     {
                         case RussianGender.Neuter:
                             return decl switch
                             {
                                 1 or 3 or 8 => "ов",
-                                4 or 5 when IsAccentOnEnding(declension, info) => "ов",
-                                2 or 6 or 7 when IsAccentOnEnding(declension, info) => "ёв",
+                                4 or 5 when IsEndingStressed(declension, info) => "ов",
+                                2 or 6 or 7 when IsEndingStressed(declension, info) => "ёв",
                                 _ => "ев",
                             };
                         case RussianGender.Masculine:
@@ -84,7 +84,7 @@ namespace Chasm.Grammar.Russian
             }
             else // if (info.IsSingular)
             {
-                if ((declension.Flags & RussianDeclensionFlags.CircledThree) != 0 && declension.Digit == 7)
+                if ((declension.Flags & RussianDeclensionFlags.CircledThree) != 0 && declension.StemType == 7)
                 {
                     if (info.Case == RussianCase.Prepositional || info.Gender == RussianGender.Feminine && info.Case == RussianCase.Dative)
                         return "е";
@@ -93,43 +93,43 @@ namespace Chasm.Grammar.Russian
             return null;
         }
 
-        private static bool IsAccentOnEnding(NounDecl declension, NounDeclInfo info)
+        private static bool IsEndingStressed(NounDecl declension, NounDeclInfo info)
         {
             bool plural = info.IsPlural;
 
-            // Accusative case's endings and accents depend on the noun's animacy.
-            // Some accents, though, depend on the original case, like D′ and F′.
+            // Accusative case's endings and stresses depend on the noun's animacy.
+            // Some stresses, though, depend on the original case, like D′ and F′.
             RussianCase normCase = info.Case;
             if (normCase == RussianCase.Accusative)
                 normCase = info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative;
 
-            return declension.Letter switch
+            return declension.Stress switch
             {
-                RussianDeclensionAccent.A => false,
-                RussianDeclensionAccent.B => true,
-                RussianDeclensionAccent.C => plural,
-                RussianDeclensionAccent.D => !plural,
-                RussianDeclensionAccent.E => plural && normCase != RussianCase.Nominative,
-                RussianDeclensionAccent.F => !plural || normCase != RussianCase.Nominative,
-                RussianDeclensionAccent.Bp => plural || normCase != RussianCase.Instrumental,
-                RussianDeclensionAccent.Dp => !plural && info.Case != RussianCase.Accusative,
-                RussianDeclensionAccent.Fp => plural ? normCase != RussianCase.Nominative : info.Case != RussianCase.Accusative,
-                RussianDeclensionAccent.Fpp => plural ? normCase != RussianCase.Nominative : normCase != RussianCase.Instrumental,
+                RussianStressPattern.A => false,
+                RussianStressPattern.B => true,
+                RussianStressPattern.C => plural,
+                RussianStressPattern.D => !plural,
+                RussianStressPattern.E => plural && normCase != RussianCase.Nominative,
+                RussianStressPattern.F => !plural || normCase != RussianCase.Nominative,
+                RussianStressPattern.Bp => plural || normCase != RussianCase.Instrumental,
+                RussianStressPattern.Dp => !plural && info.Case != RussianCase.Accusative,
+                RussianStressPattern.Fp => plural ? normCase != RussianCase.Nominative : info.Case != RussianCase.Accusative,
+                RussianStressPattern.Fpp => plural ? normCase != RussianCase.Nominative : normCase != RussianCase.Instrumental,
             };
         }
 
         private static int ComposeEndingIndex(NounDecl declension, NounDeclInfo info, RussianCase @case)
         {
             // Context-dependent variables are more significant and come first, noun-dependent variables come next,
-            // And finally, unaccented and accented forms are next to each other to make accent-checking simpler.
+            // And finally, unstressed and stressed forms are next to each other to make stress-checking simpler.
 
-            // Composite index: [case:6] [plural:2] [gender:3] [declension:8] [accent:2]
+            // Composite index: [case:6] [plural:2] [gender:3] [stem type:8] [stress:2]
 
             int index = (int)@case;
             index = index * 2 + (info.IsPlural ? 1 : 0);
             index = index * 3 + (int)info.Gender;
-            index = index * 8 + (declension.Digit - 1);
-            index *= 2; // accent takes up the least significant bit
+            index = index * 8 + (declension.StemType - 1);
+            index *= 2; // stress takes up the least significant bit
 
             return index;
         }

@@ -60,7 +60,7 @@ namespace Chasm.Grammar.Russian
                 ProcessUniqueAlternation(ref results, declension, info);
 
             // Replace 'я' in endings with 'а', if it's after a hissing consonant
-            if (declension.Digit == 8 && ending.Length > 0 && ending[0] == 'я' && RussianLowerCase.IsHissingConsonant(stem[^1]))
+            if (declension.StemType == 8 && ending.Length > 0 && ending[0] == 'я' && RussianLowerCase.IsHissingConsonant(stem[^1]))
                 results.Ending[0] = 'а';
 
             // If declension has a star, figure out the vowel and where to place it
@@ -194,7 +194,7 @@ namespace Chasm.Grammar.Russian
 
         private static void ProcessVowelAlternation(ref DeclBuffer buffer, NounDecl declension, NounDeclInfo info)
         {
-            if (info.Gender == RussianGender.Masculine || info.Gender == RussianGender.Feminine && declension.Digit == 8)
+            if (info.Gender == RussianGender.Masculine || info.Gender == RussianGender.Feminine && declension.StemType == 8)
             {
                 // A) vowel alternation type (masc any / fem 8*)
 
@@ -226,9 +226,9 @@ namespace Chasm.Grammar.Russian
                         }
                         else if (
                             // 2)a) is *always* replaced with 'ь', when noun is masc 6*
-                            declension.Digit == 6 ||
+                            declension.StemType == 6 ||
                             // 2)b) is replaced with 'ь', when noun is masc 3* and it's after a non-sibilant consonant
-                            declension.Digit == 3 && RussianLowerCase.IsNonSibilantConsonant(preceding) ||
+                            declension.StemType == 3 && RussianLowerCase.IsNonSibilantConsonant(preceding) ||
                             // 2)c) is replaced with 'ь', when after 'л'
                             preceding == 'л'
                         )
@@ -254,17 +254,17 @@ namespace Chasm.Grammar.Russian
                 if (info.IsPlural && info.IsGenitiveNormalized)
                 {
                     // Undocumented exceptions to the rule (2*b, 2*f, 2*②, and neuter ②)
-                    if (declension.Digit == 2 && declension.Letter is RussianDeclensionAccent.B or RussianDeclensionAccent.F)
+                    if (declension.StemType == 2 && declension.Stress is RussianStressPattern.B or RussianStressPattern.F)
                         return;
 
                     // If the noun is marked with ②, then it uses a different gender's endings,
                     // and for some reason that also means that vowel alternation doesn't apply.
                     if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0) return;
 
-                    if (declension.Digit == 6 && buffer.Stem[^1] == 'ь')
+                    if (declension.StemType == 6 && buffer.Stem[^1] == 'ь')
                     {
                         // 1) stem's ending 'ь' is replaced with 'е' or 'и'
-                        buffer.Stem[^1] = IsAccentOnEnding(declension, info) ? 'е' : 'и';
+                        buffer.Stem[^1] = IsEndingStressed(declension, info) ? 'е' : 'и';
                         return;
                     }
                     // Special exception for feminine 2*a nouns ending with 'ня' - remove ending 'ь'.
@@ -284,14 +284,14 @@ namespace Chasm.Grammar.Russian
                     if (preLastChar is 'ь' or 'й')
                     {
                         // 2) if 'ь' or 'й' precedes the stem's last consonant, replace with 'ё' or 'е'
-                        buffer.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsAccentOnEnding(declension, info) ? 'ё' : 'е';
+                        buffer.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsEndingStressed(declension, info) ? 'ё' : 'е';
                         return;
                     }
 
                     // 3) in all other cases, insert 'о', 'е' or 'ё'
                     if (
                         preLastChar is 'к' or 'г' or 'х' ||
-                        lastChar is 'к' or 'г' or 'х' /* OR declension.Digit == 3 */ && !RussianLowerCase.IsSibilantConsonant(preLastChar)
+                        lastChar is 'к' or 'г' or 'х' /* OR declension.StemType == 3 */ && !RussianLowerCase.IsSibilantConsonant(preLastChar)
                     )
                     {
                         // 3)a) after 'к', 'г' or 'х' insert 'о'
@@ -300,9 +300,9 @@ namespace Chasm.Grammar.Russian
                         return;
                     }
 
-                    // 3)c) unaccented or before 'ц' - 'е', after hissing consonants - 'о', otherwise accented 'ё'
+                    // 3)c) unstressed or before 'ц' - 'е', after hissing consonants - 'о', otherwise stressed 'ё'
                     buffer.InsertBetweenTwoLastStemChars(
-                        lastChar == 'ц' || !IsAccentOnEnding(declension, info) ? 'е'
+                        lastChar == 'ц' || !IsEndingStressed(declension, info) ? 'е'
                         : RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о'
                         : 'ё'
                     );
@@ -318,7 +318,7 @@ namespace Chasm.Grammar.Russian
             int letterIndex = buffer.Stem.IndexOf('ё');
             if (letterIndex >= 0)
             {
-                if (IsAccentOnEnding(declension, info) && RussianLowerCase.LastIndexOfVowel(buffer.Ending) != -1)
+                if (IsEndingStressed(declension, info) && RussianLowerCase.LastIndexOfVowel(buffer.Ending) != -1)
                 {
                     buffer.Buffer[letterIndex] = 'е';
                 }
@@ -334,8 +334,8 @@ namespace Chasm.Grammar.Russian
 
                 if (
                     RussianLowerCase.LastIndexOfVowel(buffer.Ending) == -1 ||
-                    !IsAccentOnEnding(declension, info) && (
-                        declension.Letter is not RussianDeclensionAccent.F and not RussianDeclensionAccent.Fp and not RussianDeclensionAccent.Fpp ||
+                    !IsEndingStressed(declension, info) && (
+                        declension.Stress is not RussianStressPattern.F and not RussianStressPattern.Fp and not RussianStressPattern.Fpp ||
                         letterIndex == RussianLowerCase.IndexOfVowel(buffer.Stem)
                     )
                 )

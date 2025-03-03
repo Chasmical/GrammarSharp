@@ -12,30 +12,30 @@ namespace Chasm.Grammar.Russian
             declension = default;
             SpanParser parser = new SpanParser(text);
 
-            if (!parser.OnAsciiDigit) return ParseCode.DigitNotFound;
-            int digit = parser.Read() - '0';
+            if (!parser.OnAsciiDigit) return ParseCode.StemTypeNotFound;
+            int stemType = parser.Read() - '0';
 
-            if (digit == 0) return parser.CanRead() ? ParseCode.Unknown : ParseCode.Success;
-            if (digit > 8) return ParseCode.InvalidDigit;
+            if (stemType == 0) return parser.CanRead() ? ParseCode.Unknown : ParseCode.Success;
+            if (stemType > 8) return ParseCode.InvalidStemType;
 
             RussianDeclensionFlags flags = 0;
 
             if (parser.Skip('*')) flags |= RussianDeclensionFlags.Star;
             if (parser.Skip('°')) flags |= RussianDeclensionFlags.Circle;
 
-            if (!parser.OnAsciiLetter) return ParseCode.LetterNotFound;
-            RussianDeclensionAccent accent = (RussianDeclensionAccent)((parser.Read() | ' ')  - '`');
+            if (!parser.OnAsciiLetter) return ParseCode.StressNotFound;
+            RussianStressPattern stress = (RussianStressPattern)((parser.Read() | ' ')  - '`');
 
             if (parser.SkipAny('\'', '′'))
-                accent += 0b0111;
+                stress += 0b0111;
             else if (parser.SkipAny('"', '″'))
             {
-                if (accent == RussianDeclensionAccent.C)
-                    accent = RussianDeclensionAccent.Cpp;
-                else if (accent == RussianDeclensionAccent.F)
-                    accent = RussianDeclensionAccent.Fpp;
+                if (stress == RussianStressPattern.C)
+                    stress = RussianStressPattern.Cpp;
+                else if (stress == RussianStressPattern.F)
+                    stress = RussianStressPattern.Fpp;
                 else
-                    return ParseCode.InvalidLetter;
+                    return ParseCode.InvalidStress;
             }
 
             while (parser.Skip('('))
@@ -53,7 +53,7 @@ namespace Chasm.Grammar.Russian
             if (parser.Skip(',', ' ', 'ё') || parser.Skip(' ', 'ё'))
                 flags |= RussianDeclensionFlags.AlternatingYo;
 
-            declension = new RussianNounDeclension(digit, accent, flags);
+            declension = new RussianNounDeclension(stemType, stress, flags);
             return ParseCode.Success;
         }
 
@@ -81,10 +81,10 @@ namespace Chasm.Grammar.Russian
         {
             Success,
             Unknown,
-            DigitNotFound,
-            LetterNotFound,
-            InvalidDigit,
-            InvalidLetter,
+            StemTypeNotFound,
+            StressNotFound,
+            InvalidStemType,
+            InvalidStress,
         }
     }
 }
