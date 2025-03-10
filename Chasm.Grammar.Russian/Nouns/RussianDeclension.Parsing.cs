@@ -5,9 +5,10 @@ using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    public readonly partial struct RussianNounDeclension
+    public readonly partial struct RussianDeclension
     {
-        [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianNounDeclension declension)
+        [Pure]
+        private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianDeclension declension)
         {
             declension = default;
             SpanParser parser = new SpanParser(text);
@@ -24,19 +25,8 @@ namespace Chasm.Grammar.Russian
             if (parser.Skip('°')) flags |= RussianDeclensionFlags.Circle;
 
             if (!parser.OnAsciiLetter) return ParseCode.StressNotFound;
-            RussianStressPattern stress = (RussianStressPattern)((parser.Read() | ' ')  - '`');
-
-            if (parser.SkipAny('\'', '′'))
-                stress += 0b0111;
-            else if (parser.SkipAny('"', '″'))
-            {
-                if (stress == RussianStressPattern.C)
-                    stress = RussianStressPattern.Cpp;
-                else if (stress == RussianStressPattern.F)
-                    stress = RussianStressPattern.Fpp;
-                else
-                    return ParseCode.InvalidStress;
-            }
+            var code = RussianStressPattern.ParseInternal(ref parser, out var stressPattern);
+            if (code > RussianStressPattern.ParseCode.Leftovers) return ParseCode.InvalidStress;
 
             while (parser.Skip('('))
             {
@@ -53,28 +43,28 @@ namespace Chasm.Grammar.Russian
             if (parser.Skip(',', ' ', 'ё') || parser.Skip(' ', 'ё'))
                 flags |= RussianDeclensionFlags.AlternatingYo;
 
-            declension = new RussianNounDeclension(stemType, stress, flags);
+            declension = new RussianDeclension(RussianDeclensionType.Noun, stemType, stressPattern, flags);
             return ParseCode.Success;
         }
 
-        [Pure] public static RussianNounDeclension Parse(string? text)
+        [Pure] public static RussianDeclension Parse(string? text)
         {
             Guard.ThrowIfNull(text);
             return Parse(text.AsSpan());
         }
-        [Pure] public static RussianNounDeclension Parse(ReadOnlySpan<char> text)
+        [Pure] public static RussianDeclension Parse(ReadOnlySpan<char> text)
         {
-            ParseCode code = ParseInternal(text, out RussianNounDeclension declension);
+            ParseCode code = ParseInternal(text, out RussianDeclension declension);
             if (code is ParseCode.Success) return declension;
             throw new ArgumentException(code.ToString(), nameof(text));
         }
 
-        [Pure] public static bool TryParse(string? text, out RussianNounDeclension declension)
+        [Pure] public static bool TryParse(string? text, out RussianDeclension declension)
         {
             if (text is null) return Util.Fail(out declension);
             return TryParse(text.AsSpan(), out declension);
         }
-        [Pure] public static bool TryParse(ReadOnlySpan<char> text, out RussianNounDeclension declension)
+        [Pure] public static bool TryParse(ReadOnlySpan<char> text, out RussianDeclension declension)
             => ParseInternal(text, out declension) is ParseCode.Success;
 
         private enum ParseCode

@@ -2,7 +2,7 @@
 
 namespace Chasm.Grammar.Russian
 {
-    using NounDecl = RussianNounDeclension;
+    using NounDecl = RussianDeclension;
     using NounDeclInfo = RussianNounInfoForDeclension;
 
     public sealed partial class RussianNoun
@@ -238,7 +238,7 @@ namespace Chasm.Grammar.Russian
                 if (info.IsPlural && info.IsGenitiveNormalized)
                 {
                     // Undocumented exceptions to the rule (2*b, 2*f, 2*②, and neuter ②)
-                    if (declension.StemType == 2 && declension.Stress is RussianStressPattern.B or RussianStressPattern.F)
+                    if (declension.StemType == 2 && declension.StressPattern.Main is RussianStress.B or RussianStress.F)
                         return;
 
                     // If the noun is marked with ②, then it uses a different gender's endings,
@@ -320,7 +320,7 @@ namespace Chasm.Grammar.Russian
                 if (
                     RussianLowerCase.LastIndexOfVowel(buffer.Ending) == -1 ||
                     !IsEndingStressed(declension, info) && (
-                        declension.Stress is not RussianStressPattern.F and not RussianStressPattern.Fp and not RussianStressPattern.Fpp ||
+                        declension.StressPattern.Main is not RussianStress.F and not RussianStress.Fp and not RussianStress.Fpp ||
                         letterIndex == RussianLowerCase.IndexOfVowel(buffer.Stem)
                     )
                 )

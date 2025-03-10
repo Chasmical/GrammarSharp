@@ -2,7 +2,7 @@
 
 namespace Chasm.Grammar.Russian
 {
-    using NounDecl = RussianNounDeclension;
+    using NounDecl = RussianDeclension;
     using NounDeclInfo = RussianNounInfoForDeclension;
 
     public sealed partial class RussianNoun
@@ -103,18 +103,18 @@ namespace Chasm.Grammar.Russian
             if (normCase == RussianCase.Accusative)
                 normCase = info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative;
 
-            return declension.Stress switch
+            return declension.StressPattern.Main switch
             {
-                RussianStressPattern.A => false,
-                RussianStressPattern.B => true,
-                RussianStressPattern.C => plural,
-                RussianStressPattern.D => !plural,
-                RussianStressPattern.E => plural && normCase != RussianCase.Nominative,
-                RussianStressPattern.F => !plural || normCase != RussianCase.Nominative,
-                RussianStressPattern.Bp => plural || normCase != RussianCase.Instrumental,
-                RussianStressPattern.Dp => !plural && info.Case != RussianCase.Accusative,
-                RussianStressPattern.Fp => plural ? normCase != RussianCase.Nominative : info.Case != RussianCase.Accusative,
-                RussianStressPattern.Fpp => plural ? normCase != RussianCase.Nominative : normCase != RussianCase.Instrumental,
+                RussianStress.A => false,
+                RussianStress.B => true,
+                RussianStress.C => plural,
+                RussianStress.D => !plural,
+                RussianStress.E => plural && normCase != RussianCase.Nominative,
+                RussianStress.F => !plural || normCase != RussianCase.Nominative,
+                RussianStress.Bp => plural || normCase != RussianCase.Instrumental,
+                RussianStress.Dp => !plural && info.Case != RussianCase.Accusative,
+                RussianStress.Fp => plural ? normCase != RussianCase.Nominative : info.Case != RussianCase.Accusative,
+                RussianStress.Fpp => plural ? normCase != RussianCase.Nominative : normCase != RussianCase.Instrumental,
             };
         }
 

@@ -6,9 +6,9 @@ namespace Chasm.Grammar.Russian
     {
         public string Stem { get; }
         public RussianNounInfo Info { get; }
-        public RussianNounDeclension Declension { get; }
+        public RussianDeclension Declension { get; }
 
-        public RussianNoun(string word, RussianNounInfo info, RussianNounDeclension declension)
+        public RussianNoun(string word, RussianNounInfo info, RussianDeclension declension)
         {
             Stem = declension.IsZero ? word : ExtractStem(word);
             Info = info;

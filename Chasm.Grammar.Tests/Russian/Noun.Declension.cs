@@ -11,7 +11,7 @@ namespace Chasm.Grammar.Tests
         [Theory, MemberData(nameof(CreateDeclensionFixtures))]
         public void Declension(DeclensionFixture fixture)
         {
-            var declension = RussianNounDeclension.Parse(fixture.Declension);
+            var declension = RussianDeclension.Parse(fixture.Declension);
             var info = RussianNounInfo.Parse(fixture.Info);
             RussianNoun noun = new RussianNoun(fixture.Stem, info, declension);
 

@@ -26,9 +26,9 @@ namespace Chasm.Grammar.Russian
         Common    = 0b_11,
     }
     [Flags]
-    public enum RussianStressPattern
+    public enum RussianStress
     {
-        // 0 is reserved for stem type 0, that doesn't have a stress pattern
+        // 0 is for when the stress is not specified
         Zero = 0,
 
         // Regular stress patterns start from 1
@@ -38,7 +38,7 @@ namespace Chasm.Grammar.Russian
         D = 0b_0100, // nouns
         E = 0b_0101, // nouns
         F = 0b_0110, // nouns
-        // (0b_0111 is unused)
+        // (0b_0111 is only used for debugging, to display `a/` or `/b`)
 
         // Single- and double-prime stress patterns (a′, f″) start from 0
         Ap = 0b_1000, // adjectives
