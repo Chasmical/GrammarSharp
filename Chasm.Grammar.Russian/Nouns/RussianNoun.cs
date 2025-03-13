@@ -10,14 +10,9 @@ namespace Chasm.Grammar.Russian
 
         public RussianNoun(string word, RussianNounInfo info)
         {
-            Stem = info.Declension.IsZero ? word : ExtractStem(word);
+            Stem = info.Declension.IsZero ? word : info.Declension.ExtractStem(word);
             Info = info;
         }
-
-        [Pure] public static string ExtractStem(string word)
-            => RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
-        [Pure] public static ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
-            => RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
 
     }
 }

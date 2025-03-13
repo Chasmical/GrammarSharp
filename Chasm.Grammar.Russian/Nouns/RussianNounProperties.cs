@@ -67,7 +67,7 @@ namespace Chasm.Grammar.Russian
         internal int ExtraData
         {
             readonly get => _data >> 5;
-            set => _data = (byte)((_data & 0b_000_11_111) | value);
+            set => _data = (byte)((_data & 0b_000_11_111) | (value << 5));
         }
         internal readonly bool IsPlural => (_data & 0b_000_01_000) != 0;
         internal readonly RussianCase Case => (RussianCase)ExtraData;

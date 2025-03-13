@@ -90,6 +90,25 @@ namespace Chasm.Grammar.Russian
             _flags = (byte)flags;
         }
 
+        [Pure] public readonly string ExtractStem(string word)
+            => ExtractStem(word.AsSpan()).ToString();
+        [Pure] public readonly ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
+        {
+            if (IsZero) return word;
+
+            switch (Type)
+            {
+                case RussianDeclensionType.Noun:
+                    return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        internal void RemovePluraleTantum()
+            => _nounProps.IsPluraleTantum = false;
+
         [Pure] public readonly bool Equals(RussianDeclension other)
         {
             // Nothing special is needed here, so just perform bitwise equality

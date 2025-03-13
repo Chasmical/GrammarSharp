@@ -12,10 +12,13 @@ namespace Chasm.Grammar.Russian
 
             sb.Append(Properties).Append(' ');
 
-            bool specialDeclensionProps = Declension.SpecialNounProperties.HasValue;
+            RussianDeclension decl = Declension;
+
+            bool specialDeclensionProps = decl.Type != RussianDeclensionType.Noun || decl.SpecialNounProperties.HasValue;
 
             if (specialDeclensionProps) sb.Append('<');
-            sb.Append(Declension);
+            decl.RemovePluraleTantum();
+            sb.Append(decl);
             if (specialDeclensionProps) sb.Append('>');
 
             return sb.ToString();

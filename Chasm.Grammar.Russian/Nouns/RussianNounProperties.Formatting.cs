@@ -4,7 +4,7 @@ namespace Chasm.Grammar.Russian
 {
     public partial struct RussianNounProperties
     {
-        [Pure] public override string ToString()
+        [Pure] public readonly override string ToString()
         {
             if (IsPluraleTantum) return "мн.";
 

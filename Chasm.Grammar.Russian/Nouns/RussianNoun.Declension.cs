@@ -10,8 +10,15 @@ namespace Chasm.Grammar.Russian
     {
         [Pure] public string Decline(RussianCase @case, bool plural)
         {
-            if (Info.Declension.Type != RussianDeclensionType.Noun)
-                throw new NotImplementedException("Declension for other types not implemented yet.");
+            NounProps props;
+
+            switch (Info.Declension.Type)
+            {
+                case RussianDeclensionType.Noun:
+                    break;
+                default:
+                    throw new NotImplementedException("Declension for other types not implemented yet.");
+            }
 
             NounDecl declension = Info.Declension;
             if (declension.IsZero) return Stem;
@@ -21,12 +28,12 @@ namespace Chasm.Grammar.Russian
             // - Account for tantums (override plural parameter)
             // - Store @case in the structure
 
-            NounProps info = Info.PrepareForDeclension(@case, plural);
+            props = Info.PrepareForDeclension(@case, plural);
 
-            return DeclineCore(Stem, declension, info);
+            return DeclineCore(Stem, declension, props);
         }
 
-        [Pure] private static string DeclineCore(ReadOnlySpan<char> stem, NounDecl declension, NounProps props)
+        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, NounDecl declension, NounProps props)
         {
             if (declension.IsZero) return stem.ToString();
 

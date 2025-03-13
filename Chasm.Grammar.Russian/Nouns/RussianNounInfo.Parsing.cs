@@ -45,7 +45,10 @@ namespace Chasm.Grammar.Russian
                     if (code > ParseCode.Leftovers) return ParseCode.InvalidProperties;
                     parsedDeclensionProps = true;
 
+                    // Declension properties cannot have tantums (?)
                     if (declensionProps.IsTantum) throw new NotImplementedException();
+                    // Pass on the main properties' plurale tantum
+                    if (properties.IsPluraleTantum) declensionProps.IsPluraleTantum = true;
                 }
 
                 parser.SkipWhitespaces();
