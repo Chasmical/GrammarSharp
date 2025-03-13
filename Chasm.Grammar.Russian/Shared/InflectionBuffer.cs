@@ -47,6 +47,11 @@ namespace Chasm.Grammar.Russian
             StemLength += 2;
             ResultLength += 2;
         }
+        public void AppendToEnding(char a, char b)
+        {
+            Buffer[ResultLength++] = a;
+            Buffer[ResultLength++] = b;
+        }
 
         public void RemoveEnding()
             => ResultLength = StemLength;

@@ -101,6 +101,12 @@ namespace Chasm.Grammar.Russian
                 case RussianDeclensionType.Noun:
                     return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
 
+                case RussianDeclensionType.Adjective:
+                    if (word.Length > 4 && word[^2] == 'с' && word[^1] == 'я')
+                    {
+                        return word[..^4].ToString() + word[^2..].ToString();
+                    }
+                    return word.Length > 2 ? word[..^2] : word;
                 default:
                     throw new NotImplementedException();
             }

@@ -81,6 +81,17 @@ namespace Chasm.Grammar.Russian
 
             return new((byte)data);
         }
+        [Pure] internal readonly RussianNounProperties PrepareForAdjDeclension(RussianCase @case, bool plural)
+        {
+            // If it doesn't have a tantum, apply specified count
+            int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
+            // If plural, use Common gender (lookup optimization)
+            int genderFlag = plural ? 0b_011 : Math.Min(_data & 0b_011, (int)RussianGender.Feminine);
+            // Preserve animacy, and add case as extra data
+            int data = (_data & 0b_100) | pluralFlag | genderFlag | ((int)@case << 5);
+
+            return new((byte)data);
+        }
 
         internal readonly bool IsNominativeNormalized
         {

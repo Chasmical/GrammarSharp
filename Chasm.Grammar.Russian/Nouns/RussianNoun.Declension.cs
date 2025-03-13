@@ -16,6 +16,9 @@ namespace Chasm.Grammar.Russian
             {
                 case RussianDeclensionType.Noun:
                     break;
+                case RussianDeclensionType.Adjective:
+                    props = Info.Properties.PrepareForAdjDeclension(@case, plural);
+                    return RussianAdjective.DeclineCore(Stem, new(Info.Declension), props);
                 default:
                     throw new NotImplementedException("Declension for other types not implemented yet.");
             }
