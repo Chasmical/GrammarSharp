@@ -15,12 +15,6 @@ namespace Chasm.Grammar.Russian
             Declension = declension;
         }
 
-        [Pure] internal readonly RussianNounProperties PrepareForDeclension(RussianCase @case, bool plural)
-        {
-            var props = Declension.SpecialNounProperties ?? Properties;
-            return props.PrepareForDeclension(@case, plural);
-        }
-
         [Pure] public readonly bool Equals(RussianNounInfo other)
             => Declension.Equals(other.Declension) && Properties.Equals(other.Properties);
         [Pure] public readonly override bool Equals([NotNullWhen(true)] object? obj)

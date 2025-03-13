@@ -8,17 +8,21 @@ namespace Chasm.Grammar.Russian
 
     public sealed partial class RussianAdjective
     {
-        [Pure] public string Decline(RussianCase @case, bool plural, SubjProps properties)
+        [Pure] public string Decline(RussianCase @case, bool plural, SubjProps props)
         {
-            if (Info.Declension.Type != RussianDeclensionType.Adjective)
-                throw new NotImplementedException("Declension for other types not implemented yet.");
-
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            properties = properties.PrepareForAdjDeclension(@case, plural);
+            // Prepare information for declension, and use the appropriate declension method
+            switch (Info.Declension.Type)
+            {
+                case RussianDeclensionType.Adjective:
+                    props.PrepareForAdjectiveDeclension(@case, plural);
+                    return DeclineCore(Stem, Info, props);
 
-            return DeclineCore(Stem, Info, properties);
+                default:
+                    throw new NotImplementedException("Declension for other types not implemented yet.");
+            }
         }
         [Pure] public string DeclineShort(bool plural, SubjProps properties)
             => Decline((RussianCase)6, plural, properties);
@@ -32,7 +36,7 @@ namespace Chasm.Grammar.Russian
             Span<char> buffer = stackalloc char[stem.Length + extraCharCount];
             InflectionBuffer results = new(buffer);
 
-            // Find the appropriate noun ending
+            // Find the appropriate adjective ending
             ReadOnlySpan<char> ending = DetermineAdjectiveEnding(info, props);
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);

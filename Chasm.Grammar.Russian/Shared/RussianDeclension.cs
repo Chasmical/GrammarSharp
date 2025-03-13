@@ -99,14 +99,16 @@ namespace Chasm.Grammar.Russian
             switch (Type)
             {
                 case RussianDeclensionType.Noun:
+                    // Remove the last vowel/'й'/'ь' to get the stem
                     return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
 
                 case RussianDeclensionType.Adjective:
+                    // Remove the two ending's letters (treat 'ся' as part of the stem)
                     if (word.Length > 4 && word[^2] == 'с' && word[^1] == 'я')
-                    {
                         return word[..^4].ToString() + word[^2..].ToString();
-                    }
+
                     return word.Length > 2 ? word[..^2] : word;
+
                 default:
                     throw new NotImplementedException();
             }

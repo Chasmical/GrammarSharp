@@ -10,30 +10,26 @@ namespace Chasm.Grammar.Russian
     {
         [Pure] public string Decline(RussianCase @case, bool plural)
         {
-            NounProps props;
-
-            switch (Info.Declension.Type)
-            {
-                case RussianDeclensionType.Noun:
-                    break;
-                case RussianDeclensionType.Adjective:
-                    props = Info.Properties.PrepareForAdjDeclension(@case, plural);
-                    return RussianAdjective.DeclineCore(Stem, new(Info.Declension), props);
-                default:
-                    throw new NotImplementedException("Declension for other types not implemented yet.");
-            }
-
             NounDecl declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            // Prepare the noun's information for declension:
-            // - Use declension-specific gender/animacy
-            // - Account for tantums (override plural parameter)
-            // - Store @case in the structure
+            // Prepare information for declension, and use the appropriate declension method
+            NounProps props;
+            switch (Info.Declension.Type)
+            {
+                case RussianDeclensionType.Noun:
+                    props = Info.Declension.SpecialNounProperties ?? Info.Properties;
+                    props.PrepareForNounDeclension(@case, plural);
+                    return DeclineCore(Stem, declension, props);
 
-            props = Info.PrepareForDeclension(@case, plural);
+                case RussianDeclensionType.Adjective:
+                    props = Info.Properties;
+                    props.PrepareForAdjectiveDeclension(@case, plural);
+                    return RussianAdjective.DeclineCore(Stem, new(declension), props);
 
-            return DeclineCore(Stem, declension, props);
+                default:
+                    throw new NotImplementedException("Declension for other types not implemented yet.");
+            }
         }
 
         [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, NounDecl declension, NounProps props)

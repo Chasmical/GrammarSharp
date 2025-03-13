@@ -72,25 +72,21 @@ namespace Chasm.Grammar.Russian
         internal readonly bool IsPlural => (_data & 0b_000_01_000) != 0;
         internal readonly RussianCase Case => (RussianCase)ExtraData;
 
-        [Pure] internal readonly RussianNounProperties PrepareForDeclension(RussianCase @case, bool plural)
+        internal void PrepareForNounDeclension(RussianCase @case, bool plural)
         {
             // If it doesn't have a tantum, apply specified count
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
             // Preserve animacy, convert Common to Feminine for correct endings, and add case as extra data
-            int data = (_data & 0b_100) | Math.Min(_data & 0b_011, (int)RussianGender.Feminine) | pluralFlag | ((int)@case << 5);
-
-            return new((byte)data);
+            _data = (byte)((_data & 0b_100) | Math.Min(_data & 0b_011, (int)RussianGender.Feminine) | pluralFlag | ((int)@case << 5));
         }
-        [Pure] internal readonly RussianNounProperties PrepareForAdjDeclension(RussianCase @case, bool plural)
+        internal void PrepareForAdjectiveDeclension(RussianCase @case, bool plural)
         {
             // If it doesn't have a tantum, apply specified count
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
             // If plural, use Common gender (lookup optimization)
             int genderFlag = plural ? 0b_011 : Math.Min(_data & 0b_011, (int)RussianGender.Feminine);
             // Preserve animacy, and add case as extra data
-            int data = (_data & 0b_100) | pluralFlag | genderFlag | ((int)@case << 5);
-
-            return new((byte)data);
+            _data = (byte)((_data & 0b_100) | pluralFlag | genderFlag | ((int)@case << 5));
         }
 
         internal readonly bool IsNominativeNormalized
