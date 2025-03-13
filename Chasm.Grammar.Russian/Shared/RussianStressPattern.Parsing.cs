@@ -7,15 +7,6 @@ namespace Chasm.Grammar.Russian
 {
     public readonly partial struct RussianStressPattern
     {
-        internal enum ParseCode
-        {
-            Success,
-            Leftovers,
-
-            InvalidChar,
-            InvalidAccent,
-        }
-
         [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianStressPattern pattern)
         {
             SpanParser parser = new(text);
@@ -57,7 +48,7 @@ namespace Chasm.Grammar.Russian
                         skippedDoublePrime = true;
                     // Otherwise, add single prime to the stress
                     else
-                        stress += 0b_0111;
+                        stress += 6;
                 }
                 // Skip double prime
                 else if (parser.SkipAny('"', '″'))
@@ -75,14 +66,14 @@ namespace Chasm.Grammar.Russian
                             stress = RussianStress.Fpp;
                             break;
                         default:
-                            return ParseCode.InvalidAccent;
+                            return ParseCode.InvalidStressPrime;
                     }
                 }
                 return ParseCode.Success;
             }
 
             stress = 0;
-            return ParseCode.InvalidChar;
+            return ParseCode.StressNotFound;
         }
 
         [Pure] public static RussianStressPattern Parse(string text)
@@ -91,11 +82,7 @@ namespace Chasm.Grammar.Russian
             return Parse(text.AsSpan());
         }
         [Pure] public static RussianStressPattern Parse(ReadOnlySpan<char> text)
-        {
-            ParseCode code = ParseInternal(text, out RussianStressPattern pattern);
-            if (code is ParseCode.Success) return pattern;
-            throw new ArgumentException(code.ToString()); // TODO: exception
-        }
+            => ParseInternal(text, out RussianStressPattern pattern).ReturnOrThrow(pattern, nameof(text));
 
         [Pure] public static bool TryParse([NotNullWhen(true)] string? text, out RussianStressPattern pattern)
         {

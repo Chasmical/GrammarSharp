@@ -1,10 +1,11 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
     public static class RussianGrammar
     {
-        public static RussianGender ParseGender(char gender)
+        [Pure] public static RussianGender ParseGender(char gender)
         {
             return gender switch
             {

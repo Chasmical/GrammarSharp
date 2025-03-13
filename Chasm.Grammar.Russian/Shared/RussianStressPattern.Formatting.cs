@@ -29,7 +29,7 @@ namespace Chasm.Grammar.Russian
                 var (main, alt) = this;
                 string[] lookup = stressStringLookup;
 
-                // If the alternate stress is not specified, use the short format regardless
+                // If the alternative stress is not specified, use the short format regardless
                 if (alt == RussianStress.Zero) return lookup[(int)main];
 
                 switch (format[0] | ' ')
@@ -41,7 +41,7 @@ namespace Chasm.Grammar.Russian
                         // Shorten a/a to a, b/b to b
                         if (alt == main) return lookup[(int)main];
                         // Shorten a/a′ to a′, b/b′ to b′
-                        if (main <= RussianStress.F && alt - 0b_0111 == main) return lookup[(int)alt];
+                        if (main <= RussianStress.F && alt - 6 == main) return lookup[(int)alt];
                         // Otherwise, use full format, a/b, b/c′
                         return ToStringBoth(lookup, main, alt);
                     case 'v':
@@ -49,32 +49,13 @@ namespace Chasm.Grammar.Russian
                         if (alt == RussianStress.A) return lookup[(int)main];
                         // Otherwise, use full format, b/b, c′/b
                         return ToStringBoth(lookup, main, alt);
-                    default:
-                        throw new FormatException(); // TODO: exception
                 }
             }
-            throw new FormatException(); // TODO: exception
+            throw new FormatException($"'{format.ToString()}' is not a valid format for Russian stress patterns.");
         }
 
         private static readonly string[] stressStringLookup =
-        [
-            null!,
-            "a",
-            "b",
-            "c",
-            "d",
-            "e",
-            "f",
-            "",
-            "a′",
-            "b′",
-            "c′",
-            "d′",
-            "e′",
-            "f′",
-            "c″",
-            "f″",
-        ];
+            [null!, "a", "b", "c", "d", "e", "f", "a′", "b′", "c′", "d′", "e′", "f′", "c″", "f″", ""];
 
     }
 }

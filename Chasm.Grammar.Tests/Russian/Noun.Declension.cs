@@ -11,11 +11,10 @@ namespace Chasm.Grammar.Tests
         [Theory, MemberData(nameof(CreateDeclensionFixtures))]
         public void Declension(DeclensionFixture fixture)
         {
-            var declension = RussianDeclension.Parse(fixture.Declension);
             var info = RussianNounInfo.Parse(fixture.Info);
-            RussianNoun noun = new RussianNoun(fixture.Stem, info, declension);
+            RussianNoun noun = new RussianNoun(fixture.Stem, info);
 
-            Output.WriteLine($"{noun.Stem}, {info}, {declension}\n");
+            Output.WriteLine($"{noun.Stem}, {info}\n");
 
             StringBuilder sb = new();
             sb.AppendJoin(", ", Enumerable.Range(0, 6).Select(i => noun.Decline((RussianCase)i, false)));

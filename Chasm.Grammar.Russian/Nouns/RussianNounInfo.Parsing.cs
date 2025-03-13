@@ -5,36 +5,59 @@ using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    public readonly partial struct RussianNounInfo
+    public partial struct RussianNounInfo
     {
-        private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianNounInfo info)
+        [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianNounInfo info)
+        {
+            SpanParser parser = new SpanParser(text);
+            return ParseInternal(ref parser, out info);
+        }
+        [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianNounInfo info)
         {
             info = default;
-            SpanParser parser = new SpanParser(text);
 
-            RussianGender gender;
+            var code = RussianNounProperties.ParseInternal(ref parser, out RussianNounProperties properties);
+            if (code > ParseCode.Leftovers) return ParseCode.InvalidProperties;
 
-            if (parser.Skip('с'))
-                gender = RussianGender.Neuter;
-            else if (parser.Skip('м'))
-                gender = RussianGender.Masculine;
-            else if (parser.Skip('ж'))
-                gender = RussianGender.Feminine;
-            else
-                return ParseCode.GenderNotFound;
+            RussianDeclensionType declensionType = RussianDeclensionType.Noun;
+            RussianNounProperties declensionProps = default;
+            bool parsedDeclensionProps = false;
 
-            bool animate = parser.Skip('о');
+            parser.SkipWhitespaces();
+            bool hasEnteredDeclensionBraces = parser.Skip('<');
 
-            if (animate && gender != RussianGender.Neuter)
+            if (hasEnteredDeclensionBraces)
             {
-                if (parser.Skip('-', gender is RussianGender.Masculine ? 'ж' : 'м', 'о'))
-                    gender = RussianGender.Common;
+                if (parser.Skip('п'))
+                {
+                    // adjective declension
+                    declensionType = RussianDeclensionType.Adjective;
+                }
+                else if (parser.Skip('м', 'с'))
+                {
+                    // pronoun declension
+                    declensionType = RussianDeclensionType.Pronoun;
+                }
+                else
+                {
+                    // noun declension (different declension gender or animacy)
+                    code = RussianNounProperties.ParseInternal(ref parser, out declensionProps);
+                    if (code > ParseCode.Leftovers) return ParseCode.InvalidProperties;
+                    parsedDeclensionProps = true;
+
+                    if (declensionProps.IsTantum) throw new NotImplementedException();
+                }
+
+                parser.SkipWhitespaces();
             }
 
-            // TODO: declension-specific stuff, tantums, etc.
+            code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension);
+            if (code > ParseCode.Leftovers) return ParseCode.InvalidDeclension;
 
-            info = new RussianNounInfo(gender, animate);
+            declension.Type = declensionType;
+            if (parsedDeclensionProps) declension.SpecialNounProperties = declensionProps;
 
+            info = new(properties, declension);
             return ParseCode.Success;
         }
 
@@ -44,11 +67,7 @@ namespace Chasm.Grammar.Russian
             return Parse(text.AsSpan());
         }
         [Pure] public static RussianNounInfo Parse(ReadOnlySpan<char> text)
-        {
-            ParseCode code = ParseInternal(text, out RussianNounInfo info);
-            if (code is ParseCode.Success) return info;
-            throw new ArgumentException(code.ToString(), nameof(text));
-        }
+            => ParseInternal(text, out RussianNounInfo info).ReturnOrThrow(info, nameof(text));
 
         [Pure] public static bool TryParse(string? text, out RussianNounInfo info)
         {
@@ -57,14 +76,6 @@ namespace Chasm.Grammar.Russian
         }
         [Pure] public static bool TryParse(ReadOnlySpan<char> text, out RussianNounInfo info)
             => ParseInternal(text, out info) is ParseCode.Success;
-
-        private enum ParseCode
-        {
-            Success,
-            Unknown,
-            GenderNotFound,
-            AnimacyNotFound,
-        }
 
     }
 }

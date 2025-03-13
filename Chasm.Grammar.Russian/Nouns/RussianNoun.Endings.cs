@@ -1,13 +1,14 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
     using NounDecl = RussianDeclension;
-    using NounDeclInfo = RussianNounInfoForDeclension;
+    using NounProps = RussianNounProperties;
 
     public sealed partial class RussianNoun
     {
-        private static ReadOnlySpan<char> DetermineNounEnding(NounDecl declension, NounDeclInfo info)
+        [Pure] private static ReadOnlySpan<char> DetermineNounEnding(NounDecl declension, NounProps props)
         {
             const RussianDeclensionFlags allCircledNumbers
                 = RussianDeclensionFlags.CircledOne |
@@ -17,21 +18,21 @@ namespace Chasm.Grammar.Russian
             // Handle ①②③ marks
             if ((declension.Flags & allCircledNumbers) != 0)
             {
-                string? res = GetCircledNumberOverrideEnding(declension, info);
+                string? res = GetCircledNumberOverrideEnding(declension, props);
                 if (res is not null) return res;
             }
 
             ReadOnlySpan<byte> lookup = NounEndingLookup;
 
             // Get indices of both unstressed and stressed forms of endings (usually they're the same)
-            int lookupIndex = ComposeEndingIndex(declension, info, info.Case);
+            int lookupIndex = ComposeEndingIndex(declension, props, props.Case);
             int unStrIndex = lookup[lookupIndex];
 
             // Accusative case usually uses either genitive's or nominative's ending, depending on animacy.
             // In such case, the lookup yields the index 0 (element = null). Don't confuse with "" ('null ending' in grammar).
             if (unStrIndex == 0)
             {
-                lookupIndex = ComposeEndingIndex(declension, info, info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
+                lookupIndex = ComposeEndingIndex(declension, props, props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
                 unStrIndex = lookup[lookupIndex];
             }
             // Stressed ending index is right next to the unstressed one's
@@ -39,20 +40,20 @@ namespace Chasm.Grammar.Russian
 
             // If the ending depends on the stress, determine the one needed here.
             // If the endings are the same, it doesn't matter which one is used.
-            bool stressed = unStrIndex != strIndex && IsEndingStressed(declension, info);
+            bool stressed = unStrIndex != strIndex && IsEndingStressed(declension, props);
 
             int spanPos = stressed ? strIndex : unStrIndex;
             return NounEndingSpan.Slice(spanPos & 0x3F, spanPos >> 6);
         }
 
-        private static string? GetCircledNumberOverrideEnding(NounDecl declension, NounDeclInfo info)
+        [Pure] private static string? GetCircledNumberOverrideEnding(NounDecl declension, NounProps props)
         {
-            if (info.IsPlural)
+            if (props.IsPlural)
             {
-                if ((declension.Flags & RussianDeclensionFlags.CircledOne) != 0 && info.IsNominativeNormalized)
+                if ((declension.Flags & RussianDeclensionFlags.CircledOne) != 0 && props.IsNominativeNormalized)
                 {
                     int decl = declension.StemType;
-                    switch (info.Gender)
+                    switch (props.Gender)
                     {
                         case RussianGender.Neuter:
                             return decl is 1 or 5 or 8 ? "ы" : "и";
@@ -62,17 +63,17 @@ namespace Chasm.Grammar.Russian
                             throw new InvalidOperationException();
                     }
                 }
-                if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0 && info.IsGenitiveNormalized)
+                if ((declension.Flags & RussianDeclensionFlags.CircledTwo) != 0 && props.IsGenitiveNormalized)
                 {
                     int decl = declension.StemType;
-                    switch (info.Gender)
+                    switch (props.Gender)
                     {
                         case RussianGender.Neuter:
                             return decl switch
                             {
                                 1 or 3 or 8 => "ов",
-                                4 or 5 when IsEndingStressed(declension, info) => "ов",
-                                2 or 6 or 7 when IsEndingStressed(declension, info) => "ёв",
+                                4 or 5 when IsEndingStressed(declension, props) => "ов",
+                                2 or 6 or 7 when IsEndingStressed(declension, props) => "ёв",
                                 _ => "ев",
                             };
                         case RussianGender.Masculine:
@@ -86,22 +87,22 @@ namespace Chasm.Grammar.Russian
             {
                 if ((declension.Flags & RussianDeclensionFlags.CircledThree) != 0 && declension.StemType == 7)
                 {
-                    if (info.Case == RussianCase.Prepositional || info.Gender == RussianGender.Feminine && info.Case == RussianCase.Dative)
+                    if (props.Case == RussianCase.Prepositional || props.Gender == RussianGender.Feminine && props.Case == RussianCase.Dative)
                         return "е";
                 }
             }
             return null;
         }
 
-        private static bool IsEndingStressed(NounDecl declension, NounDeclInfo info)
+        [Pure] private static bool IsEndingStressed(NounDecl declension, NounProps props)
         {
-            bool plural = info.IsPlural;
+            bool plural = props.IsPlural;
 
             // Accusative case's endings and stresses depend on the noun's animacy.
-            // Some stresses, though, depend on the original case, like D′ and F′.
-            RussianCase normCase = info.Case;
+            // Some stresses, though, depend on the original case, like d′ and f′.
+            RussianCase normCase = props.Case;
             if (normCase == RussianCase.Accusative)
-                normCase = info.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative;
+                normCase = props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative;
 
             return declension.StressPattern.Main switch
             {
@@ -112,13 +113,14 @@ namespace Chasm.Grammar.Russian
                 RussianStress.E => plural && normCase != RussianCase.Nominative,
                 RussianStress.F => !plural || normCase != RussianCase.Nominative,
                 RussianStress.Bp => plural || normCase != RussianCase.Instrumental,
-                RussianStress.Dp => !plural && info.Case != RussianCase.Accusative,
-                RussianStress.Fp => plural ? normCase != RussianCase.Nominative : info.Case != RussianCase.Accusative,
+                RussianStress.Dp => !plural && props.Case != RussianCase.Accusative,
+                RussianStress.Fp => plural ? normCase != RussianCase.Nominative : props.Case != RussianCase.Accusative,
                 RussianStress.Fpp => plural ? normCase != RussianCase.Nominative : normCase != RussianCase.Instrumental,
+                _ => throw new InvalidOperationException($"{declension.StressPattern} is not a valid stress pattern for nouns."),
             };
         }
 
-        private static int ComposeEndingIndex(NounDecl declension, NounDeclInfo info, RussianCase @case)
+        [Pure] private static int ComposeEndingIndex(NounDecl declension, NounProps props, RussianCase @case)
         {
             // Context-dependent variables are more significant and come first, noun-dependent variables come next,
             // And finally, unstressed and stressed forms are next to each other to make stress-checking simpler.
@@ -126,8 +128,8 @@ namespace Chasm.Grammar.Russian
             // Composite index: [case:6] [plural:2] [gender:3] [stem type:8] [stress:2]
 
             int index = (int)@case;
-            index = index * 2 + (info.IsPlural ? 1 : 0);
-            index = index * 3 + (int)info.Gender;
+            index = index * 2 + (props.IsPlural ? 1 : 0);
+            index = index * 3 + (int)props.Gender;
             index = index * 8 + (declension.StemType - 1);
             index *= 2; // stress takes up the least significant bit
 

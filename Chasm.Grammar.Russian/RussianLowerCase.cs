@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 #if NET8_0_OR_GREATER
 using System.Buffers;
 #endif
@@ -23,7 +24,7 @@ namespace Chasm.Grammar.Russian
         private static readonly SearchValues<char> TrimNounStemCharsSearch = SearchValues.Create(TrimNounStemChars);
 #endif
 
-        public static int LastIndexOfVowel(ReadOnlySpan<char> text)
+        [Pure] public static int LastIndexOfVowel(ReadOnlySpan<char> text)
         {
 #if NET8_0_OR_GREATER
             return text.LastIndexOfAny(VowelsSearch);
@@ -31,7 +32,7 @@ namespace Chasm.Grammar.Russian
             return text.LastIndexOfAny(Vowels);
 #endif
         }
-        public static int IndexOfVowel(ReadOnlySpan<char> text)
+        [Pure] public static int IndexOfVowel(ReadOnlySpan<char> text)
         {
 #if NET8_0_OR_GREATER
             return text.IndexOfAny(VowelsSearch);
@@ -39,7 +40,7 @@ namespace Chasm.Grammar.Russian
             return text.IndexOfAny(Vowels);
 #endif
         }
-        public static int LastIndexOfConsonant(ReadOnlySpan<char> text)
+        [Pure] public static int LastIndexOfConsonant(ReadOnlySpan<char> text)
         {
 #if NET8_0_OR_GREATER
             return text.LastIndexOfAny(ConsonantsSearch);
@@ -48,7 +49,7 @@ namespace Chasm.Grammar.Russian
 #endif
         }
 
-        public static bool IsVowel(char ch)
+        [Pure] public static bool IsVowel(char ch)
         {
 #if NET8_0_OR_GREATER
             return VowelsSearch.Contains(ch);
@@ -56,7 +57,7 @@ namespace Chasm.Grammar.Russian
             return Vowels.Contains(ch);
 #endif
         }
-        public static bool IsHissingConsonant(char ch)
+        [Pure] public static bool IsHissingConsonant(char ch)
         {
 #if NET8_0_OR_GREATER
             return HissingConsonantsSearch.Contains(ch);
@@ -64,7 +65,7 @@ namespace Chasm.Grammar.Russian
             return HissingConsonants.Contains(ch);
 #endif
         }
-        public static bool IsSibilantConsonant(char ch)
+        [Pure] public static bool IsSibilantConsonant(char ch)
         {
 #if NET8_0_OR_GREATER
             return SibilantConsonantsSearch.Contains(ch);
@@ -72,7 +73,7 @@ namespace Chasm.Grammar.Russian
             return SibilantConsonants.Contains(ch);
 #endif
         }
-        public static bool IsNonSibilantConsonant(char ch)
+        [Pure] public static bool IsNonSibilantConsonant(char ch)
         {
 #if NET8_0_OR_GREATER
             return NonSibilantConsonantsSearch.Contains(ch);
@@ -80,7 +81,7 @@ namespace Chasm.Grammar.Russian
             return NonSibilantConsonants.Contains(ch);
 #endif
         }
-        public static bool IsTrimNounStemChar(char ch)
+        [Pure] public static bool IsTrimNounStemChar(char ch)
         {
 #if NET8_0_OR_GREATER
             return TrimNounStemCharsSearch.Contains(ch);
