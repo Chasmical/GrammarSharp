@@ -1,4 +1,5 @@
 ﻿using System;
+using Chasm.Grammar.Russian;
 using JetBrains.Annotations;
 using Xunit;
 
@@ -406,6 +407,37 @@ namespace Chasm.Grammar.Tests
 
             #endregion
 
+            #region Plurale tantum
+
+            New("ножницы", "мн. <ж 5a>")
+                .Returns("ножницы, ножниц, ножницам, ножницы, ножницами, ножницах")
+                .Returns("ножницы, ножниц, ножницам, ножницы, ножницами, ножницах");
+            New("дрожжи", "мн. <м 4e>")
+                .Returns("дрожжи, дрожжей, дрожжам, дрожжи, дрожжами, дрожжах")
+                .Returns("дрожжи, дрожжей, дрожжам, дрожжи, дрожжами, дрожжах");
+            New("хлопья", "мн. <с 6*a(2)>")
+                .Returns("хлопья, хлопьев, хлопьям, хлопья, хлопьями, хлопьях")
+                .Returns("хлопья, хлопьев, хлопьям, хлопья, хлопьями, хлопьях");
+
+            #endregion
+
+            #region Nouns with different declension gender
+
+            New("мужчина", "мо <жо 1a>")
+                .Returns("мужчина, мужчины, мужчине, мужчину, мужчиной, мужчине")
+                .Returns("мужчины, мужчин, мужчинам, мужчин, мужчинами, мужчинах");
+            New("глазище", "м <с 4a(1)>")
+                .Returns("глазище, глазища, глазищу, глазище, глазищем, глазище")
+                .Returns("глазищи, глазищ, глазищам, глазищи, глазищами, глазищах");
+            New("зайка", "мо <жо 3*a>")
+                .Returns("зайка, зайки, зайке, зайку, зайкой, зайке")
+                .Returns("зайки, заек, зайкам, заек, зайками, зайках");
+            New("карько", "мо <со 3*b(1)(2)>")
+                .Returns("карько, карька, карьку, карька, карьком, карьке")
+                .Returns("карьки, карьков, карькам, карьков, карьками, карьках");
+
+            #endregion
+
             return adapter;
         }
 
@@ -431,7 +463,7 @@ namespace Chasm.Grammar.Tests
                 Assert.Equal(Expected, result);
             }
             public override string ToString()
-                => $"{base.ToString()} {Stem}, {Info}";
+                => $"{base.ToString()} {Stem}, {RussianNounInfo.Parse(Info)}";
 
         }
 
