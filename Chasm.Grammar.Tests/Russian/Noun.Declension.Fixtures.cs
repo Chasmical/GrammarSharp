@@ -506,7 +506,7 @@ namespace Chasm.Grammar.Tests
                 Assert.Equal(Expected, result);
             }
             public override string ToString()
-                => $"{base.ToString()} {Stem}, {RussianNounInfo.Parse(Info)}";
+                => $"{base.ToString()} {Stem}, {(RussianNounInfo.TryParse(Info, out var info) ? info : Info)}";
 
         }
 
