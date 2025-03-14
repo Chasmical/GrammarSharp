@@ -16,49 +16,57 @@ namespace Chasm.Grammar.Russian
         {
             info = default;
 
+            // Parse the noun's primary properties
             var code = RussianNounProperties.ParseInternal(ref parser, out RussianNounProperties properties);
-            if (code > ParseCode.Leftovers) return ParseCode.InvalidProperties;
+            if (code > ParseCode.Leftovers) return code;
+            parser.SkipWhitespaces();
 
             RussianDeclensionType declensionType = RussianDeclensionType.Noun;
             RussianNounProperties declensionProps = default;
             bool parsedDeclensionProps = false;
 
-            parser.SkipWhitespaces();
+            // See if the noun has some special declension properties
             bool hasEnteredDeclensionBraces = parser.Skip('<');
-
             if (hasEnteredDeclensionBraces)
             {
                 if (parser.Skip('п'))
                 {
-                    // adjective declension
+                    // A noun using adjective declension
                     declensionType = RussianDeclensionType.Adjective;
-                }
-                else if (parser.Skip('м', 'с'))
-                {
-                    // pronoun declension
-                    declensionType = RussianDeclensionType.Pronoun;
                 }
                 else
                 {
-                    // noun declension (different declension gender or animacy)
+                    // A noun using noun declension (but with different gender and/or animacy)
                     code = RussianNounProperties.ParseInternal(ref parser, out declensionProps);
-                    if (code > ParseCode.Leftovers) return ParseCode.InvalidProperties;
+                    if (code > ParseCode.Leftovers) return code;
                     parsedDeclensionProps = true;
 
-                    // Declension properties cannot have tantums (?)
-                    if (declensionProps.IsTantum) throw new NotImplementedException();
-                    // Pass on the main properties' plurale tantum
-                    if (properties.IsPluraleTantum) declensionProps.IsPluraleTantum = true;
+                    // Declension properties cannot have tantums
+                    if (declensionProps.IsTantum) return ParseCode.InvalidTantums;
+                    // But still, pass on the main properties' tantums for correct count
+                    declensionProps.CopyTantumsFrom(properties);
                 }
-
                 parser.SkipWhitespaces();
             }
 
+            // Parse the noun's declension type/class/info
             code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension);
-            if (code > ParseCode.Leftovers) return ParseCode.InvalidDeclension;
+            if (code > ParseCode.Leftovers) return code;
 
+            // Set the declension's type, and set special declension properties
             declension.Type = declensionType;
             if (parsedDeclensionProps) declension.SpecialNounProperties = declensionProps;
+
+            // Parse the singulare tantum indicator
+            if (parser.SkipAny('-', '–', '—'))
+            {
+                if (properties.IsTantum) return ParseCode.InvalidTantums;
+                properties.IsSingulareTantum = true;
+            }
+
+            // Ensure the declension braces were closed properly
+            if (hasEnteredDeclensionBraces && !parser.Skip('>'))
+                return ParseCode.UnclosedBraces;
 
             info = new(properties, declension);
             return ParseCode.Success;

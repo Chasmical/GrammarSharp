@@ -18,6 +18,9 @@ namespace Chasm.Grammar.Russian
         public const string InvalidStressPrime = "";
         public const string InvalidProperties = "";
         public const string InvalidDeclension = "";
+        public const string InvalidTantums = "";
+
+        public const string UnclosedBraces = "";
 
         [Pure] public static string GetMessage(this ParseCode code) => code switch
         {
@@ -33,6 +36,9 @@ namespace Chasm.Grammar.Russian
             ParseCode.InvalidStressPrime => InvalidStressPrime,
             ParseCode.InvalidProperties => InvalidProperties,
             ParseCode.InvalidDeclension => InvalidDeclension,
+            ParseCode.InvalidTantums => InvalidTantums,
+
+            ParseCode.UnclosedBraces => UnclosedBraces,
 
             // dotcover disable next line
             _ => throw new ArgumentException(code + " error code is not supposed to have a message."),

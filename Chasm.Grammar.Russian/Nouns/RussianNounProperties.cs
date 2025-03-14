@@ -19,7 +19,12 @@ namespace Chasm.Grammar.Russian
         public RussianGender Gender
         {
             readonly get => (RussianGender)(_data & 0b_000_00_011);
-            set => _data = (byte)((_data & 0b_111_11_100) | (int)value);
+            set
+            {
+                if ((uint)value > (uint)RussianGender.Common)
+                    ThrowInvalidGender((int)value);
+                _data = (byte)((_data & 0b_111_11_100) | (int)value);
+            }
         }
         public bool IsAnimate
         {
@@ -47,7 +52,7 @@ namespace Chasm.Grammar.Russian
             }
         }
 
-        internal RussianNounProperties(byte data)
+        private RussianNounProperties(byte data)
             => _data = data;
 
         public RussianNounProperties(char gender, bool isAnimate)
@@ -57,12 +62,13 @@ namespace Chasm.Grammar.Russian
         public RussianNounProperties(RussianGender gender, bool isAnimate, RussianNounFlags flags)
         {
             if ((uint)gender > (uint)RussianGender.Common)
-                throw new InvalidEnumArgumentException(nameof(gender), (int)gender, typeof(RussianGender));
-            if (gender == RussianGender.Common && !isAnimate)
-                throw new ArgumentException("isAnimate must be true, if the gender is Common.", nameof(isAnimate));
+                ThrowInvalidGender((int)gender);
 
             _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0) | ((int)flags << 3));
         }
+
+        private static void ThrowInvalidGender(int gender)
+            => throw new InvalidEnumArgumentException(nameof(gender), gender, typeof(RussianGender));
 
         internal int ExtraData
         {
@@ -76,18 +82,22 @@ namespace Chasm.Grammar.Russian
         {
             // If it doesn't have a tantum, apply specified count
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
-            // Preserve animacy, convert Common to Feminine for correct endings, and add case as extra data
-            _data = (byte)((_data & 0b_100) | Math.Min(_data & 0b_011, (int)RussianGender.Feminine) | pluralFlag | ((int)@case << 5));
+            // Convert Common to Feminine gender for endings
+            int genderFlags = Math.Min(_data & 0b_011, (int)RussianGender.Feminine);
+            // Preserve animacy, and add case as extra data
+            _data = (byte)((_data & 0b_100) | pluralFlag | genderFlags | ((int)@case << 5));
         }
         internal void PrepareForAdjectiveDeclension(RussianCase @case, bool plural)
         {
             // If it doesn't have a tantum, apply specified count
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
             // If plural, use Common gender (lookup optimization)
-            int genderFlag = plural ? 0b_011 : Math.Min(_data & 0b_011, (int)RussianGender.Feminine);
+            int genderFlags = pluralFlag != 0 ? 0b_011 : Math.Min(_data & 0b_011, (int)RussianGender.Feminine);
             // Preserve animacy, and add case as extra data
-            _data = (byte)((_data & 0b_100) | pluralFlag | genderFlag | ((int)@case << 5));
+            _data = (byte)((_data & 0b_100) | pluralFlag | genderFlags | ((int)@case << 5));
         }
+        internal void CopyTantumsFrom(RussianNounProperties other)
+            => _data = (byte)((_data & 0b_111_00_111) | (other._data & 0b_000_11_000));
 
         internal readonly bool IsNominativeNormalized
         {

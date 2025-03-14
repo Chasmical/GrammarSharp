@@ -15,5 +15,8 @@
         InvalidStressPrime,
         InvalidProperties,
         InvalidDeclension,
+        InvalidTantums,
+
+        UnclosedBraces,
     }
 }

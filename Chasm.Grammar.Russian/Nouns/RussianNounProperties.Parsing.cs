@@ -14,36 +14,57 @@ namespace Chasm.Grammar.Russian
         [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianNounProperties properties)
         {
             properties = default;
-            RussianGender gender;
+            RussianNounFlags flags = 0;
 
-            if (parser.Skip('м'))
+            var code = ParseSimpleGenderAndAnimacy(ref parser, out RussianGender gender, out bool isAnimate);
+            if (code != ParseCode.Success) return code;
+
+            if (gender == RussianGender.Masculine && !isAnimate && parser.Skip('н'))
             {
-                gender = RussianGender.Masculine;
+                parser.Skip('.');
+                flags = RussianNounFlags.IsPluraleTantum;
 
-                if (parser.Skip('н'))
+                if (parser.Skip(' ', 'о', 'т', ' '))
                 {
-                    parser.Skip('.');
-                    properties = new(gender, false, RussianNounFlags.IsPluraleTantum);
-                    return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
+                    code = ParseSimpleGenderAndAnimacy(ref parser, out gender, out isAnimate);
+                    if (code != ParseCode.Success) return code;
                 }
+                else
+                    gender = RussianGender.Common;
             }
+
+            properties = new(gender, isAnimate, flags);
+            return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
+        }
+
+        [Pure] private static ParseCode ParseSimpleGenderAndAnimacy(ref SpanParser parser, out RussianGender gender, out bool isAnimate)
+        {
+            if (parser.Skip('м'))
+                gender = RussianGender.Masculine;
             else if (parser.Skip('ж'))
                 gender = RussianGender.Feminine;
             else if (parser.Skip('с'))
                 gender = RussianGender.Neuter;
             else
-                return ParseCode.GenderNotFound;
-
-            bool isAnimate = parser.Skip('о');
-
-            if (isAnimate && gender != RussianGender.Neuter)
             {
-                if (parser.Skip('-', gender is RussianGender.Masculine ? 'ж' : 'м', 'о'))
-                    gender = RussianGender.Common;
+                gender = default;
+                isAnimate = false;
+                return ParseCode.GenderNotFound;
             }
 
-            properties = new(gender, isAnimate, 0);
-            return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
+            isAnimate = parser.Skip('о');
+            if (gender != RussianGender.Neuter && parser.Skip('-'))
+            {
+                if (parser.Skip(gender is RussianGender.Masculine ? 'ж' : 'м'))
+                {
+                    gender = RussianGender.Common;
+                    isAnimate |= parser.Skip('о');
+                }
+                else
+                    parser.position--;
+            }
+            // Note: does not check if parser is done reading
+            return ParseCode.Success;
         }
 
         [Pure] public static RussianNounProperties Parse(string text)
