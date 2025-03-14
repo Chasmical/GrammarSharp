@@ -69,7 +69,7 @@ namespace Chasm.Grammar.Russian
                 return ParseCode.UnclosedBraces;
 
             info = new(properties, declension);
-            return ParseCode.Success;
+            return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
         }
 
         [Pure] public static RussianNounInfo Parse(string text)
