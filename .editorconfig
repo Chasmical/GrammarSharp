@@ -29,6 +29,10 @@ dotnet_diagnostic.IDE0008.severity = none
 # - Having method bodies is more convenient when writing code with #if directives
 dotnet_diagnostic.IDE0022.severity = none
 
+# Disable 'if statement can be simplified' message
+# - Sometimes having separate if branches looks better
+dotnet_diagnostic.IDE0045.severity = none
+
 # Disable 'Slice can be simplified' message
 # - Not all target frameworks support ranges, and using the range syntax doesn't have any significant benefits
 dotnet_diagnostic.IDE0057.severity = none
@@ -54,3 +58,7 @@ dotnet_diagnostic.IDE0065.severity = none
 
 # Disable 'Namespace does not match folder structure' message
 dotnet_diagnostic.IDE0130.severity = none
+
+# Disable 'Theory data member returns object[]. Consider using TheoryData<>' message
+# - We have our own theory data class in this solution
+dotnet_diagnostic.xUnit1042.severity = none
