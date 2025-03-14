@@ -63,15 +63,21 @@ namespace Chasm.Grammar.Russian
             readonly get => (RussianDeclensionFlags)_flags;
             set => _flags = (byte)value;
         }
+
         public RussianNounProperties? SpecialNounProperties
         {
             // This property uses the field's ExtraData as a non-null value flag
-            readonly get => _nounProps.ExtraData != 0 ? _nounProps : null;
+            readonly get => _nounProps.ExtraData == 1 ? _nounProps : null;
             set
             {
                 _nounProps = value.GetValueOrDefault();
                 _nounProps.ExtraData = value.HasValue ? 1 : 0;
             }
+        }
+        public bool IsReflexiveAdjective
+        {
+            readonly get => _nounProps.ExtraData == 2;
+            set => _nounProps.ExtraData = value ? 2 : 0;
         }
 
         public readonly bool IsZero => StemType == 0;

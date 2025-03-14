@@ -26,12 +26,10 @@ namespace Chasm.Grammar.Russian
             else // if(declension.Type == RussianDeclensionType.Adjective)
             {
                 props = Info.Properties;
-                // Create RussianAdjectiveInfo, retrieve "is reflexive adjective" flag from props
-                RussianAdjectiveInfo info = new(declension, props);
                 // Prepare the props for adjective declension, store case in props
                 props.PrepareForAdjectiveDeclension(@case, plural);
 
-                return RussianAdjective.DeclineCore(Stem, info, props);
+                return RussianAdjective.DeclineCore(Stem, new(declension), props);
             }
         }
 

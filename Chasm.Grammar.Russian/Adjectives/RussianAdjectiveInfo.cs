@@ -19,13 +19,7 @@ namespace Chasm.Grammar.Russian
                     throw new ArgumentException($"Declension {declension} is not valid for adjectives.", nameof(declension));
             }
             Declension = declension;
-        }
-
-        internal RussianAdjectiveInfo(RussianDeclension declension, RussianNounProperties nounProps)
-        {
-            Declension = declension;
-            // RussianNoun treats ExtraData = 1 as "is reflexive" flag
-            IsReflexive = nounProps.ExtraData != 0;
+            IsReflexive = declension.IsReflexiveAdjective;
         }
 
         [Pure] public readonly bool Equals(RussianAdjectiveInfo other)
