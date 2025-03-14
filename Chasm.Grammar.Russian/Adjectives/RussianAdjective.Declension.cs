@@ -13,15 +13,16 @@ namespace Chasm.Grammar.Russian
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            // Prepare information for declension, and use the appropriate declension method
-            switch (Info.Declension.Type)
+            if (declension.Type == RussianDeclensionType.Adjective)
             {
-                case RussianDeclensionType.Adjective:
-                    props.PrepareForAdjectiveDeclension(@case, plural);
-                    return DeclineCore(Stem, Info, props);
+                // Prepare the props for adjective declension, store case in props
+                props.PrepareForAdjectiveDeclension(@case, plural);
 
-                default:
-                    throw new NotImplementedException("Declension for other types not implemented yet.");
+                return DeclineCore(Stem, Info, props);
+            }
+            else
+            {
+                throw new NotImplementedException("Declension for pronoun-like adjectives not implemented yet.");
             }
         }
         [Pure] public string DeclineShort(bool plural, SubjProps properties)
@@ -43,12 +44,8 @@ namespace Chasm.Grammar.Russian
 
             // TODO: transformations
 
-            // Move 'ся' to the end, if it's a reflexive adjective
-            if (results.StemLength > 2 && results.Stem[^2] == 'с' && results.Stem[^1] == 'я')
-            {
-                results.ShrinkStemBy(2);
-                results.AppendToEnding('с', 'я');
-            }
+            // Add 'ся' to the end, if it's a reflexive adjective
+            if (info.IsReflexive) results.AppendToEnding('с', 'я');
 
             return results.Result.ToString();
         }

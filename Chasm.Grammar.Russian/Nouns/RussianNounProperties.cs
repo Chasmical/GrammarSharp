@@ -70,6 +70,10 @@ namespace Chasm.Grammar.Russian
         private static void ThrowInvalidGender(int gender)
             => throw new InvalidEnumArgumentException(nameof(gender), gender, typeof(RussianGender));
 
+        // Where ExtraData is used and what for:
+        // - in RussianDeclension, as a "non-null special props" flag.
+        // - in RussianNoun, as "is reflexive adjective" flag, to pass it on to RussianAdjectiveInfo during declension.
+        // - when declining nouns and adjectives, to store case.
         internal int ExtraData
         {
             readonly get => _data >> 5;

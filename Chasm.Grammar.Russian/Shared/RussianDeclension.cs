@@ -87,10 +87,11 @@ namespace Chasm.Grammar.Russian
             _flags = (byte)flags;
         }
 
-        [Pure] public readonly string ExtractStem(string word)
-            => ExtractStem(word.AsSpan()).ToString();
-        [Pure] public readonly ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
+        [Pure] public readonly string ExtractStem(string word, out bool isAdjReflexive)
+            => ExtractStem(word.AsSpan(), out isAdjReflexive).ToString();
+        [Pure] public readonly ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word, out bool isAdjReflexive)
         {
+            isAdjReflexive = false;
             if (IsZero) return word;
 
             switch (Type)
@@ -100,10 +101,13 @@ namespace Chasm.Grammar.Russian
                     return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
 
                 case RussianDeclensionType.Adjective:
-                    // Remove the two ending's letters (treat 'ся' as part of the stem)
+                    // If adjective ends with 'ся', remove the last four letters
                     if (word.Length > 4 && word[^2] == 'с' && word[^1] == 'я')
-                        return word[..^4].ToString() + word[^2..].ToString();
-
+                    {
+                        isAdjReflexive = true;
+                        return word[..^4];
+                    }
+                    // Otherwise, remove just the last two letters
                     return word.Length > 2 ? word[..^2] : word;
 
                 default:

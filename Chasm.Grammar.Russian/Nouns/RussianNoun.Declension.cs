@@ -13,22 +13,25 @@ namespace Chasm.Grammar.Russian
             NounDecl declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            // Prepare information for declension, and use the appropriate declension method
             NounProps props;
-            switch (Info.Declension.Type)
+            if (declension.Type == RussianDeclensionType.Noun)
             {
-                case RussianDeclensionType.Noun:
-                    props = Info.Declension.SpecialNounProperties ?? Info.Properties;
-                    props.PrepareForNounDeclension(@case, plural);
-                    return DeclineCore(Stem, declension, props);
+                // Use special declension properties, if they're specified
+                props = declension.SpecialNounProperties ?? Info.Properties;
+                // Prepare the props for noun declension, store case in props
+                props.PrepareForNounDeclension(@case, plural);
 
-                case RussianDeclensionType.Adjective:
-                    props = Info.Properties;
-                    props.PrepareForAdjectiveDeclension(@case, plural);
-                    return RussianAdjective.DeclineCore(Stem, new(declension), props);
+                return DeclineCore(Stem, declension, props);
+            }
+            else // if(declension.Type == RussianDeclensionType.Adjective)
+            {
+                props = Info.Properties;
+                // Create RussianAdjectiveInfo, retrieve "is reflexive adjective" flag from props
+                RussianAdjectiveInfo info = new(declension, props);
+                // Prepare the props for adjective declension, store case in props
+                props.PrepareForAdjectiveDeclension(@case, plural);
 
-                default:
-                    throw new NotImplementedException("Declension for other types not implemented yet.");
+                return RussianAdjective.DeclineCore(Stem, info, props);
             }
         }
 

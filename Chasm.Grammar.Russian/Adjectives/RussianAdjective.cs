@@ -1,7 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace Chasm.Grammar.Russian
+﻿namespace Chasm.Grammar.Russian
 {
     public sealed partial class RussianAdjective
     {
@@ -10,7 +7,7 @@ namespace Chasm.Grammar.Russian
 
         public RussianAdjective(string word, RussianAdjectiveInfo info)
         {
-            Stem = info.Declension.IsZero ? word : info.Declension.ExtractStem(word);
+            Stem = info.Declension.IsZero ? word : info.Declension.ExtractStem(word, out info.IsReflexive);
             Info = info;
         }
 

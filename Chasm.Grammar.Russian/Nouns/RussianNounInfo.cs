@@ -11,6 +11,13 @@ namespace Chasm.Grammar.Russian
 
         public RussianNounInfo(RussianNounProperties properties, RussianDeclension declension)
         {
+            if (declension.Type is not RussianDeclensionType.Noun and not RussianDeclensionType.Adjective)
+            {
+                if (declension.IsZero)
+                    declension.Type = RussianDeclensionType.Noun;
+                else
+                    throw new ArgumentException($"Declension {declension} is not valid for nouns.", nameof(declension));
+            }
             Properties = properties;
             Declension = declension;
         }
