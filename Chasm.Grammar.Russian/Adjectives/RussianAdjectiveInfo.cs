@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    public struct RussianAdjectiveInfo : IEquatable<RussianAdjectiveInfo>
+    public partial struct RussianAdjectiveInfo : IEquatable<RussianAdjectiveInfo>
     {
         public RussianDeclension Declension;
         public bool IsReflexive;
