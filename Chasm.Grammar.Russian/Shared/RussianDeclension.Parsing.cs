@@ -10,9 +10,9 @@ namespace Chasm.Grammar.Russian
         [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianDeclension declension)
         {
             SpanParser parser = new SpanParser(text);
-            return ParseInternal(ref parser, out declension);
+            return ParseInternal(ref parser, out declension, (RussianDeclensionType)(-1));
         }
-        [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianDeclension declension)
+        [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianDeclension declension, RussianDeclensionType type)
         {
             declension = default;
 
@@ -51,7 +51,7 @@ namespace Chasm.Grammar.Russian
             if (parser.Skip(',', ' ', 'ё') || parser.Skip(' ', 'ё'))
                 flags |= RussianDeclensionFlags.AlternatingYo;
 
-            declension = new RussianDeclension(RussianDeclensionType.Noun, stemType, stressPattern, flags);
+            declension = new RussianDeclension(type, stemType, stressPattern, flags);
             return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
         }
 

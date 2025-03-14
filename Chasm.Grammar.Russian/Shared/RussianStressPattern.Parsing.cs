@@ -69,6 +69,7 @@ namespace Chasm.Grammar.Russian
                             return ParseCode.InvalidStressPrime;
                     }
                 }
+                // Note: does not check if parser is done reading
                 return ParseCode.Success;
             }
 

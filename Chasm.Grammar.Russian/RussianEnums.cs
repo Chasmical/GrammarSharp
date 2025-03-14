@@ -52,6 +52,7 @@ namespace Chasm.Grammar.Russian
     }
     public enum RussianDeclensionType
     {
+        Unknown,
         Noun,
         Adjective,
         Pronoun,

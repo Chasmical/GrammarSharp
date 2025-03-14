@@ -82,6 +82,8 @@ namespace Chasm.Grammar.Russian
         {
             switch (type)
             {
+                case RussianDeclensionType.Unknown:
+                    break;
                 case RussianDeclensionType.Noun:
                     NormalizeForNoun(paramName);
                     break;
@@ -92,7 +94,7 @@ namespace Chasm.Grammar.Russian
                     NormalizeForPronoun(paramName);
                     break;
                 default:
-                    throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType));
+                    throw new InvalidEnumArgumentException(paramName, (int)type, typeof(RussianDeclensionType));
             }
         }
         private void NormalizeForNoun(string paramName)

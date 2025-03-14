@@ -14,7 +14,7 @@ namespace Chasm.Grammar.Russian
             if (declension.Type is not RussianDeclensionType.Noun and not RussianDeclensionType.Adjective)
             {
                 if (declension.IsZero)
-                    declension.Type = RussianDeclensionType.Noun;
+                    declension = new(RussianDeclensionType.Noun, 0, default, 0);
                 else
                     throw new ArgumentException($"Declension {declension} is not valid for nouns.", nameof(declension));
             }

@@ -50,11 +50,10 @@ namespace Chasm.Grammar.Russian
             }
 
             // Parse the noun's declension type/class/info
-            code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension);
+            code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension, declensionType);
             if (code > ParseCode.Leftovers) return code;
 
-            // Set the declension's type, and set special declension properties
-            declension.Type = declensionType;
+            // Set the special declension properties
             if (parsedDeclensionProps) declension.SpecialNounProperties = declensionProps;
 
             // Parse the singulare tantum indicator

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -34,21 +33,11 @@ namespace Chasm.Grammar.Russian
             readonly get => _types & 0x0F;
             set
             {
-                if ((uint)value > 8)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, ""); // TODO: exception
+                ValidateStemType(Type, value);
                 _types = (byte)((_types & 0xF0) | value);
             }
         }
-        public RussianDeclensionType Type
-        {
-            readonly get => (RussianDeclensionType)(_types >> 4);
-            set
-            {
-                if ((uint)value > (uint)RussianDeclensionType.Pronoun)
-                    throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(RussianDeclensionType));
-                _types = (byte)((_types & 0x0F) | ((int)value << 4));
-            }
-        }
+        public readonly RussianDeclensionType Type => (RussianDeclensionType)(_types >> 4);
         public RussianStressPattern StressPattern
         {
             readonly get => _stress;
@@ -84,13 +73,30 @@ namespace Chasm.Grammar.Russian
 
         public RussianDeclension(RussianDeclensionType type, int stemType, RussianStressPattern stress, RussianDeclensionFlags flags)
         {
-            if ((uint)stemType > 8)
-                throw new ArgumentOutOfRangeException(nameof(stemType), stemType, ""); // TODO: exception
-
+            ValidateStemType(type, stemType);
             stress.Normalize(type, nameof(stress));
+
             _types = (byte)(stemType | ((int)type << 4));
             _stress = stress;
             _flags = (byte)flags;
+        }
+
+        private static void ValidateStemType(
+            RussianDeclensionType type, int stemType,
+            [CallerArgumentExpression(nameof(stemType))] string? paramName = null
+        )
+        {
+            // Stem type 8 is exclusive to nouns
+            if ((uint)stemType > (type == RussianDeclensionType.Noun ? 8 : 7))
+                Throw(stemType, type, paramName);
+
+            static void Throw(int stemType, RussianDeclensionType type, string? paramName)
+            {
+                string msg = stemType == 8
+                    ? "Stem type 8 is only valid for noun declensions."
+                    : $"Stem type {stemType} is not valid for {type} declension.";
+                throw new ArgumentOutOfRangeException(paramName, stemType, msg);
+            }
         }
 
         [Pure] public readonly string ExtractStem(string word, out bool isAdjReflexive)

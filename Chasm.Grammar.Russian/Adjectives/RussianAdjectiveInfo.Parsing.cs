@@ -38,11 +38,8 @@ namespace Chasm.Grammar.Russian
             }
 
             // Parse the adjective's declension type/class/info
-            var code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension);
+            var code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension, declensionType);
             if (code > ParseCode.Leftovers) return code;
-
-            // Set the declension's type
-            declension.Type = declensionType;
 
             // Ensure the declension braces were closed properly
             if (hasEnteredDeclensionBraces && !parser.Skip('>'))
