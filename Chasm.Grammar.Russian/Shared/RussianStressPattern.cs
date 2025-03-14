@@ -1,20 +1,37 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    public readonly partial struct RussianStressPattern : IEquatable<RussianStressPattern>
+    public partial struct RussianStressPattern : IEquatable<RussianStressPattern>
     {
         // Representation (_data field):
         //   xxxx_1111 - main stress type
         //   1111_xxxx - alternative stress type
         //
-        private readonly byte _data;
+        private byte _data;
 
-        public RussianStress Main => (RussianStress)(_data & 0x0F);
-        public RussianStress Alt => (RussianStress)(_data >> 4);
+        public RussianStress Main
+        {
+            readonly get => (RussianStress)(_data & 0x0F);
+            set
+            {
+                ValidateStress(value);
+                _data = (byte)((_data & 0xF0) | (int)value);
+            }
+        }
+        public RussianStress Alt
+        {
+            readonly get => (RussianStress)(_data >> 4);
+            set
+            {
+                ValidateStress(value);
+                _data = (byte)((_data & 0x0F) | ((int)value << 4));
+            }
+        }
 
         private RussianStressPattern(byte data)
             => _data = data;
@@ -23,10 +40,8 @@ namespace Chasm.Grammar.Russian
             : this(main, RussianStress.Zero) { }
         public RussianStressPattern(RussianStress main, RussianStress alt)
         {
-            if ((uint)main > (uint)RussianStress.Fpp)
-                throw new InvalidEnumArgumentException(nameof(main), (int)main, typeof(RussianStress));
-            if ((uint)alt > (uint)RussianStress.Fpp)
-                throw new InvalidEnumArgumentException(nameof(alt), (int)alt, typeof(RussianStress));
+            ValidateStress(main);
+            ValidateStress(alt);
 
             _data = (byte)((int)main | ((int)alt << 4));
         }
@@ -36,17 +51,26 @@ namespace Chasm.Grammar.Russian
         public RussianStressPattern(ReadOnlySpan<char> stressPattern)
             => this = Parse(stressPattern);
 
-        public void Deconstruct(out RussianStress main, out RussianStress alt)
+        private static void ValidateStress(RussianStress stress, [CallerArgumentExpression(nameof(stress))] string? paramName = null)
+        {
+            if ((uint)stress > (uint)RussianStress.Fpp)
+                Throw(stress, paramName);
+
+            static void Throw(RussianStress stress, string? paramName)
+                => throw new InvalidEnumArgumentException(paramName, (int)stress, typeof(RussianStress));
+        }
+
+        public readonly void Deconstruct(out RussianStress main, out RussianStress alt)
         {
             main = Main;
             alt = Alt;
         }
 
-        [Pure] public bool Equals(RussianStressPattern other)
+        [Pure] public readonly bool Equals(RussianStressPattern other)
             => _data == other._data;
-        [Pure] public override bool Equals([NotNullWhen(true)] object? obj)
+        [Pure] public readonly override bool Equals([NotNullWhen(true)] object? obj)
             => obj is RussianStressPattern other && Equals(other);
-        [Pure] public override int GetHashCode()
+        [Pure] public readonly override int GetHashCode()
             => _data;
 
         [Pure] public static bool operator ==(RussianStressPattern left, RussianStressPattern right)
@@ -54,7 +78,24 @@ namespace Chasm.Grammar.Russian
         [Pure] public static bool operator !=(RussianStressPattern left, RussianStressPattern right)
             => !(left == right);
 
-        [Pure] internal RussianStressPattern NormalizeForNoun(string paramName)
+        internal void Normalize(RussianDeclensionType type, string paramName)
+        {
+            switch (type)
+            {
+                case RussianDeclensionType.Noun:
+                    NormalizeForNoun(paramName);
+                    break;
+                case RussianDeclensionType.Adjective:
+                    NormalizeForAdjective(paramName);
+                    break;
+                case RussianDeclensionType.Pronoun:
+                    NormalizeForPronoun(paramName);
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType));
+            }
+        }
+        private void NormalizeForNoun(string paramName)
         {
             var (main, alt) = this;
 
@@ -66,9 +107,9 @@ namespace Chasm.Grammar.Russian
             if ((uint)main > (uint)RussianStress.F && ((uint)main & 1) != 0)
                 throw new ArgumentException($"{this} is not a valid stress pattern for nouns.", paramName);
 
-            return new((byte)main);
+            _data = (byte)((int)main | ((int)alt << 4));
         }
-        [Pure] internal RussianStressPattern NormalizeForAdjective(string paramName)
+        private void NormalizeForAdjective(string paramName)
         {
             var (main, alt) = this;
 
@@ -96,9 +137,9 @@ namespace Chasm.Grammar.Russian
             if (alt is > RussianStress.C and not (>= RussianStress.Ap and <= RussianStress.Cp) and not RussianStress.Cpp)
                 throw new ArgumentException($"{this} is not a valid stress pattern for adjectives.", paramName);
 
-            return new((byte)((int)main | ((int)alt << 4)));
+            _data = (byte)((int)main | ((int)alt << 4));
         }
-        [Pure] internal RussianStressPattern NormalizeForPronoun(string paramName)
+        private void NormalizeForPronoun(string paramName)
         {
             var (main, alt) = this;
 
@@ -109,9 +150,10 @@ namespace Chasm.Grammar.Russian
             if (main is > RussianStress.B and not RussianStress.F)
                 throw new ArgumentException($"{this} is not a valid stress pattern for pronouns.", paramName);
 
-            return new((byte)((int)main | ((int)alt << 4)));
+            _data = (byte)((int)main | ((int)alt << 4));
         }
-        [Pure] internal RussianStressPattern NormalizeForVerb(string paramName)
+
+        internal void NormalizeForVerb(string paramName)
         {
             var (main, alt) = this;
 
@@ -126,7 +168,7 @@ namespace Chasm.Grammar.Russian
             if (alt is > RussianStress.C and not RussianStress.Cp and not RussianStress.Cpp)
                 throw new ArgumentException($"{this} is not a valid stress pattern for verbs.", paramName);
 
-            return new((byte)((int)main | ((int)alt << 4)));
+            _data = (byte)((int)main | ((int)alt << 4));
         }
 
     }

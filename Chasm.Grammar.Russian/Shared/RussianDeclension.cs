@@ -52,7 +52,11 @@ namespace Chasm.Grammar.Russian
         public RussianStressPattern StressPattern
         {
             readonly get => _stress;
-            set => _stress = value;
+            set
+            {
+                value.Normalize(Type, nameof(value));
+                _stress = value;
+            }
         }
         public RussianDeclensionFlags Flags
         {
@@ -77,14 +81,7 @@ namespace Chasm.Grammar.Russian
             if ((uint)stemType > 8)
                 throw new ArgumentOutOfRangeException(nameof(stemType), stemType, ""); // TODO: exception
 
-            stress = type switch
-            {
-                RussianDeclensionType.Noun => stress.NormalizeForNoun(nameof(stress)),
-                RussianDeclensionType.Adjective => stress.NormalizeForAdjective(nameof(stress)),
-                RussianDeclensionType.Pronoun => stress.NormalizeForPronoun(nameof(stress)),
-                _ => throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType)),
-            };
-
+            stress.Normalize(type, nameof(stress));
             _types = (byte)(stemType | ((int)type << 4));
             _stress = stress;
             _flags = (byte)flags;

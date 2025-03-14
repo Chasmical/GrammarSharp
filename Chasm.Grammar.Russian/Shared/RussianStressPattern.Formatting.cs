@@ -3,9 +3,9 @@ using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    public readonly partial struct RussianStressPattern
+    public partial struct RussianStressPattern
     {
-        [Pure] public override string ToString()
+        [Pure] public readonly override string ToString()
         {
             if (_data == 0) return "";
 
@@ -18,7 +18,7 @@ namespace Chasm.Grammar.Russian
         [Pure] private static string ToStringBoth(string[] lookup, RussianStress main, RussianStress alt)
             => $"{lookup[(int)main]}/{lookup[(int)alt]}";
 
-        [Pure] public string ToString(ReadOnlySpan<char> format)
+        [Pure] public readonly string ToString(ReadOnlySpan<char> format)
         {
             if (_data == 0) return "";
 

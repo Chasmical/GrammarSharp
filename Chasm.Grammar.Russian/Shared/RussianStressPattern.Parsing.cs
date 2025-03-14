@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    public readonly partial struct RussianStressPattern
+    public partial struct RussianStressPattern
     {
         [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianStressPattern pattern)
         {
