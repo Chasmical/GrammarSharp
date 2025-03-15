@@ -12,7 +12,7 @@ namespace Chasm.Grammar.Tests
         public void Declension(DeclensionFixture fixture)
         {
             var info = RussianAdjectiveInfo.Parse(fixture.Info);
-            RussianAdjective adjective = new RussianAdjective(fixture.Stem, info);
+            var adjective = new RussianAdjective(fixture.Stem, info);
 
             Output.WriteLine($"{adjective.Stem}, {info}\n");
 
@@ -38,6 +38,35 @@ namespace Chasm.Grammar.Tests
             Output.WriteLine(result.Split(" // ").Join("\n"));
 
             fixture.AssertResult(result);
+        }
+
+        [Fact]
+        public void DifficultShortForms()
+        {
+            var info = RussianAdjectiveInfo.Parse("п 1a—");
+            var adjective = new RussianAdjective("углекислый", info);
+
+            Assert.Equal("углекисла", adjective.DeclineShort(false, new('f', true)));
+            Assert.Equal("углекисла", adjective.DeclineShort(false, new('f', true), true));
+            Assert.Null(adjective.DeclineShort(false, new('m', true)));
+            Assert.Equal("углекисл", adjective.DeclineShort(false, new('m', true), true));
+
+            info = RussianAdjectiveInfo.Parse("п 4a✕");
+            adjective = new RussianAdjective("лучший", info);
+
+            Assert.Null(adjective.DeclineShort(false, new('f', true)));
+            Assert.Equal("лучша", adjective.DeclineShort(false, new('f', true), true));
+            Assert.Null(adjective.DeclineShort(false, new('m', true)));
+            Assert.Equal("лучш", adjective.DeclineShort(false, new('m', true), true));
+
+            info = RussianAdjectiveInfo.Parse("п 1b⌧");
+            adjective = new RussianAdjective("золотой", info);
+
+            Assert.Null(adjective.DeclineShort(false, new('f', true)));
+            Assert.Equal("золота", adjective.DeclineShort(false, new('f', true), true));
+            Assert.Null(adjective.DeclineShort(false, new('m', true)));
+            Assert.Null(adjective.DeclineShort(false, new('m', true), true));
+
         }
 
     }
