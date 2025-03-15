@@ -14,7 +14,6 @@ namespace Chasm.Grammar.Tests
             var info = RussianAdjectiveInfo.Parse(fixture.Info);
             RussianAdjective adjective = new RussianAdjective(fixture.Stem, info);
 
-            string t = info.ToString();
             Output.WriteLine($"{adjective.Stem}, {info}\n");
 
             StringBuilder sb = new();
