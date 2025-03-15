@@ -7,9 +7,12 @@ namespace Chasm.Grammar.Russian
     public partial struct RussianAdjectiveInfo : IEquatable<RussianAdjectiveInfo>
     {
         public RussianDeclension Declension;
-        public bool IsReflexive;
+        public RussianAdjectiveFlags Flags;
 
         public RussianAdjectiveInfo(RussianDeclension declension)
+            : this(declension, declension.IsReflexiveAdjective ? RussianAdjectiveFlags.IsReflexive : 0) { }
+
+        public RussianAdjectiveInfo(RussianDeclension declension, RussianAdjectiveFlags flags)
         {
             if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
             {
@@ -19,7 +22,10 @@ namespace Chasm.Grammar.Russian
                     throw new ArgumentException($"Declension {declension} is not valid for adjectives.", nameof(declension));
             }
             Declension = declension;
-            IsReflexive = declension.IsReflexiveAdjective;
+
+            if (flags != 0 && declension.Type != RussianDeclensionType.Adjective)
+                throw new ArgumentException("Only pure adjectives (with adjective declension) can have flags.", nameof(flags));
+            Flags = flags;
         }
 
         [Pure] public readonly bool Equals(RussianAdjectiveInfo other)

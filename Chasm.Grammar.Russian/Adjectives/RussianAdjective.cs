@@ -7,7 +7,17 @@
 
         public RussianAdjective(string word, RussianAdjectiveInfo info)
         {
-            Stem = info.Declension.IsZero ? word : info.Declension.ExtractStem(word, out info.IsReflexive);
+            string stem;
+
+            if (info.Declension.IsZero)
+                stem = word;
+            else
+            {
+                stem = info.Declension.ExtractStem(word, out bool isAdjReflexive);
+                if (isAdjReflexive) info.Flags |= RussianAdjectiveFlags.IsReflexive;
+            }
+
+            Stem = stem;
             Info = info;
         }
 

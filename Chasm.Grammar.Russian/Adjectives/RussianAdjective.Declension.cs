@@ -25,8 +25,28 @@ namespace Chasm.Grammar.Russian
                 throw new NotImplementedException("Declension for pronoun-like adjectives not implemented yet.");
             }
         }
-        [Pure] public string DeclineShort(bool plural, SubjProps properties)
-            => Decline((RussianCase)6, plural, properties);
+        [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
+        {
+            if (Info.Declension.Type != RussianDeclensionType.Adjective) return null;
+
+            RussianAdjectiveFlags flags = Info.Flags & RussianAdjectiveFlags.BoxedCross;
+            if (flags != 0)
+            {
+                if (
+                    // If not forced, and there are difficulties forming short form for all types (cross and boxed cross);
+                    !force && flags >= RussianAdjectiveFlags.Cross ||
+
+                    // At this point, flags only concern the masculine short form (Minus or BoxedCross):
+                    // - if force is false, return null always (Minus or BoxedCross) if masc (no short form, or difficulty)
+                    // - if force is true, return null on BoxedCross if masc (no short form)
+                    (!force || flags == RussianAdjectiveFlags.BoxedCross) &&
+                    !plural && !properties.IsPluraleTantum && properties.Gender == RussianGender.Masculine
+                )
+                    return null; // (either no short form, or difficulty forming)
+            }
+
+            return Decline((RussianCase)6, plural, properties);
+        }
 
         [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, AdjInfo info, SubjProps props)
         {
@@ -45,7 +65,8 @@ namespace Chasm.Grammar.Russian
             // TODO: transformations
 
             // Add 'ся' to the end, if it's a reflexive adjective
-            if (info.IsReflexive) results.AppendToEnding('с', 'я');
+            if ((info.Flags & RussianAdjectiveFlags.IsReflexive) != 0)
+                results.AppendToEnding('с', 'я');
 
             return results.Result.ToString();
         }

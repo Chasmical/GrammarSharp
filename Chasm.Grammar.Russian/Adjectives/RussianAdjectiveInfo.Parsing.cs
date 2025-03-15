@@ -41,11 +41,39 @@ namespace Chasm.Grammar.Russian
             var code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension, declensionType);
             if (code > ParseCode.Leftovers) return code;
 
-            // Ensure the declension braces were closed properly
-            if (hasEnteredDeclensionBraces && !parser.Skip('>'))
-                return ParseCode.UnclosedBraces;
+            RussianAdjectiveFlags flags = 0;
 
-            info = new(declension);
+            if (hasEnteredDeclensionBraces)
+            {
+                // Ensure the declension braces were closed properly
+                if (!parser.Skip('>')) return ParseCode.UnclosedBraces;
+            }
+            else
+            {
+                // Only "pure" adjectives have short form and comparative indicators
+
+                // Parse the short form difficulty indicators
+                switch (parser.Peek())
+                {
+                    case '-' or '–' or '—':
+                        parser.Skip();
+                        flags = RussianAdjectiveFlags.Minus;
+                        break;
+                    case 'X' or '✕':
+                        parser.Skip();
+                        flags = RussianAdjectiveFlags.Cross;
+                        break;
+                    case '⌧':
+                        parser.Skip();
+                        flags = RussianAdjectiveFlags.BoxedCross;
+                        break;
+                }
+                // Parse the "no comparative form" indicator
+                if (parser.Skip('~'))
+                    flags |= RussianAdjectiveFlags.NoComparativeForm;
+            }
+
+            info = new(declension, flags);
             return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
         }
 
