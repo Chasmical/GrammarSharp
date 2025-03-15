@@ -42,16 +42,28 @@ namespace Chasm.Grammar.Russian
 
             return stress switch
             {
-                // Full-form and short-form:
+                // Full form and short form:
                 RussianStress.A => false,
                 RussianStress.B => true,
-                // Short-form only:
+                // Short form only:
                 RussianStress.C => props.Gender is RussianGender.Feminine,
+
+                // Stresses with primes are kind of ambiguous...
+                //   Ap:  F - ???,    N - stem,   Pl - stem
+                //   Bp:  F - ending, N - ending, Pl - ???
+                //   Cp:  F - ending, N - stem,   Pl - ???
+                //   Cpp: F - ending, N - ???,    Pl - ???
+                //
+                // I decided to set these values for now:
+                //   Ap:  F - stem,   N - stem,   Pl - stem
+                //   Bp:  F - ending, N - ending, Pl - ending
+                //   Cp:  F - ending, N - stem,   Pl - ending
+                //   Cpp: F - ending, N - ending, Pl - ending
+                //
                 RussianStress.Ap => false,
-                RussianStress.Bp => props.Gender is RussianGender.Neuter or RussianGender.Feminine,
-                // TODO: ??
-                RussianStress.Cp => props.Gender is RussianGender.Feminine,
-                RussianStress.Cpp => props.Gender is RussianGender.Feminine,
+                RussianStress.Bp => props.Gender is RussianGender.Neuter or RussianGender.Feminine or RussianGender.Common,
+                RussianStress.Cp => props.Gender is RussianGender.Feminine or RussianGender.Common,
+                RussianStress.Cpp => props.Gender is RussianGender.Neuter or RussianGender.Feminine or RussianGender.Common,
 
                 _ => throw new InvalidOperationException($"{stress} is not a valid stress pattern for adjectives."),
             };
