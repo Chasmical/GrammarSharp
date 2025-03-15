@@ -293,11 +293,11 @@ namespace Chasm.Grammar.Russian
                         return;
                     }
 
-                    // 3)c) unstressed or before 'ц' - 'е', after hissing consonants - 'о', otherwise stressed 'ё'
+                    // 3)c) if stressed, 'ё' (but after hissing consonants - 'о'); otherwise (or after 'ц'), 'е'
                     buffer.InsertBetweenTwoLastStemChars(
-                        lastChar == 'ц' || !IsEndingStressed(declension, props) ? 'е'
-                        : RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о'
-                        : 'ё'
+                        lastChar != 'ц' && IsEndingStressed(declension, props)
+                            ? RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о' : 'ё'
+                            : 'е'
                     );
                 }
             }
