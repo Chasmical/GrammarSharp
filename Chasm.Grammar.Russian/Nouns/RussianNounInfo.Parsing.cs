@@ -43,8 +43,6 @@ namespace Chasm.Grammar.Russian
 
                     // Declension properties cannot have tantums
                     if (declensionProps.IsTantum) return ParseCode.InvalidTantums;
-                    // But still, pass on the main properties' tantums for correct count
-                    declensionProps.CopyTantumsFrom(properties);
                 }
                 parser.SkipWhitespaces();
             }
@@ -53,14 +51,19 @@ namespace Chasm.Grammar.Russian
             code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension, declensionType);
             if (code > ParseCode.Leftovers) return code;
 
-            // Set the special declension properties
-            if (parsedDeclensionProps) declension.SpecialNounProperties = declensionProps;
-
             // Parse the singulare tantum indicator
             if (parser.SkipAny('-', '–', '—'))
             {
                 if (properties.IsTantum) return ParseCode.InvalidTantums;
                 properties.IsSingulareTantum = true;
+            }
+
+            // Set the special declension properties
+            if (parsedDeclensionProps)
+            {
+                // Pass on the main properties' tantums for correct count
+                declensionProps.CopyTantumsFrom(properties);
+                declension.SpecialNounProperties = declensionProps;
             }
 
             // Ensure the declension braces were closed properly
