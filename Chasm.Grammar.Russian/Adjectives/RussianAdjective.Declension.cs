@@ -62,6 +62,9 @@ namespace Chasm.Grammar.Russian
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);
 
+            if ((info.Declension.Flags & RussianDeclensionFlags.Star) != 0)
+                ProcessVowelAlternation(ref results, info, props);
+
             // TODO: transformations
 
             // Add 'ся' to the end, if it's a reflexive adjective
@@ -69,6 +72,53 @@ namespace Chasm.Grammar.Russian
                 results.AppendToEnding('с', 'я');
 
             return results.Result.ToString();
+        }
+
+        private static void ProcessVowelAlternation(ref InflectionBuffer buffer, AdjInfo info, SubjProps props)
+        {
+            if (props.Gender == RussianGender.Masculine && props.Case == (RussianCase)6)
+            {
+                // B) vowel alternation type (masculine short form)
+
+                int lastConsonantIndex = RussianLowerCase.LastIndexOfConsonant(buffer.Stem);
+                if (lastConsonantIndex < 1) throw new InvalidOperationException();
+
+                char preLastChar = buffer.Buffer[lastConsonantIndex - 1];
+                char lastChar = buffer.Buffer[lastConsonantIndex];
+
+                // Special exception for adjectives ending with '-ний' - remove 'ь' ending
+                if (lastChar is 'н' && info.Declension.StemType == 2 && info.Declension.StressPattern.Alt == RussianStress.A)
+                {
+                    buffer.RemoveEnding();
+                }
+
+                if (preLastChar is 'ь' or 'й')
+                {
+                    // 2) if 'ь' or 'й' precedes the stem's last consonant, replace with 'ё' or 'е'
+                    buffer.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsEndingStressed(info, props) ? 'ё' : 'е';
+                    return;
+                }
+
+                // 3) in all other cases, insert 'о', 'е' or 'ё'
+                if (
+                    preLastChar is 'к' or 'г' or 'х' ||
+                    lastChar is 'к' or 'г' or 'х' /* OR declension.StemType == 3 */ &&
+                    !RussianLowerCase.IsSibilantConsonant(preLastChar)
+                )
+                {
+                    // 3)a) after 'к', 'г' or 'х' insert 'о'
+                    // 3)b) before 'к', 'г' or 'х', but not after a sibilant, insert 'о'
+                    buffer.InsertBetweenTwoLastStemChars('о');
+                    return;
+                }
+
+                // 3)c) if stressed, 'ё' (but after hissing consonants - 'о'); otherwise (or after 'ц'), 'е'
+                buffer.InsertBetweenTwoLastStemChars(
+                    lastChar != 'ц' && IsEndingStressed(info, props)
+                        ? RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о' : 'ё'
+                        : 'е'
+                );
+            }
         }
 
     }
