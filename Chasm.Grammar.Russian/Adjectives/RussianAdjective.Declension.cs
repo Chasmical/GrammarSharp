@@ -62,10 +62,30 @@ namespace Chasm.Grammar.Russian
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);
 
-            if ((info.Declension.Flags & RussianDeclensionFlags.Star) != 0)
-                ProcessVowelAlternation(ref results, info, props);
+            RussianDeclensionFlags flags = info.Declension.Flags;
 
-            // TODO: transformations
+            // Apply short form-specific transformations
+            if (props.Case == (RussianCase)6)
+            {
+                // If declension has a ① or ② mark, remove the redundant 'н' in short form
+                if (
+                    (flags & RussianDeclensionFlags.CircledTwo) != 0 ||
+                    (flags & RussianDeclensionFlags.CircledOne) != 0 && props.Gender == RussianGender.Masculine
+                )
+                {
+                    results.ShrinkStemBy(1);
+                }
+                else
+                {
+                    // If declension has a star, figure out the vowel and where to place it in short form
+                    if ((flags & RussianDeclensionFlags.Star) != 0)
+                        ProcessShortFormVowelAlternation(ref results, info, props);
+                }
+            }
+
+            // If declension has an alternating ё, figure out if it needs to be moved
+            if ((flags & RussianDeclensionFlags.AlternatingYo) != 0)
+                ProcessYoAlternation(ref results, info, props);
 
             // Add 'ся' to the end, if it's a reflexive adjective
             if ((info.Flags & RussianAdjectiveFlags.IsReflexive) != 0)
@@ -74,9 +94,9 @@ namespace Chasm.Grammar.Russian
             return results.Result.ToString();
         }
 
-        private static void ProcessVowelAlternation(ref InflectionBuffer buffer, AdjInfo info, SubjProps props)
+        private static void ProcessShortFormVowelAlternation(ref InflectionBuffer buffer, AdjInfo info, SubjProps props)
         {
-            if (props.Gender == RussianGender.Masculine && props.Case == (RussianCase)6)
+            if (props.Gender == RussianGender.Masculine)
             {
                 // B) vowel alternation type (masculine short form)
 
@@ -118,6 +138,38 @@ namespace Chasm.Grammar.Russian
                         ? RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о' : 'ё'
                         : 'е'
                 );
+            }
+        }
+
+        private static void ProcessYoAlternation(ref InflectionBuffer buffer, AdjInfo info, SubjProps props)
+        {
+            int letterIndex = buffer.Stem.IndexOf('ё');
+            if (letterIndex >= 0)
+            {
+                if (IsEndingStressed(info, props) && RussianLowerCase.LastIndexOfVowel(buffer.Ending) != -1)
+                {
+                    buffer.Buffer[letterIndex] = 'е';
+                }
+            }
+            else
+            {
+                ReadOnlySpan<char> stem = buffer.Stem;
+                // For stems with vowel alternation, cut off the last two letters (where an extra 'е' could appear)
+                if ((info.Declension.Flags & RussianDeclensionFlags.Star) != 0)
+                    stem = stem[..^2];
+
+                letterIndex = stem.LastIndexOf('е');
+
+                if (
+                    RussianLowerCase.LastIndexOfVowel(buffer.Ending) == -1 ||
+                    !IsEndingStressed(info, props) && (
+                        info.Declension.StressPattern.Main is not RussianStress.F and not RussianStress.Fp and not RussianStress.Fpp ||
+                        letterIndex == RussianLowerCase.IndexOfVowel(buffer.Stem)
+                    )
+                )
+                {
+                    buffer.Buffer[letterIndex] = 'ё';
+                }
             }
         }
 
