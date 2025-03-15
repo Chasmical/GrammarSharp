@@ -18,17 +18,20 @@ namespace Chasm.Grammar.Tests
 
             StringBuilder sb = new();
 
-            string Decline(RussianGender gender, int num)
-                => adjective.Decline((RussianCase)num, gender == RussianGender.Common, new(gender, true));
+            string? Decline(int num, char gender, bool plural = false)
+            {
+                if (num == 6) return adjective.DeclineShort(plural, new(gender, true));
+                return adjective.Decline((RussianCase)num, plural, new(gender, true));
+            }
 
             // Decline for every gender, and then for plural
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(RussianGender.Neuter, i)));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'n')));
             sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(RussianGender.Masculine, i)));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'm')));
             sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(RussianGender.Feminine, i)));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'f')));
             sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(RussianGender.Common, i)));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'n', true)));
 
             string result = sb.ToString();
 
