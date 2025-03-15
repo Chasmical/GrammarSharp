@@ -25,6 +25,7 @@ namespace Chasm.Grammar.Russian
                 throw new NotImplementedException("Declension for pronoun-like adjectives not implemented yet.");
             }
         }
+
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
         {
             if (Info.Declension.Type != RussianDeclensionType.Adjective) return null;
@@ -46,6 +47,55 @@ namespace Chasm.Grammar.Russian
             }
 
             return Decline((RussianCase)6, plural, properties);
+        }
+
+        [Pure] public string? DeclineComparative(bool force = false)
+        {
+            RussianDeclension declension = Info.Declension;
+            if (declension.Type != RussianDeclensionType.Adjective) return null;
+            if ((Info.Flags & RussianAdjectiveFlags.NoComparativeForm) != 0) return null;
+
+            ReadOnlySpan<char> stem = Stem;
+            int length = stem.Length;
+            Span<char> buffer = stackalloc char[length + 2];
+            stem.CopyTo(buffer);
+            // Add a 'е' to the ending (ч|е, ж|е, ш|е, |ее)
+            buffer[length] = 'е';
+
+            int yoIndex;
+            switch (stem[^1])
+            {
+                case 'к': // Replace 'к' with 'ч'
+                    buffer[length - 1] = 'ч';
+                    break;
+                case 'г': // Replace 'г' with 'ж'
+                    buffer[length - 1] = 'ж';
+                    break;
+                case 'х': // Replace 'х' with 'ш'
+                    buffer[length - 1] = 'ш';
+                    break;
+
+                default:
+                    // Replace 'ё' in the stem with 'е', since the stress is always on the 'ее' ending.
+                    // (unless the stress pattern is exactly a/a, in which case it is on the stem)
+                    yoIndex = stem.IndexOf('ё');
+                    if (yoIndex >= 0 && !declension.StressPattern.IsDoubleA())
+                        buffer[yoIndex] = 'е';
+
+                    // Add the last 'е' to complete the 'ее' ending
+                    buffer[length + 1] = 'е';
+                    // Construct and return the string with double-char ending (|ее)
+                    return buffer.ToString();
+            }
+
+            // Here, stress should be on the last stem syllable.
+            // If the stem contains a 'ё', and there's a vowel after it, replace 'ё' with 'е'.
+            yoIndex = stem.IndexOf('ё');
+            if (yoIndex >= 0 && yoIndex != RussianLowerCase.LastIndexOfVowel(stem))
+                buffer[yoIndex] = 'е';
+
+            // Construct and return the string with single-char ending (ч|е, ж|е, ш|е)
+            return buffer[..(length + 1)].ToString();
         }
 
         [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, AdjInfo info, SubjProps props)

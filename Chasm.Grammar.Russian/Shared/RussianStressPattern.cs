@@ -78,6 +78,9 @@ namespace Chasm.Grammar.Russian
         [Pure] public static bool operator !=(RussianStressPattern left, RussianStressPattern right)
             => !(left == right);
 
+        [Pure] internal readonly bool IsDoubleA()
+            => _data == ((int)RussianStress.A | ((int)RussianStress.A << 4));
+
         internal void Normalize(RussianDeclensionType type, string paramName)
         {
             switch (type)
