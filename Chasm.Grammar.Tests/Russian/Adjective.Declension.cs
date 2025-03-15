@@ -69,5 +69,38 @@ namespace Chasm.Grammar.Tests
 
         }
 
+        [Fact]
+        public void ComparativeForms()
+        {
+            var info = RussianAdjectiveInfo.Parse("п 1a/c");
+            var adjective = new RussianAdjective("живой", info);
+            Assert.Equal("живее", adjective.DeclineComparative());
+
+            info = RussianAdjectiveInfo.Parse("п 3a/c'");
+            adjective = new RussianAdjective("мягкий", info);
+            Assert.Equal("мягче", adjective.DeclineComparative());
+
+            info = RussianAdjectiveInfo.Parse("п 3a/c'");
+            adjective = new RussianAdjective("строгий", info);
+            Assert.Equal("строже", adjective.DeclineComparative());
+
+            info = RussianAdjectiveInfo.Parse("п 3a/c'");
+            adjective = new RussianAdjective("тихий", info);
+            Assert.Equal("тише", adjective.DeclineComparative());
+
+            info = RussianAdjectiveInfo.Parse("п 3*a/c, ё");
+            adjective = new RussianAdjective("жёсткий", info);
+            Assert.Equal("жёстче", adjective.DeclineComparative());
+
+            info = RussianAdjectiveInfo.Parse("п 1a/c\", ё");
+            adjective = new RussianAdjective("мёртвый", info);
+            Assert.Equal("мертвее", adjective.DeclineComparative());
+
+            info = RussianAdjectiveInfo.Parse("п 3*a', ё");
+            adjective = new RussianAdjective("чёткий", info);
+            Assert.Equal("чётче", adjective.DeclineComparative());
+
+        }
+
     }
 }
