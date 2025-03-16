@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace Chasm.Grammar.Russian
 {
-    using AdjInfo = RussianAdjectiveInfo;
+    using AdjDecl = RussianDeclension;
     using SubjProps = RussianNounProperties;
 
     public sealed partial class RussianAdjective
@@ -98,7 +98,7 @@ namespace Chasm.Grammar.Russian
             return buffer[..(length + 1)].ToString();
         }
 
-        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, AdjInfo info, SubjProps props)
+        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, RussianAdjectiveInfo info, SubjProps props)
         {
             if (info.Declension.IsZero) return stem.ToString();
 
@@ -108,7 +108,7 @@ namespace Chasm.Grammar.Russian
             InflectionBuffer results = new(buffer);
 
             // Find the appropriate adjective ending
-            ReadOnlySpan<char> ending = DetermineAdjectiveEnding(info, props);
+            ReadOnlySpan<char> ending = DetermineEnding(info.Declension, props);
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);
 
@@ -129,13 +129,13 @@ namespace Chasm.Grammar.Russian
                 {
                     // If declension has a star, figure out the vowel and where to place it in short form
                     if ((flags & RussianDeclensionFlags.Star) != 0)
-                        ProcessShortFormVowelAlternation(ref results, info, props);
+                        ProcessShortFormVowelAlternation(ref results, info.Declension, props);
                 }
             }
 
             // If declension has an alternating ё, figure out if it needs to be moved
             if ((flags & RussianDeclensionFlags.AlternatingYo) != 0)
-                ProcessYoAlternation(ref results, info, props);
+                ProcessYoAlternation(ref results, info.Declension, props);
 
             // Add 'ся' to the end, if it's a reflexive adjective
             if ((info.Flags & RussianAdjectiveFlags.IsReflexive) != 0)
@@ -144,7 +144,7 @@ namespace Chasm.Grammar.Russian
             return results.Result.ToString();
         }
 
-        private static void ProcessShortFormVowelAlternation(ref InflectionBuffer buffer, AdjInfo info, SubjProps props)
+        private static void ProcessShortFormVowelAlternation(ref InflectionBuffer buffer, AdjDecl decl, SubjProps props)
         {
             if (props.Gender == RussianGender.Masculine)
             {
@@ -157,7 +157,7 @@ namespace Chasm.Grammar.Russian
                 char lastChar = buffer.Buffer[lastConsonantIndex];
 
                 // Special exception for adjectives ending with '-ний' - remove 'ь' ending
-                if (lastChar is 'н' && info.Declension.StemType == 2 && info.Declension.StressPattern.Alt == RussianStress.A)
+                if (lastChar is 'н' && decl.StemType == 2 && decl.StressPattern.Alt == RussianStress.A)
                 {
                     buffer.RemoveEnding();
                 }
@@ -165,7 +165,7 @@ namespace Chasm.Grammar.Russian
                 if (preLastChar is 'ь' or 'й')
                 {
                     // 2) if 'ь' or 'й' precedes the stem's last consonant, replace with 'ё' or 'е'
-                    buffer.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsEndingStressed(info, props) ? 'ё' : 'е';
+                    buffer.Buffer[lastConsonantIndex - 1] = lastChar != 'ц' && IsEndingStressed(decl, props) ? 'ё' : 'е';
                     return;
                 }
 
@@ -184,19 +184,19 @@ namespace Chasm.Grammar.Russian
 
                 // 3)c) if stressed, 'ё' (but after hissing consonants - 'о'); otherwise (or after 'ц'), 'е'
                 buffer.InsertBetweenTwoLastStemChars(
-                    lastChar != 'ц' && IsEndingStressed(info, props)
+                    lastChar != 'ц' && IsEndingStressed(decl, props)
                         ? RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о' : 'ё'
                         : 'е'
                 );
             }
         }
 
-        private static void ProcessYoAlternation(ref InflectionBuffer buffer, AdjInfo info, SubjProps props)
+        private static void ProcessYoAlternation(ref InflectionBuffer buffer, AdjDecl decl, SubjProps props)
         {
             int letterIndex = buffer.Stem.IndexOf('ё');
             if (letterIndex >= 0)
             {
-                if (IsEndingStressed(info, props) && RussianLowerCase.LastIndexOfVowel(buffer.Ending) != -1)
+                if (IsEndingStressed(decl, props) && RussianLowerCase.LastIndexOfVowel(buffer.Ending) != -1)
                 {
                     buffer.Buffer[letterIndex] = 'е';
                 }
@@ -205,17 +205,14 @@ namespace Chasm.Grammar.Russian
             {
                 ReadOnlySpan<char> stem = buffer.Stem;
                 // For stems with vowel alternation, cut off the last two letters (where an extra 'е' could appear)
-                if ((info.Declension.Flags & RussianDeclensionFlags.Star) != 0)
+                if ((decl.Flags & RussianDeclensionFlags.Star) != 0)
                     stem = stem[..^2];
 
                 letterIndex = stem.LastIndexOf('е');
 
                 if (
-                    RussianLowerCase.LastIndexOfVowel(buffer.Ending) == -1 ||
-                    !IsEndingStressed(info, props) && (
-                        info.Declension.StressPattern.Main is not RussianStress.F and not RussianStress.Fp and not RussianStress.Fpp ||
-                        letterIndex == RussianLowerCase.IndexOfVowel(buffer.Stem)
-                    )
+                    RussianLowerCase.IndexOfVowel(buffer.Ending) == -1 ||
+                    !IsEndingStressed(decl, props) && letterIndex == RussianLowerCase.IndexOfVowel(buffer.Stem)
                 )
                 {
                     buffer.Buffer[letterIndex] = 'ё';
