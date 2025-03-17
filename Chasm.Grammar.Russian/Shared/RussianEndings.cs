@@ -44,7 +44,8 @@ namespace Chasm.Grammar.Russian
 
         [Pure] public static (byte, byte) GetAdjectiveEndingIndices(RussianDeclension declension, RussianNounProperties props)
         {
-            ReadOnlySpan<byte> lookup = AdjectiveLookup;
+            bool isPronoun = declension.Type == RussianDeclensionType.Pronoun;
+            ReadOnlySpan<byte> lookup = isPronoun ? PronounLookup : AdjectiveLookup;
 
             // Get indices of both unstressed and stressed forms of endings (usually they're the same)
             int lookupIndex = ComposeAdjectiveEndingIndex(declension, props, props.Case);
@@ -54,6 +55,11 @@ namespace Chasm.Grammar.Russian
             // In such case, the lookup yields index 0. Don't confuse with "" (encoded as 0x01: pos=1, length=0).
             if (unStrIndex == 0)
             {
+                // Stem type 2 pronouns' accusative case is not consistent. Normally, the endings of either
+                // Genitive or Nominative of the same stem type are used, but those are "shortened", while
+                // Accusative still uses the full form of those.
+                if (isPronoun && declension.StemType == 2) declension.StemType = 4;
+
                 lookupIndex = ComposeAdjectiveEndingIndex(declension, props, props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
                 unStrIndex = lookup[lookupIndex];
             }

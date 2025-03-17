@@ -100,7 +100,14 @@ namespace Chasm.Grammar.Russian
         }
 
         [Pure] public readonly string ExtractStem(string word, out bool isAdjReflexive)
-            => ExtractStem(word.AsSpan(), out isAdjReflexive).ToString();
+        {
+            if (IsZero)
+            {
+                isAdjReflexive = false;
+                return word;
+            }
+            return ExtractStem(word.AsSpan(), out isAdjReflexive).ToString();
+        }
         [Pure] public readonly ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word, out bool isAdjReflexive)
         {
             isAdjReflexive = false;
@@ -108,7 +115,7 @@ namespace Chasm.Grammar.Russian
 
             switch (Type)
             {
-                case RussianDeclensionType.Noun:
+                case RussianDeclensionType.Noun or RussianDeclensionType.Pronoun:
                     // Remove the last vowel/'й'/'ь' to get the stem
                     return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
 

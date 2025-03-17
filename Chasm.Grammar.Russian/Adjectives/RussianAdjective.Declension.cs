@@ -13,17 +13,10 @@ namespace Chasm.Grammar.Russian
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            if (declension.Type == RussianDeclensionType.Adjective)
-            {
-                // Prepare the props for adjective declension, store case in props
-                props.PrepareForAdjectiveDeclension(@case, plural);
+            // Prepare the props for adjective/pronoun declension, store case in props
+            props.PrepareForAdjectiveDeclension(@case, plural);
 
-                return DeclineCore(Stem, Info, props);
-            }
-            else
-            {
-                throw new NotImplementedException("Declension for pronoun-like adjectives not implemented yet.");
-            }
+            return DeclineCore(Stem, Info, props);
         }
 
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
@@ -133,6 +126,10 @@ namespace Chasm.Grammar.Russian
                 }
             }
 
+            // Process vowel alternation for adjectives with pronoun declension
+            if ((flags & RussianDeclensionFlags.Star) != 0 && info.Declension.Type == RussianDeclensionType.Pronoun)
+                ProcessPronounVowelAlternation(ref results, info.Declension, props);
+
             // If declension has an alternating ё, figure out if it needs to be moved
             if ((flags & RussianDeclensionFlags.AlternatingYo) != 0)
                 ProcessYoAlternation(ref results, info.Declension, props);
@@ -188,6 +185,53 @@ namespace Chasm.Grammar.Russian
                         ? RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о' : 'ё'
                         : 'е'
                 );
+            }
+        }
+
+        private static void ProcessPronounVowelAlternation(ref InflectionBuffer buffer, AdjDecl decl, SubjProps props)
+        {
+            int lastVowelIndex = RussianLowerCase.LastIndexOfVowel(buffer.Stem);
+            if (lastVowelIndex == -1) throw new InvalidOperationException();
+
+            // Masculine nominative is unchanged (and accusative for inanimate nouns too)
+            if (props.Gender == RussianGender.Masculine && props.IsNominativeNormalized)
+                return;
+
+            switch (buffer.Buffer[lastVowelIndex])
+            {
+                case 'о': // 'о' is removed
+                    buffer.RemoveStemCharAt(lastVowelIndex);
+                    break;
+                case 'и': // 'и' is replaced with 'ь'
+                    buffer.Buffer[lastVowelIndex] = 'ь';
+                    break;
+                case 'е' or 'ё':
+                    char preceding = lastVowelIndex > 0 ? buffer.Buffer[lastVowelIndex - 1] : '\0';
+
+                    if (RussianLowerCase.IsVowel(preceding))
+                    {
+                        // 1) is replaced with 'й', when after a vowel
+                        buffer.Buffer[lastVowelIndex] = 'й';
+                    }
+                    else if (
+                        // 2)a) is *always* replaced with 'ь', when noun is masc 6*
+                        decl.StemType == 6 ||
+                        // 2)b) is replaced with 'ь', when noun is masc 3* and it's after a non-sibilant consonant
+                        decl.StemType == 3 && RussianLowerCase.IsNonSibilantConsonant(preceding) ||
+                        // 2)c) is replaced with 'ь', when after 'л'
+                        preceding == 'л'
+                    )
+                    {
+                        buffer.Buffer[lastVowelIndex] = 'ь';
+                    }
+                    else
+                    {
+                        // 3) in all other cases, is removed
+                        buffer.RemoveStemCharAt(lastVowelIndex);
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException();
             }
         }
 
