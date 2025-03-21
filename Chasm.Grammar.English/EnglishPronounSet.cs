@@ -1,7 +1,10 @@
-﻿namespace Chasm.Grammar.English
+﻿using JetBrains.Annotations;
+
+namespace Chasm.Grammar.English
 {
     public struct EnglishPronounSet
     {
+        // TODO: null pronouns on default???
         public EnglishPronoun FirstPerson;
         public EnglishPronoun SecondPerson;
         public EnglishPronoun ThirdPerson;
@@ -22,7 +25,7 @@
         public static EnglishPronounSet Masculine { get; } = new(EnglishPronoun.ThirdMasculine);
         public static EnglishPronounSet Feminine { get; } = new(EnglishPronoun.ThirdFeminine);
 
-        public readonly override string ToString()
+        [Pure] public readonly override string ToString()
         {
             if (FirstPerson == EnglishPronoun.FirstSingular && SecondPerson == EnglishPronoun.SecondSingular)
                 return ThirdPerson.ToString();

@@ -1,4 +1,6 @@
-﻿namespace Chasm.Grammar.English
+﻿using JetBrains.Annotations;
+
+namespace Chasm.Grammar.English
 {
     public sealed class EnglishAdjective
     {
@@ -7,7 +9,7 @@
         public EnglishAdjective(string stem)
             => Stem = stem;
 
-        public string Decline()
+        [Pure] public string Decline()
             => Stem;
 
     }

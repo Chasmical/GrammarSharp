@@ -4,5 +4,8 @@
     {
         public EnglishNounFlags Flags;
 
+        public EnglishNounInfo(EnglishNounFlags flags)
+            => Flags = flags;
+
     }
 }

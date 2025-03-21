@@ -4,13 +4,34 @@ namespace Chasm.Grammar.English
 {
     public enum EnglishCase
     {
-        Nominative,
-        // TODO
+        Subjective,
+        Objective,
+        PossessiveDeterminer,
+        PossessivePronoun,
+    }
+    public enum EnglishTense
+    {
+        Present,
+        Past,
+    }
+    public enum EnglishPerson
+    {
+        First,
+        Second,
+        Third,
+    }
+    public enum EnglishConjugationType
+    {
+        SingularIs,
+        SingularAre,
+        SingularAm,
+        PluralAre,
     }
     [Flags]
     public enum EnglishNounFlags
     {
-        IsSingulareTantum = 0b_10,
-        IsPluraleTantum   = 0b_11,
+        IsProper          = 0b_001,
+        IsSingulareTantum = 0b_100,
+        IsPluraleTantum   = 0b_110,
     }
 }
