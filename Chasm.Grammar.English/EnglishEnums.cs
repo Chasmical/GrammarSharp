@@ -13,6 +13,19 @@ namespace Chasm.Grammar.English
     {
         Present,
         Past,
+        Future,
+    }
+    [Flags]
+    public enum EnglishAspect
+    {
+        Continuous        = 0b_01,
+        Perfect           = 0b_10,
+        PerfectContinuous = 0b_11,
+    }
+    public enum EnglishVoice
+    {
+        Active,
+        Passive,
     }
     public enum EnglishPerson
     {
