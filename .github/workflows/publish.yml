@@ -1,4 +1,4 @@
-name: Publish (Chasm.Grammar.*)
+name: Publish (GrammarSharp.*)
 run-name: Publish ${{ inputs.project }}
 
 permissions:
@@ -12,9 +12,9 @@ on:
         required: true
         type: choice
         options:
-        - Chasm.Grammar
-        - Chasm.Grammar.English
-        - Chasm.Grammar.Russian
+        - GrammarSharp
+        - GrammarSharp.English
+        - GrammarSharp.Russian
 
 jobs:
   publish-package:

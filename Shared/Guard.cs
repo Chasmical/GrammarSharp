@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Chasm.Grammar
+namespace GrammarSharp
 {
     /// <summary>
     ///   <para>Provides a set of static methods for throwing various exceptions.</para>

@@ -20,8 +20,8 @@
     </TargetFrameworks>
 
     <!-- Repository -->
-    <PackageProjectUrl>https://github.com/Chasmical/Chasm.Grammar</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Chasmical/Chasm.Grammar.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Chasmical/GrammarSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Chasmical/GrammarSharp.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>main</RepositoryBranch>
 
