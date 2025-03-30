@@ -56,7 +56,7 @@ namespace GrammarSharp.Russian
         public RussianNounProperties? SpecialNounProperties
         {
             // This property uses the field's ExtraData as a non-null value flag
-            readonly get => _nounProps.ExtraData == 1 ? _nounProps : null;
+            readonly get => _nounProps.ExtraData == 1 ? _nounProps.WithoutExtraData() : null;
             set
             {
                 _nounProps = value.GetValueOrDefault();

@@ -82,6 +82,9 @@ namespace GrammarSharp.Russian
         internal readonly bool IsPlural => (_data & 0b_000_01_000) != 0;
         internal readonly RussianCase Case => (RussianCase)ExtraData;
 
+        internal readonly RussianNounProperties WithoutExtraData()
+            => new RussianNounProperties((byte)(_data & 0b_000_11_111));
+
         internal void PrepareForNounDeclension(RussianCase @case, bool plural)
         {
             // If it doesn't have a tantum, apply specified count
