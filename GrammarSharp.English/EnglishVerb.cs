@@ -112,11 +112,13 @@ namespace GrammarSharp.English
             {
                 case 'e':
                     if (word is [.., 'i', _])
+                        // ReSharper disable once StringLiteralTypo
                         return word[..^2] + "ying";
 
                     return word[..^1] + "ing";
 
                 case 'c':
+                    // ReSharper disable once StringLiteralTypo
                     return word + "cking";
             }
 
