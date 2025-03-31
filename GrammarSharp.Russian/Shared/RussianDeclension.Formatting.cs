@@ -38,15 +38,7 @@ namespace GrammarSharp.Russian
             }
 
             // Append the stress pattern
-
-            string? stressFormat = Type switch
-            {
-                RussianDeclensionType.Noun => "n",
-                RussianDeclensionType.Adjective => "a",
-                RussianDeclensionType.Pronoun => "p",
-                _ => null,
-            };
-            sb.Append(StressPattern.ToString(stressFormat));
+            sb.Append(StressPattern.ToString(Type));
 
             const RussianDeclensionFlags trailingFlags
                 = RussianDeclensionFlags.CircledOne

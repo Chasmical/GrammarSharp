@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
@@ -75,6 +76,24 @@ namespace GrammarSharp.Russian
 
             // The format specifier was not handled, throw exception
             throw new FormatException($"'{format.ToString()}' is not a valid format for Russian stress patterns.");
+        }
+        /// <summary>
+        ///   <para>Converts this Russian stress pattern to its equivalent string representation, formatting it for the specified declension <paramref name="type"/>.</para>
+        /// </summary>
+        /// <param name="type">The declension type to format this Russian stress pattern to.</param>
+        /// <returns>The string representation of this Russian stress pattern, formatted for declension <paramref name="type"/>.</returns>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="type"/> is not a valid declension type.</exception>
+        [Pure] public readonly string ToString(RussianDeclensionType type)
+        {
+            char stressFormat = type switch
+            {
+                RussianDeclensionType.Unknown => 'g',
+                RussianDeclensionType.Noun => 'n',
+                RussianDeclensionType.Adjective => 'a',
+                RussianDeclensionType.Pronoun => 'p',
+                _ => throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType)),
+            };
+            return ToString([stressFormat]);
         }
 
         private static readonly string[] singleStressLookup =
