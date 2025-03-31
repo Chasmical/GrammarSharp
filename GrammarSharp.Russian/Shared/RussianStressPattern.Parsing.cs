@@ -18,17 +18,15 @@ namespace GrammarSharp.Russian
 
             // Try to parse the main stress schema
             ParseCode code = ParseSingleStress(ref parser, out RussianStress main);
-            if (code > ParseCode.StressNotFound) return code;
+            if (code != ParseCode.Success) return code;
 
             RussianStress alt = 0;
             if (parser.Skip('/'))
             {
                 // Try to parse the alternative stress schema
                 ParseCode code2 = ParseSingleStress(ref parser, out alt);
-                if (code2 > ParseCode.StressNotFound) return code2;
+                if (code2 != ParseCode.Success) return code2;
             }
-            // If nothing was parsed at all, return StressNotFound
-            else if (code == ParseCode.StressNotFound) return code;
 
             pattern = new((byte)((int)main | ((int)alt << 4)));
             return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;

@@ -12,7 +12,7 @@ namespace GrammarSharp.Russian
         /// </summary>
         /// <returns>The string representation of this Russian stress pattern.</returns>
         [Pure] public readonly override string ToString()
-            => IsZero ? "" : ToStringBoth(Main, Alt);
+            => ToString(default(ReadOnlySpan<char>));
 
         /// <summary>
         ///   <para>Converts this Russian stress pattern to its equivalent string representation, using the specified <paramref name="format"/>.</para>
@@ -34,6 +34,9 @@ namespace GrammarSharp.Russian
 
             RussianStress main = Main, alt = Alt;
 
+            // If alternative stress is zero, output just the main stress
+            if (alt == RussianStress.Zero) return singleStressLookup[(int)main];
+
             // If format is empty/null, use the full format
             if (format.Length == 0) return ToStringBoth(main, alt);
 
@@ -41,14 +44,8 @@ namespace GrammarSharp.Russian
             {
                 switch (format[0] | ' ')
                 {
-                    case 'g':
-                        // Always use the full format
-                        return ToStringBoth(main, alt);
-
-                    case 'n' or 'p':
-                        // If alternative stress is zero, output just the main stress
-                        if (alt == RussianStress.Zero) return singleStressLookup[(int)main];
-                        // Otherwise, format them both (not really valid for nouns)
+                    case 'g' or 'n' or 'p':
+                        // Always use the full format, unless alt is non-zero
                         return ToStringBoth(main, alt);
 
                     case 'a':

@@ -50,15 +50,32 @@ namespace GrammarSharp.Russian
             => _data = data;
 
         /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianStressPattern"/> structure with the specified <paramref name="main"/> form stress schema.</para>
+        /// </summary>
+        /// <param name="main">The stress schema in the word's main form.</param>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="main"/> is not a valid stress schema.</exception>
+        public RussianStressPattern(RussianStress main)
+        {
+            ValidateStress(main, nameof(main));
+            _data = (byte)main;
+        }
+        /// <summary>
         ///   <para>Initializes a new instance of the <see cref="RussianStressPattern"/> structure with the specified <paramref name="main"/> and <paramref name="alt"/> form stress schemas.</para>
         /// </summary>
         /// <param name="main">The stress schema in the word's main form.</param>
         /// <param name="alt">The stress schema in the word's alternative form.</param>
         /// <exception cref="InvalidEnumArgumentException"><paramref name="main"/> or <paramref name="alt"/> is not a valid stress schema.</exception>
+        /// <exception cref="ArgumentException"><paramref name="alt"/> is not zero, while <paramref name="main"/> is zero.</exception>
         public RussianStressPattern(RussianStress main, RussianStress alt)
         {
             ValidateStress(main, nameof(main));
             ValidateStress(alt, nameof(alt));
+
+            if (main == 0 && alt != 0)
+            {
+                const string msg = "Alternative form stress cannot be non-zero, when the main form stress is zero.";
+                throw new ArgumentException(msg, nameof(alt));
+            }
 
             _data = (byte)((int)main | ((int)alt << 4));
         }
@@ -139,99 +156,87 @@ namespace GrammarSharp.Russian
         [Pure] internal readonly bool IsDoubleA()
             => _data == ((int)RussianStress.A | ((int)RussianStress.A << 4));
 
-        internal void Normalize(RussianDeclensionType type, string paramName)
+        [Pure] public readonly RussianStressPattern Normalize(RussianDeclensionType type)
         {
+            if ((uint)type - 1 > (uint)RussianDeclensionType.Pronoun - 1)
+                throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType));
+
+            RussianStressPattern copy = this;
+            if (copy.NormalizeCore(type)) return copy;
+            throw new InvalidOperationException($"{this} is not a valid stress pattern for {type}.");
+        }
+
+        private bool NormalizeCore(RussianDeclensionType type)
+        {
+            var (main, alt) = this;
+
             switch (type)
             {
-                case RussianDeclensionType.Unknown:
-                    break;
                 case RussianDeclensionType.Noun:
-                    NormalizeForNoun(paramName);
+                    // Nouns don't have alternative stress
+                    if (alt != RussianStress.Zero) return false;
+                    // Noun stress can only be: 0, a through f, b′, d′, f′ and f″
+                    if ((uint)main > (uint)RussianStress.F && ((uint)main & 1) != 0) return false;
                     break;
+
                 case RussianDeclensionType.Adjective:
-                    NormalizeForAdjective(paramName);
+                    // If alternative stress is not specified, default to main
+                    if (alt == RussianStress.Zero)
+                    {
+                        alt = main;
+
+                        // If main stress has a prime, remove the stress from it (but keep it in alternative stress)
+                        if (main >= RussianStress.Ap)
+                        {
+                            if (main <= RussianStress.Cp)
+                                main -= (int)RussianStress.F;
+                            else if (main == RussianStress.Cpp)
+                                main = RussianStress.C;
+                            else
+                                return false;
+                        }
+                    }
+
+                    // Full-form stress can only be: 0, a, b or c
+                    if (main > RussianStress.C) return false;
+                    // Short-form stress can only be: 0, a, b, c, a′, b′, c′ and c″
+                    if (alt is > RussianStress.C and not (>= RussianStress.Ap and <= RussianStress.Cp) and not RussianStress.Cpp)
+                        return false;
                     break;
+
                 case RussianDeclensionType.Pronoun:
-                    NormalizeForPronoun(paramName);
+                    // Pronouns don't have alternative stress
+                    if (alt != RussianStress.Zero) return false;
+                    // Pronoun stress can only be: 0, a, b or f
+                    if (main is > RussianStress.B and not RussianStress.F) return false;
                     break;
+
+                // Otherwise, it's a verb
                 default:
-                    throw new InvalidEnumArgumentException(paramName, (int)type, typeof(RussianDeclensionType));
-            }
-        }
-        private void NormalizeForNoun(string paramName)
-        {
-            var (main, alt) = this;
+                    // If alternative stress is not specified, default to a
+                    if (alt == RussianStress.Zero)
+                        alt = RussianStress.A;
 
-            // Nouns don't have alternative stress
-            if (alt != RussianStress.Zero)
-                throw new ArgumentException($"{this} is not a valid stress pattern for nouns.", paramName);
-
-            // Noun stress can only be: 0, a through f, b′, d′, f′ and f″
-            if ((uint)main > (uint)RussianStress.F && ((uint)main & 1) != 0)
-                throw new ArgumentException($"{this} is not a valid stress pattern for nouns.", paramName);
-
-            _data = (byte)((int)main | ((int)alt << 4));
-        }
-        private void NormalizeForAdjective(string paramName)
-        {
-            var (main, alt) = this;
-
-            // If alternative stress is not specified, default to main
-            if (alt == RussianStress.Zero)
-            {
-                alt = main;
-
-                // If main stress has a prime, remove the stress from it (but keep it in alternative stress)
-                if (main >= RussianStress.Ap)
-                {
-                    if (main <= RussianStress.Cp)
-                        main -= (int)RussianStress.F;
-                    else if (main == RussianStress.Cpp)
-                        main = RussianStress.C;
-                    else
-                        throw new ArgumentException($"{this} is not a valid stress pattern for adjectives.", paramName);
-                }
+                    // Present-tense stress can only be: a, b, c or c′
+                    if (main is RussianStress.Zero or > RussianStress.C and not RussianStress.Cp) return false;
+                    // Past-tense stress can only be: a, b, c, c′ or c″
+                    if (alt is > RussianStress.C and not RussianStress.Cp and not RussianStress.Cpp) return false;
+                    break;
             }
 
-            // Full-form stress can only be: 0, a, b or c
-            if (main > RussianStress.C)
-                throw new ArgumentException($"{this} is not a valid stress pattern for adjectives.", paramName);
-            // Short-form stress can only be: 0, a, b, c, a′, b′, c′ and c″
-            if (alt is > RussianStress.C and not (>= RussianStress.Ap and <= RussianStress.Cp) and not RussianStress.Cpp)
-                throw new ArgumentException($"{this} is not a valid stress pattern for adjectives.", paramName);
-
             _data = (byte)((int)main | ((int)alt << 4));
-        }
-        private void NormalizeForPronoun(string paramName)
-        {
-            var (main, alt) = this;
-
-            // Pronouns don't have alternative stress
-            if (alt != RussianStress.Zero)
-                throw new ArgumentException($"{this} is not a valid stress pattern for pronouns.", paramName);
-            // Pronoun stress can only be: 0, a, b or f
-            if (main is > RussianStress.B and not RussianStress.F)
-                throw new ArgumentException($"{this} is not a valid stress pattern for pronouns.", paramName);
-
-            _data = (byte)((int)main | ((int)alt << 4));
+            return true;
         }
 
-        internal void NormalizeForVerb(string paramName)
+        internal void NormalizeMut(RussianDeclensionType type, string paramName)
         {
-            var (main, alt) = this;
-
-            // If alternative stress is not specified, default to a
-            if (alt == RussianStress.Zero)
-                alt = RussianStress.A;
-
-            // Present-tense stress can only be: a, b, c or c′
-            if (main is RussianStress.Zero or > RussianStress.C and not RussianStress.Cp)
-                throw new ArgumentException($"{this} is not a valid stress pattern for verbs.", paramName);
-            // Past-tense stress can only be: a, b, c, c′ or c″
-            if (alt is > RussianStress.C and not RussianStress.Cp and not RussianStress.Cpp)
-                throw new ArgumentException($"{this} is not a valid stress pattern for verbs.", paramName);
-
-            _data = (byte)((int)main | ((int)alt << 4));
+            if (!NormalizeCore(type))
+                throw new ArgumentException($"{this} is not a valid stress pattern for {type}.", paramName);
+        }
+        internal void NormalizeMutForVerb(string paramName)
+        {
+            if (!NormalizeCore(RussianDeclensionType.Unknown))
+                throw new ArgumentException($"{this} is not a valid stress schema for verbs.", paramName);
         }
 
     }
