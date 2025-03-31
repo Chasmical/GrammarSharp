@@ -77,14 +77,33 @@ namespace GrammarSharp.Russian
             return ParseCode.StressNotFound;
         }
 
+        /// <summary>
+        ///   <para>Converts the specified string representation of a Russian stress pattern to an equivalent <see cref="RussianStressPattern"/> structure.</para>
+        /// </summary>
+        /// <param name="text">The string containing a Russian stress pattern to convert.</param>
+        /// <returns>The <see cref="RussianStressPattern"/> structure equivalent to the Russian stress pattern specified in the <paramref name="text"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="text"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="text"/> is not a valid Russian stress pattern.</exception>
         [Pure] public static RussianStressPattern Parse(string text)
         {
             Guard.ThrowIfNull(text);
             return Parse(text.AsSpan());
         }
+        /// <summary>
+        ///   <para>Converts the specified read-only span of characters representing a Russian stress pattern to an equivalent <see cref="RussianStressPattern"/> structure.</para>
+        /// </summary>
+        /// <param name="text">The read-only span of characters containing a Russian stress pattern to convert.</param>
+        /// <returns>The <see cref="RussianStressPattern"/> structure equivalent to the Russian stress pattern specified in the <paramref name="text"/>.</returns>
+        /// <exception cref="ArgumentException"><paramref name="text"/> is not a valid Russian stress pattern.</exception>
         [Pure] public static RussianStressPattern Parse(ReadOnlySpan<char> text)
             => ParseInternal(text, out RussianStressPattern pattern).ReturnOrThrow(pattern, nameof(text));
 
+        /// <summary>
+        ///   <para>Tries to convert the specified string representation of a Russian stress pattern to an equivalent <see cref="RussianStressPattern"/> structure, and returns a value indicating whether the conversion was successful.</para>
+        /// </summary>
+        /// <param name="text">The string containing a Russian stress pattern to convert.</param>
+        /// <param name="pattern">When this method returns, contains the <see cref="RussianStressPattern"/> structure equivalent to the Russian stress pattern specified in the <paramref name="text"/>, if the conversion succeeded, or <see langword="default"/> if the conversion failed.</param>
+        /// <returns><see langword="true"/>, if the conversion was successful; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool TryParse([NotNullWhen(true)] string? text, out RussianStressPattern pattern)
         {
             if (text is null)
@@ -94,6 +113,12 @@ namespace GrammarSharp.Russian
             }
             return TryParse(text.AsSpan(), out pattern);
         }
+        /// <summary>
+        ///   <para>Tries to convert the specified read-only span of characters representing a Russian stress pattern to an equivalent <see cref="RussianStressPattern"/> structure, and returns a value indicating whether the conversion was successful.</para>
+        /// </summary>
+        /// <param name="text">The read-only span of characters containing a Russian stress pattern to convert.</param>
+        /// <param name="pattern">When this method returns, contains the <see cref="RussianStressPattern"/> structure equivalent to the Russian stress pattern specified in the <paramref name="text"/>, if the conversion succeeded, or <see langword="default"/> if the conversion failed.</param>
+        /// <returns><see langword="true"/>, if the conversion was successful; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool TryParse(ReadOnlySpan<char> text, out RussianStressPattern pattern)
             => ParseInternal(text, out pattern) is ParseCode.Success;
 

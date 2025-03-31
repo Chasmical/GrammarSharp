@@ -6,6 +6,9 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
+    /// <summary>
+    ///   <para>Represents a stress pattern in Russian words, according to Zaliznyak's classification, consisting of main and alternative <see cref="RussianStress"/> schemas.</para>
+    /// </summary>
     public partial struct RussianStressPattern : IEquatable<RussianStressPattern>
     {
         // Representation (_data field):
@@ -14,6 +17,9 @@ namespace GrammarSharp.Russian
         //
         private byte _data;
 
+        /// <summary>
+        ///   <para>Gets or sets the stress schema in the word's main form.</para>
+        /// </summary>
         public RussianStress Main
         {
             readonly get => (RussianStress)(_data & 0x0F);
@@ -23,6 +29,9 @@ namespace GrammarSharp.Russian
                 _data = (byte)((_data & 0xF0) | (int)value);
             }
         }
+        /// <summary>
+        ///   <para>Gets or sets the stress schema in the word's alternative form.</para>
+        /// </summary>
         public RussianStress Alt
         {
             readonly get => (RussianStress)(_data >> 4);
@@ -36,8 +45,12 @@ namespace GrammarSharp.Russian
         private RussianStressPattern(byte data)
             => _data = data;
 
-        public RussianStressPattern(RussianStress main)
-            : this(main, RussianStress.Zero) { }
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianStressPattern"/> structure with the specified <paramref name="main"/> and <paramref name="alt"/> form stress schemas.</para>
+        /// </summary>
+        /// <param name="main">The stress schema in the word's main form.</param>
+        /// <param name="alt">The stress schema in the word's alternative form.</param>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="main"/> or <paramref name="alt"/> is not a valid stress schema.</exception>
         public RussianStressPattern(RussianStress main, RussianStress alt)
         {
             ValidateStress(main);
@@ -46,8 +59,18 @@ namespace GrammarSharp.Russian
             _data = (byte)((int)main | ((int)alt << 4));
         }
 
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianStressPattern"/> structure from the specified <paramref name="stressPattern"/> string.</para>
+        /// </summary>
+        /// <param name="stressPattern">The string containing a Russian stress pattern to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="stressPattern"/> is not a valid Russian stress pattern.</exception>
         public RussianStressPattern(string stressPattern)
             => this = Parse(stressPattern);
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianStressPattern"/> structure from the specified <paramref name="stressPattern"/> span.</para>
+        /// </summary>
+        /// <param name="stressPattern">The read-only span of characters containing a Russian stress pattern to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="stressPattern"/> is not a valid Russian stress pattern.</exception>
         public RussianStressPattern(ReadOnlySpan<char> stressPattern)
             => this = Parse(stressPattern);
 
@@ -60,21 +83,52 @@ namespace GrammarSharp.Russian
                 => throw new InvalidEnumArgumentException(paramName, (int)stress, typeof(RussianStress));
         }
 
+        /// <summary>
+        ///   <para>Deconstructs this Russian stress pattern by <see cref="Main"/> and <see cref="Alt"/>.</para>
+        /// </summary>
+        /// <param name="main">When this method returns, represents the <see cref="Main"/> value of this Russian stress pattern.</param>
+        /// <param name="alt">When this method returns, represents the <see cref="Alt"/> value of this Russian stress pattern.</param>
         public readonly void Deconstruct(out RussianStress main, out RussianStress alt)
         {
             main = Main;
             alt = Alt;
         }
 
+        /// <summary>
+        ///   <para>Determines whether this Russian stress pattern is equal to another specified Russian stress pattern.</para>
+        /// </summary>
+        /// <param name="other">The Russian stress pattern to compare with this Russian stress pattern.</param>
+        /// <returns><see langword="true"/>, if this Russian stress pattern is equal to <paramref name="other"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly bool Equals(RussianStressPattern other)
             => _data == other._data;
+        /// <summary>
+        ///   <para>Determines whether this Russian stress pattern is equal to the specified <paramref name="obj"/>.</para>
+        /// </summary>
+        /// <param name="obj">The object to compare with this Russian stress pattern.</param>
+        /// <returns><see langword="true"/>, if <paramref name="obj"/> is a <see cref="RussianStressPattern"/> instance equal to this Russian stress pattern; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly override bool Equals([NotNullWhen(true)] object? obj)
             => obj is RussianStressPattern other && Equals(other);
+        /// <summary>
+        ///   <para>Returns a hash code for this Russian stress pattern.</para>
+        /// </summary>
+        /// <returns>A hash code for this Russian stress pattern.</returns>
         [Pure] public readonly override int GetHashCode()
             => _data;
 
+        /// <summary>
+        ///   <para>Determines whether the two specified Russian stress patterns are equal.</para>
+        /// </summary>
+        /// <param name="left">The first Russian stress pattern to compare.</param>
+        /// <param name="right">The second Russian stress pattern to compare.</param>
+        /// <returns><see langword="true"/>, if <paramref name="left"/> is equal to <paramref name="right"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool operator ==(RussianStressPattern left, RussianStressPattern right)
             => left.Equals(right);
+        /// <summary>
+        ///   <para>Determines whether the two specified Russian stress patterns are not equal.</para>
+        /// </summary>
+        /// <param name="left">The first Russian stress pattern to compare.</param>
+        /// <param name="right">The second Russian stress pattern to compare.</param>
+        /// <returns><see langword="true"/>, if <paramref name="left"/> is not equal to <paramref name="right"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool operator !=(RussianStressPattern left, RussianStressPattern right)
             => !(left == right);
 

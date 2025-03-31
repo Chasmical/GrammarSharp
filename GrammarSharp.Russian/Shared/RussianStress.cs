@@ -1,7 +1,10 @@
 ﻿namespace GrammarSharp.Russian
 {
     /// <summary>
-    ///   <para>Defines stress positions in Russian words, according to Zaliznyak's classification.</para>
+    ///   <para>
+    ///     Defines stress schemas in Russian words, according to Zaliznyak's classification.<br/>
+    ///     Values: a, b, c, d, e, f, a′, b′, c′, d′, e′, f′, c″, f″.
+    ///   </para>
     /// </summary>
     public enum RussianStress
     {

@@ -5,6 +5,10 @@ namespace GrammarSharp.Russian
 {
     public partial struct RussianStressPattern
     {
+        /// <summary>
+        ///   <para>Returns a string representation of this Russian stress pattern.</para>
+        /// </summary>
+        /// <returns>The string representation of this Russian stress pattern.</returns>
         [Pure] public readonly override string ToString()
         {
             if (_data == 0) return "";
@@ -18,6 +22,20 @@ namespace GrammarSharp.Russian
         [Pure] private static string ToStringBoth(string[] lookup, RussianStress main, RussianStress alt)
             => $"{lookup[(int)main]}/{lookup[(int)alt]}";
 
+        /// <summary>
+        ///   <para>Converts this Russian stress pattern to its equivalent string representation, using the specified <paramref name="format"/>.</para>
+        /// </summary>
+        /// <remarks>
+        ///   <para>
+        ///     <c>G</c> — outputs both the main and alternative stress schemas;<br/>
+        ///     <c>N</c> — formats the pattern for nouns (a/ ⇒ a, d′/ ⇒ d′);<br/>
+        ///     <c>A</c> — formats the pattern for adjectives (a/a ⇒ a, b/b ⇒ b, b/b′ ⇒ b′);<br/>
+        ///     <c>V</c> — formats the pattern for verbs (b/a ⇒ b, c/a ⇒ c);
+        ///   </para>
+        /// </remarks>
+        /// <param name="format">The format to use.</param>
+        /// <returns>The string representation of this Russian stress pattern, as specified by <paramref name="format"/>.</returns>
+        /// <exception cref="FormatException">The specified <paramref name="format"/> is not a valid format specifier.</exception>
         [Pure] public readonly string ToString(ReadOnlySpan<char> format)
         {
             if (_data == 0) return "";
