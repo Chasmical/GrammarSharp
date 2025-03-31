@@ -124,11 +124,11 @@ namespace GrammarSharp.Russian
         }
 
         [Pure] public readonly bool Equals(RussianNounProperties other)
-            => (_data & 0b_000_11_111) == (other._data & 0b_000_11_111);
+            => _data == other._data;
         [Pure] public readonly override bool Equals([NotNullWhen(true)] object? obj)
             => obj is RussianNounProperties other && Equals(other);
         [Pure] public readonly override int GetHashCode()
-            => _data & 0b_000_11_111;
+            => _data;
 
         [Pure] public static bool operator ==(RussianNounProperties left, RussianNounProperties right)
             => left.Equals(right);

@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
@@ -22,6 +23,17 @@ namespace GrammarSharp.Russian
         {
             Stem = stem;
             Info = info;
+        }
+
+        [Pure] public static string ExtractStem(string word)
+        {
+            // Remove the last vowel/'й'/'ь' to get the stem
+            return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
+        }
+        [Pure] public static ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
+        {
+            // Remove the last vowel/'й'/'ь' to get the stem
+            return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
         }
 
         [Pure] public static RussianNoun FromStem(string stem, RussianNounInfo info)

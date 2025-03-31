@@ -95,7 +95,7 @@ namespace GrammarSharp.Russian
         public RussianStressPattern(ReadOnlySpan<char> stressPattern)
             => this = Parse(stressPattern);
 
-        private static void ValidateStress(RussianStress stress, string? paramName)
+        private static void ValidateStress(RussianStress stress, string paramName)
         {
             if ((uint)stress > (uint)RussianStress.Fpp)
                 Throw(stress, paramName);

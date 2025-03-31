@@ -14,7 +14,7 @@ namespace GrammarSharp.Russian
 
         public RussianAdjectiveInfo(RussianDeclension declension, RussianAdjectiveFlags flags)
         {
-            declension.Normalize(RussianDeclensionType.Adjective);
+            declension.Normalize(RussianDeclensionType.Adjective, nameof(declension));
 
             if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
                 throw new ArgumentException($"Declension {declension} is not valid for adjectives.", nameof(declension));
