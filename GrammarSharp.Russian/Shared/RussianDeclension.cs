@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -17,16 +18,17 @@ namespace GrammarSharp.Russian
         // Representation (_flags field):
         //   1111_1111 - see RussianDeclensionFlags enum
         //
-        // Representation (_nounProps field):
-        //   1111_1111 - see RussianNounProperties struct
+        // Representation (_specialProps field):
+        //   111_11111 - see RussianNounProperties struct
         //
-        //   xxxx_x111 - special noun gender and animacy
-        //   111x_xxxx - 'special noun props are present' flag
+        //   xxx_11111 - special noun gender, animacy and tantums
+        //   001_xxxxx - 'is noun and has special declension properties' flag
+        //   010_xxxxx - 'is adjective and is reflexive' flag
         //
         private byte _types;
         private RussianStressPattern _stress;
         private byte _flags;
-        private RussianNounProperties _nounProps;
+        private RussianNounProperties _specialProps;
 
         public int StemType
         {
@@ -37,15 +39,17 @@ namespace GrammarSharp.Russian
                 _types = (byte)((_types & 0xF0) | value);
             }
         }
-        public readonly RussianDeclensionType Type => (RussianDeclensionType)(_types >> 4);
+        public RussianDeclensionType Type
+        {
+            readonly get => (RussianDeclensionType)(_types >> 4);
+            // Set only in internal Normalize() method, so there's no validation
+            private set => _types = (byte)((_types & 0x0F) | ((int)value << 4));
+        }
+
         public RussianStressPattern StressPattern
         {
             readonly get => _stress;
-            set
-            {
-                value.Normalize(Type, nameof(value));
-                _stress = value;
-            }
+            set => _stress = value;
         }
         public RussianDeclensionFlags Flags
         {
@@ -56,29 +60,51 @@ namespace GrammarSharp.Russian
         public RussianNounProperties? SpecialNounProperties
         {
             // This property uses the field's ExtraData as a non-null value flag
-            readonly get => _nounProps.ExtraData == 1 ? _nounProps.WithoutExtraData() : null;
+            readonly get => _specialProps.ExtraData == 1 ? _specialProps.WithoutExtraData() : null;
             set
             {
-                _nounProps = value.GetValueOrDefault();
-                _nounProps.ExtraData = value.HasValue ? 1 : 0;
+                _specialProps = value.GetValueOrDefault();
+                if (value.HasValue && Type > RussianDeclensionType.Noun)
+                    throw new InvalidOperationException("Cannot set adjective/pronoun declension's noun properties.");
+                _specialProps.ExtraData = value.HasValue ? 1 : 0;
             }
         }
         public bool IsReflexiveAdjective
         {
-            readonly get => _nounProps.ExtraData == 2;
-            set => _nounProps.ExtraData = value ? 2 : 0;
+            readonly get => _specialProps.ExtraData == 2;
+            set
+            {
+                if (value && Type is not RussianDeclensionType.Unknown and not RussianDeclensionType.Adjective)
+                    throw new InvalidOperationException("Cannot set noun/pronoun declension's adjective properties.");
+                _specialProps = default;
+                _specialProps.ExtraData = value ? 2 : 0;
+            }
         }
 
         public readonly bool IsZero => StemType == 0;
 
+        private RussianDeclension(RussianDeclensionType type)
+            => _types = (byte)((int)type << 4);
+
         public RussianDeclension(RussianDeclensionType type, int stemType, RussianStressPattern stress, RussianDeclensionFlags flags)
         {
+            if ((uint)type > (uint)RussianDeclensionType.Pronoun)
+                throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType));
+
             ValidateStemType(type, stemType);
-            stress.Normalize(type, nameof(stress));
 
             _types = (byte)(stemType | ((int)type << 4));
-            _stress = stress;
-            _flags = (byte)flags;
+
+            if (stemType == 0)
+            {
+                if (!stress.IsZero) throw new ArgumentException("0 declension cannot have a non-zero stress pattern.", nameof(stress));
+                if (flags != 0) throw new ArgumentException("0 declension cannot have declension flags.", nameof(stress));
+            }
+            else
+            {
+                _stress = stress;
+                _flags = (byte)flags;
+            }
         }
 
         private static void ValidateStemType(
@@ -135,7 +161,18 @@ namespace GrammarSharp.Russian
         }
 
         internal void RemovePluraleTantum()
-            => _nounProps.IsPluraleTantum = false;
+            => _specialProps.IsPluraleTantum = false;
+
+        internal void Normalize(RussianDeclensionType defaultType)
+        {
+            if (IsZero)
+            {
+                Type = defaultType;
+                return;
+            }
+            if (Type == RussianDeclensionType.Unknown) Type = defaultType;
+            _stress.Normalize(Type, nameof(defaultType));
+        }
 
         [Pure] public readonly bool Equals(RussianDeclension other)
         {

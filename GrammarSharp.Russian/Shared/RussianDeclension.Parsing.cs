@@ -10,7 +10,7 @@ namespace GrammarSharp.Russian
         [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianDeclension declension)
         {
             SpanParser parser = new SpanParser(text);
-            return ParseInternal(ref parser, out declension, (RussianDeclensionType)(-1));
+            return ParseInternal(ref parser, out declension, RussianDeclensionType.Unknown);
         }
         [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianDeclension declension, RussianDeclensionType type)
         {

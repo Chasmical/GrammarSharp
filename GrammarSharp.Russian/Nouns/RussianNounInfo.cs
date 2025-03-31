@@ -11,13 +11,11 @@ namespace GrammarSharp.Russian
 
         public RussianNounInfo(RussianNounProperties properties, RussianDeclension declension)
         {
+            declension.Normalize(RussianDeclensionType.Noun);
+
             if (declension.Type is not RussianDeclensionType.Noun and not RussianDeclensionType.Adjective)
-            {
-                if (declension.IsZero)
-                    declension = new(RussianDeclensionType.Noun, 0, default, 0);
-                else
-                    throw new ArgumentException($"Declension {declension} is not valid for nouns.", nameof(declension));
-            }
+                throw new ArgumentException($"Declension {declension} is not valid for nouns.", nameof(declension));
+
             Properties = properties;
             Declension = declension;
         }

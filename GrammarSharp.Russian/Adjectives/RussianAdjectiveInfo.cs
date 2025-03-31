@@ -14,17 +14,14 @@ namespace GrammarSharp.Russian
 
         public RussianAdjectiveInfo(RussianDeclension declension, RussianAdjectiveFlags flags)
         {
-            if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
-            {
-                if (declension.IsZero)
-                    declension = new(RussianDeclensionType.Adjective, 0, default, 0);
-                else
-                    throw new ArgumentException($"Declension {declension} is not valid for adjectives.", nameof(declension));
-            }
-            Declension = declension;
+            declension.Normalize(RussianDeclensionType.Adjective);
 
+            if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
+                throw new ArgumentException($"Declension {declension} is not valid for adjectives.", nameof(declension));
             if (flags != 0 && declension.Type != RussianDeclensionType.Adjective)
                 throw new ArgumentException("Only pure adjectives (with adjective declension) can have flags.", nameof(flags));
+
+            Declension = declension;
             Flags = flags;
         }
 
