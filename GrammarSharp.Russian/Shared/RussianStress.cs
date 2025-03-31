@@ -114,7 +114,5 @@
         ///   </para>
         /// </summary>
         Fpp = 0b_1110,
-
-        //   (0b_1111 is a special value, used to display `a/` or `/b`, primarily for error messages)
     }
 }

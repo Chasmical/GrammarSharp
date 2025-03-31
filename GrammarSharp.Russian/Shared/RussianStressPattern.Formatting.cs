@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
@@ -10,17 +11,7 @@ namespace GrammarSharp.Russian
         /// </summary>
         /// <returns>The string representation of this Russian stress pattern.</returns>
         [Pure] public readonly override string ToString()
-        {
-            if (_data == 0) return "";
-
-            var (main, alt) = this;
-
-            if (alt == RussianStress.Zero) return stressStringLookup[(int)main];
-
-            return ToStringBoth(stressStringLookup, main, alt);
-        }
-        [Pure] private static string ToStringBoth(string[] lookup, RussianStress main, RussianStress alt)
-            => $"{lookup[(int)main]}/{lookup[(int)alt]}";
+            => _data == 0 ? "" : ToStringBoth(Main, Alt);
 
         /// <summary>
         ///   <para>Converts this Russian stress pattern to its equivalent string representation, using the specified <paramref name="format"/>.</para>
@@ -40,40 +31,88 @@ namespace GrammarSharp.Russian
         {
             if (_data == 0) return "";
 
-            if (format.Length == 0) return ToString();
+            RussianStress main = Main, alt = Alt;
+
+            // If format is empty/null, use the full format
+            if (format.Length == 0) return ToStringBoth(main, alt);
 
             if (format.Length == 1)
             {
-                var (main, alt) = this;
-                string[] lookup = stressStringLookup;
-
-                // If the alternative stress is not specified, use the short format regardless
-                if (alt == RussianStress.Zero) return lookup[(int)main];
-
                 switch (format[0] | ' ')
                 {
-                    case 'n' or 'g':
-                        // Always use full format, unless alt is unspecified
-                        return ToStringBoth(lookup, main, alt);
+                    case 'g':
+                        // Always use the full format
+                        return ToStringBoth(main, alt);
+
+                    case 'n' or 'p':
+                        // If alternative stress is zero, output just the main stress
+                        if (alt == RussianStress.Zero) return singleStressLookup[(int)main];
+                        // Otherwise, format them both (not really valid for nouns)
+                        return ToStringBoth(main, alt);
+
                     case 'a':
                         // Shorten a/a to a, b/b to b
-                        if (alt == main) return lookup[(int)main];
-                        // Shorten a/a′ to a′, b/b′ to b′
-                        if (main <= RussianStress.F && alt - 6 == main) return lookup[(int)alt];
-                        // Otherwise, use full format, a/b, b/c′
-                        return ToStringBoth(lookup, main, alt);
+                        if (alt == main) return singleStressLookup[(int)main];
+                        // Shorten a/a′ to a′, b/b′ to b′, c/c″ to c″
+                        if (main is <= RussianStress.F and not 0)
+                        {
+                            if (
+                                main == alt - 6 ||
+                                alt >= RussianStress.Cpp && main == (alt == RussianStress.Cpp ? RussianStress.C : RussianStress.F)
+                            )
+                                return singleStressLookup[(int)alt];
+                        }
+                        // Otherwise, use the full format, a/b, b/c′
+                        return ToStringBoth(main, alt);
+
                     case 'v':
                         // Shorten a/a to a, c/a to c, c′/a to c′
-                        if (alt == RussianStress.A) return lookup[(int)main];
-                        // Otherwise, use full format, b/b, c′/b
-                        return ToStringBoth(lookup, main, alt);
+                        if (alt == RussianStress.A && main != 0) return singleStressLookup[(int)main];
+                        // Otherwise, use the full format, b/b, c′/b
+                        return ToStringBoth(main, alt);
                 }
             }
+
+            // The format specifier was not handled, throw exception
             throw new FormatException($"'{format.ToString()}' is not a valid format for Russian stress patterns.");
         }
 
-        private static readonly string[] stressStringLookup =
-            [null!, "a", "b", "c", "d", "e", "f", "a′", "b′", "c′", "d′", "e′", "f′", "c″", "f″", ""];
+        private static readonly string[] singleStressLookup =
+            [null!, "a", "b", "c", "d", "e", "f", "a′", "b′", "c′", "d′", "e′", "f′", "c″", "f″"];
+
+        [Pure] private static string ToStringBoth(RussianStress main, RussianStress alt)
+        {
+            // Longest: f″/f″ (5 chars)
+            Span<char> buffer = stackalloc char[8];
+            int offset = 0;
+
+            AppendSingleStress(buffer, ref offset, main);
+            buffer[offset++] = '/';
+            AppendSingleStress(buffer, ref offset, alt);
+
+            return new string(buffer[..offset]);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            static void AppendSingleStress(Span<char> buffer, ref int offset, RussianStress stress)
+            {
+                switch (stress)
+                {
+                    case 0:
+                        break;
+                    case <= RussianStress.F:
+                        buffer[offset++] = (char)('a' - 1 + (int)stress);
+                        break;
+                    case <= RussianStress.Fp:
+                        buffer[offset++] = (char)('a' - 7 + (int)stress);
+                        buffer[offset++] = '′';
+                        break;
+                    default:
+                        buffer[offset++] = stress == RussianStress.Cpp ? 'c' : 'f';
+                        buffer[offset++] = '″';
+                        break;
+                }
+            }
+        }
 
     }
 }
