@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
@@ -25,7 +24,7 @@ namespace GrammarSharp.Russian
             readonly get => (RussianStress)(_data & 0x0F);
             set
             {
-                ValidateStress(value);
+                ValidateStress(value, nameof(value));
                 _data = (byte)((_data & 0xF0) | (int)value);
             }
         }
@@ -37,10 +36,15 @@ namespace GrammarSharp.Russian
             readonly get => (RussianStress)(_data >> 4);
             set
             {
-                ValidateStress(value);
+                ValidateStress(value, nameof(value));
                 _data = (byte)((_data & 0x0F) | ((int)value << 4));
             }
         }
+
+        /// <summary>
+        ///   <para>Determines whether the main and alternative stress schemas are both <see cref="RussianStress.Zero"/>.</para>
+        /// </summary>
+        public readonly bool IsZero => _data == 0;
 
         private RussianStressPattern(byte data)
             => _data = data;
@@ -53,8 +57,8 @@ namespace GrammarSharp.Russian
         /// <exception cref="InvalidEnumArgumentException"><paramref name="main"/> or <paramref name="alt"/> is not a valid stress schema.</exception>
         public RussianStressPattern(RussianStress main, RussianStress alt)
         {
-            ValidateStress(main);
-            ValidateStress(alt);
+            ValidateStress(main, nameof(main));
+            ValidateStress(alt, nameof(alt));
 
             _data = (byte)((int)main | ((int)alt << 4));
         }
@@ -74,7 +78,7 @@ namespace GrammarSharp.Russian
         public RussianStressPattern(ReadOnlySpan<char> stressPattern)
             => this = Parse(stressPattern);
 
-        private static void ValidateStress(RussianStress stress, [CallerArgumentExpression(nameof(stress))] string? paramName = null)
+        private static void ValidateStress(RussianStress stress, string? paramName)
         {
             if ((uint)stress > (uint)RussianStress.Fpp)
                 Throw(stress, paramName);

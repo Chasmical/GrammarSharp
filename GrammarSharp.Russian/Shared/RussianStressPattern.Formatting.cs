@@ -11,7 +11,7 @@ namespace GrammarSharp.Russian
         /// </summary>
         /// <returns>The string representation of this Russian stress pattern.</returns>
         [Pure] public readonly override string ToString()
-            => _data == 0 ? "" : ToStringBoth(Main, Alt);
+            => IsZero ? "" : ToStringBoth(Main, Alt);
 
         /// <summary>
         ///   <para>Converts this Russian stress pattern to its equivalent string representation, using the specified <paramref name="format"/>.</para>
@@ -29,7 +29,7 @@ namespace GrammarSharp.Russian
         /// <exception cref="FormatException">The specified <paramref name="format"/> is not a valid format specifier.</exception>
         [Pure] public readonly string ToString(ReadOnlySpan<char> format)
         {
-            if (_data == 0) return "";
+            if (IsZero) return "";
 
             RussianStress main = Main, alt = Alt;
 
