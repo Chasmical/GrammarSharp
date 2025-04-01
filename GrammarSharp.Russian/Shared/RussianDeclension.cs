@@ -53,7 +53,7 @@ namespace GrammarSharp.Russian
             readonly get => _specialProps.ExtraData == 1 ? _specialProps.WithoutExtraData() : null;
             set
             {
-                if (value.HasValue == (_specialProps.ExtraData == 1)) return;
+                if (!value.HasValue && _specialProps.ExtraData != 1) return;
 
                 if (Type is not RussianDeclensionType.Unknown and not RussianDeclensionType.Noun)
                     throw new InvalidOperationException("Cannot set adjective/pronoun declension's noun properties.");
