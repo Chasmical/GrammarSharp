@@ -5,6 +5,10 @@ namespace GrammarSharp.Russian
 {
     public partial struct RussianDeclension
     {
+        /// <summary>
+        ///   <para>Returns a string representation of this Russian declension.</para>
+        /// </summary>
+        /// <returns>The string representation of this Russian declension.</returns>
         [Pure] public readonly override string ToString()
         {
             // Longest form (20 chars): мо-жо 1*°f″/f″①②③, ё
