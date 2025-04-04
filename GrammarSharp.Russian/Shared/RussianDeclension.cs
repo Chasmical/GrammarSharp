@@ -10,16 +10,28 @@ namespace GrammarSharp.Russian
     /// </summary>
     public partial struct RussianDeclension : IEquatable<RussianDeclension>
     {
+        // Representation (_field1):
+        //   11_xxxxxx - declension type (see all Russian[…]Declension types)
+        //   xx_111111 - < type-specific data >
+        // Representation (_field2):
+        //   1111_1111 - < type-specific data >
+        // Representation (_field3):
+        //   1111_1111 - < type-specific data >
+        //
         private byte _field1;
-        private byte _field2;
-        private byte _field3;
+        [UsedImplicitly] private readonly byte _field2;
+        [UsedImplicitly] private readonly byte _field3;
+
+        // TODO: what about this implementation of IsZero?
+        // public readonly bool IsZero => (_field1 & 0x3F) == 0 && _field2 == 0 && _field3 == 0;
 
         public readonly bool IsZero => Type switch
         {
-            RussianDeclensionType.Noun => ForNounUnsafe().IsZero,
-            RussianDeclensionType.Adjective => ForAdjectiveUnsafe().IsZero,
-            // TODO: use pronoun struct for IsZero?
-            _ => ForAdjectiveUnsafe().IsZero,
+            RussianDeclensionType.Noun => this.AsNounUnsafeRef().IsZero,
+            RussianDeclensionType.Adjective => this.AsAdjectiveUnsafeRef().IsZero,
+            RussianDeclensionType.Pronoun => this.AsPronounUnsafeRef().IsZero,
+            // TODO: pro-adj declension: IsZero property
+            _ => throw new NotImplementedException(),
         };
 
         public RussianDeclensionType Type
@@ -28,24 +40,40 @@ namespace GrammarSharp.Russian
             private set => _field1 = (byte)((_field1 & 0x3F) | ((int)value << 6));
         }
 
-        [Pure] internal readonly RussianNounDeclension ForNounUnsafe()
-            => Unsafe.As<RussianDeclension, RussianNounDeclension>(ref Unsafe.AsRef(in this));
-        [Pure] internal readonly RussianAdjectiveDeclension ForAdjectiveUnsafe()
-            => Unsafe.As<RussianDeclension, RussianAdjectiveDeclension>(ref Unsafe.AsRef(in this));
-        // TODO: ForPronounUnsafe()
-        // TODO: ForPronounAdjectiveUnsafe()
-
         [Pure] public static implicit operator RussianDeclension(RussianNounDeclension declension)
             => Unsafe.As<RussianNounDeclension, RussianDeclension>(ref declension);
         [Pure] public static implicit operator RussianDeclension(RussianAdjectiveDeclension declension)
         {
             var decl = Unsafe.As<RussianAdjectiveDeclension, RussianDeclension>(ref declension);
             // Ensure that the type marker is not lost (argument could have a default value)
-            decl.Type = RussianDeclensionType.Adjective;
+            decl._field1 |= (int)RussianDeclensionType.Adjective << 6;
             return decl;
         }
-        // TODO: implicit from PronounDeclension
-        // TODO: implicit from PronounAdjectiveDeclension
+        [Pure] public static implicit operator RussianDeclension(RussianPronounDeclension declension)
+        {
+            var decl = Unsafe.As<RussianPronounDeclension, RussianDeclension>(ref declension);
+            // Ensure that the type marker is not lost (argument could have a default value)
+            decl._field1 |= (int)RussianDeclensionType.Pronoun << 6;
+            return decl;
+        }
+        // TODO: pro-adj declension: implicit from PronounAdjectiveDeclension
+
+        public readonly bool TryAsNoun(out RussianNounDeclension nounDeclension)
+        {
+            nounDeclension = this.AsNounUnsafeRef();
+            return Type == RussianDeclensionType.Noun;
+        }
+        public readonly bool TryAsAdjective(out RussianAdjectiveDeclension adjectiveDeclension)
+        {
+            adjectiveDeclension = this.AsAdjectiveUnsafeRef();
+            return Type == RussianDeclensionType.Adjective;
+        }
+        public readonly bool TryAsPronoun(out RussianPronounDeclension pronounDeclension)
+        {
+            pronounDeclension = this.AsPronounUnsafeRef();
+            return Type == RussianDeclensionType.Pronoun;
+        }
+        // TODO: pro-adj declension: TryAsPronounAdjective()
 
         public string ExtractStem(string word)
         {
@@ -66,17 +94,8 @@ namespace GrammarSharp.Russian
                     return res;
 
                 default:
-                    throw new NotImplementedException("pro-adj declension: extract stem");
-            }
-        }
-
-        // TODO: get rid of RemovePluraleTantum?
-        internal void RemovePluraleTantum()
-        {
-            if (Type == RussianDeclensionType.Noun)
-            {
-                ref var forNoun = ref Unsafe.As<RussianDeclension, RussianNounDeclension>(ref this);
-                forNoun.RemovePluraleTantum();
+                    // TODO: pro-adj declension: extract stem
+                    throw new NotImplementedException();
             }
         }
 

@@ -13,25 +13,25 @@ namespace GrammarSharp.Russian
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            NounProps props;
+            NounProps props = Info.Properties;
             if (declension.Type == RussianDeclensionType.Noun)
             {
-                NounDecl decl = declension.ForNounUnsafe();
+                NounDecl decl = declension.AsNounUnsafeRef();
                 // Use special declension properties, if they're specified
-                props = decl.SpecialProperties ?? Info.Properties;
-                props.CopyTantumsFrom(Info.Properties);
+                if (decl.SpecialProperties is { } specialProps)
+                    props.CopyFromButKeepTantums(specialProps);
+
                 // Prepare the props for noun declension, store case in props
                 props.PrepareForNounDeclension(@case, plural);
 
                 return DeclineCore(Stem, decl, props);
             }
-            else // if(declension.Type == RussianDeclensionType.Adjective)
+            else // if (declension.Type == RussianDeclensionType.Adjective)
             {
-                props = Info.Properties;
                 // Prepare the props for adjective declension, store case in props
                 props.PrepareForAdjectiveDeclension(@case, plural);
 
-                return RussianAdjective.DeclineCore(Stem, declension.ForAdjectiveUnsafe(), props);
+                return RussianAdjective.DeclineCore(Stem, declension.AsAdjectiveUnsafeRef(), props);
             }
         }
 

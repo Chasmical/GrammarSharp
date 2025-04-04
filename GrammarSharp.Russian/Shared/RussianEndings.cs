@@ -5,7 +5,7 @@ namespace GrammarSharp.Russian
 {
     using NounDecl = RussianNounDeclension;
     using AdjectiveDecl = RussianAdjectiveDeclension;
-    using PronounDecl = RussianAdjectiveDeclension;
+    using PronounDecl = RussianPronounDeclension;
     using NounProps = RussianNounProperties;
 
     internal static partial class RussianEndings
@@ -88,7 +88,7 @@ namespace GrammarSharp.Russian
             ReadOnlySpan<byte> lookup = PronounLookup;
 
             // Get indices of both unstressed and stressed forms of endings (usually they're the same)
-            int lookupIndex = ComposeAdjectiveEndingIndex(decl, props, props.Case);
+            int lookupIndex = ComposePronounEndingIndex(decl, props, props.Case);
             byte unStrIndex = lookup[lookupIndex];
 
             // Accusative case usually uses either genitive's or nominative's ending, depending on animacy.
@@ -98,9 +98,9 @@ namespace GrammarSharp.Russian
                 // Stem type 2 pronouns' accusative case is not consistent. Normally, the endings of either
                 // Genitive or Nominative of the same stem type are used, but those are "shortened", while
                 // Accusative still uses the full form of those.
-                if (decl.StemType == 2) decl.StemType = 4;
+                if (decl.StemType == 2) decl.SetStemTypeUnsafe(4);
 
-                lookupIndex = ComposeAdjectiveEndingIndex(decl, props, props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
+                lookupIndex = ComposePronounEndingIndex(decl, props, props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
                 unStrIndex = lookup[lookupIndex];
             }
             // Stressed ending index is right next to the unstressed one's
@@ -114,7 +114,7 @@ namespace GrammarSharp.Russian
             // Context-dependent variables are more significant and come first, subject-driven variables come next,
             // And finally, unstressed and stressed forms are next to each other to make stress-checking simpler.
 
-            // Composite index: [short & case:7] [plural & gender:4] [stem type:7] [stress:2]
+            // Composite index: [case:6] [plural & gender:4] [stem type:7] [stress:2]
 
             int index = (int)@case;
             index = index * 4 + (int)props.Gender;

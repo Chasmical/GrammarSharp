@@ -39,7 +39,7 @@ namespace GrammarSharp.Russian
                 code = RussianDeclension.ParseInternal(ref parser, out declension);
                 if (code > ParseCode.Leftovers) return code;
 
-                if (declension.Type != RussianDeclensionType.Noun || declension.ForNounUnsafe().SpecialProperties is not null)
+                if (declension.Type != RussianDeclensionType.Noun || declension.AsNounUnsafeRef().SpecialProperties is not null)
                     return ParseCode.InvalidDeclension;
             }
 

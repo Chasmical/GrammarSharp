@@ -11,9 +11,11 @@ namespace GrammarSharp.Russian
         /// <returns>The string representation of this Russian declension.</returns>
         [Pure] public readonly override string ToString()
         {
-            // Longest form (noun): мо-жо 8*°f″①②③, ё (17 chars)
-            // Longest form (adj) : п 7*f″/f″①②, ё (14 chars)
-            // Longest form (pro) : TODO
+            // Longest forms of types:
+            // Noun      (17 chars): мо-жо 8*°f″①②③, ё
+            // Adjective (14 chars): п 7*f″/f″①②, ё
+            // Pronoun    (6 chars): мс 6*f
+            // Pro-Adj    (  chars): TODO: pro-adj declension: formatting
             Span<char> buffer = stackalloc char[32];
             int offset = 0;
 
@@ -26,7 +28,7 @@ namespace GrammarSharp.Russian
             {
                 case RussianDeclensionType.Noun:
                 {
-                    var forNoun = ForNounUnsafe();
+                    var forNoun = this.AsNounUnsafeRef();
                     stemType = forNoun.StemType;
                     stress = new(forNoun.Stress);
                     flags = forNoun.Flags;
@@ -48,7 +50,7 @@ namespace GrammarSharp.Russian
                 }
                 case RussianDeclensionType.Adjective:
                 {
-                    var forAdjective = ForAdjectiveUnsafe();
+                    var forAdjective = this.AsAdjectiveUnsafeRef();
                     stemType = forAdjective.StemType;
                     stress = forAdjective.StressPattern;
                     flags = forAdjective.Flags;
@@ -60,9 +62,9 @@ namespace GrammarSharp.Russian
                 }
                 case RussianDeclensionType.Pronoun:
                 {
-                    var forAdjective = ForAdjectiveUnsafe();
+                    var forAdjective = this.AsPronounUnsafeRef();
                     stemType = forAdjective.StemType;
-                    stress = forAdjective.StressPattern;
+                    stress = new(forAdjective.Stress);
                     flags = forAdjective.Flags;
 
                     // Append the declension type identifier
@@ -72,7 +74,8 @@ namespace GrammarSharp.Russian
                     break;
                 }
                 default:
-                    throw new NotImplementedException("Pro/pro-adj declension: formatting");
+                    // TODO: pro-adj declension: formatting
+                    throw new NotImplementedException();
             }
 
             // Append the stem type

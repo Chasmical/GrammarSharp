@@ -89,7 +89,8 @@ namespace GrammarSharp.Russian
             0x53, 0x53, 0x47, 0x47, 0x53, 0x53, 0x53, 0x53,
         ];
 
-        // A compact (336 B) pronoun ending index lookup, used by GetAdjectiveEndingIndices()
+        // A compact (336 B) pronoun ending index lookup, used by GetPronounEndingIndices()
+        // TODO: consider shortening pronoun ending lookup, since only 1, 2, 4 and 6 stem types are used
         public static ReadOnlySpan<byte> PronounLookup =>
         [
             0x40, 0x40, 0x41, 0x4b, 0x40, 0x40, 0x41, 0x40, 0x41, 0x40, 0x41, 0x4b, 0x41, 0x4b, 0x01, 0x01,

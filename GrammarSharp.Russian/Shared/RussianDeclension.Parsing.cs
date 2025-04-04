@@ -23,7 +23,7 @@ namespace GrammarSharp.Russian
             {
                 type = RussianDeclensionType.Pronoun;
                 parser.SkipWhitespaces();
-                // TODO: handle pro-adj declension identifier
+                // TODO: pro-adj declension: parsing identifier
             }
             else if (parser.Skip('п'))
             {
@@ -86,7 +86,7 @@ namespace GrammarSharp.Russian
             {
                 case RussianDeclensionType.Noun:
                 {
-                    // TODO: handle invalid alt stress
+                    if (stressPattern.Alt != 0) return ParseCode.InvalidStress;
                     declension = new RussianNounDeclension(stemType, stressPattern.Main, flags, specialNounProps);
                     break;
                 }
@@ -97,14 +97,14 @@ namespace GrammarSharp.Russian
                 }
                 case RussianDeclensionType.Pronoun:
                 {
-                    // TODO: PRIORITY! add separate type for pronoun declension?
-                    declension = new RussianAdjectiveDeclension(stemType, stressPattern, flags);
-                    declension.Type = RussianDeclensionType.Pronoun;
+                    if (stressPattern.Alt != 0) return ParseCode.InvalidStress;
+                    declension = new RussianPronounDeclension(stemType, stressPattern.Main, flags);
                     break;
                 }
                 default:
                 {
-                    throw new NotImplementedException("Pro/pro-adj declension: parsing");
+                    // TODO: pro-adj declension: parsing construction
+                    throw new NotImplementedException();
                 }
             }
 

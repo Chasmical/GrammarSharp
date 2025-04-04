@@ -8,6 +8,7 @@ namespace GrammarSharp.Russian
         [Pure] public readonly override string ToString()
         {
             // Longest form (28 chars): мо-жо <мо-жо 1*°f″/f″①②③, ё>
+            // TODO: use a span buffer to format RussianNounInfo
             StringBuilder sb = new(32);
 
             // Append the noun's properties
@@ -15,13 +16,12 @@ namespace GrammarSharp.Russian
 
             RussianDeclension decl = Declension;
 
-            bool isSpecialDeclension = decl.Type != RussianDeclensionType.Noun || decl.ForNounUnsafe().SpecialProperties.HasValue;
+            bool isSpecialDeclension = decl.Type != RussianDeclensionType.Noun || decl.AsNounUnsafeRef().SpecialProperties.HasValue;
 
             // If it's a special declension or has special declension properties, put it in braces
             if (isSpecialDeclension) sb.Append('<');
 
-            // Append the actual declension and special props, but without tantums
-            decl.RemovePluraleTantum();
+            // Append the actual declension and special props
             sb.Append(decl);
 
             // Append the singulare tantum indicator

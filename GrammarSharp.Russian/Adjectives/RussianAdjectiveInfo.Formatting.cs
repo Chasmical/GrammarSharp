@@ -7,6 +7,7 @@ namespace GrammarSharp.Russian
     {
         [Pure] public readonly override string ToString()
         {
+            // TODO: use a span buffer to format RussianAdjectiveInfo
             StringBuilder sb = new();
 
             RussianDeclension decl = Declension;

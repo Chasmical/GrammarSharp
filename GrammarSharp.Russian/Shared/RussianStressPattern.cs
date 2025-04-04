@@ -159,87 +159,52 @@ namespace GrammarSharp.Russian
         [Pure] internal readonly bool IsDoubleA()
             => _data == ((int)RussianStress.A | ((int)RussianStress.A << 4));
 
-        [Pure] public readonly RussianStressPattern Normalize(RussianDeclensionType type)
-        {
-            if ((uint)type - 1 > (uint)RussianDeclensionType.Pronoun - 1)
-                throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(RussianDeclensionType));
-
-            RussianStressPattern copy = this;
-            if (copy.NormalizeCore(type)) return copy;
-            throw new InvalidOperationException($"{this} is not a valid stress pattern for {type}.");
-        }
-
-        private bool NormalizeCore(RussianDeclensionType type)
+        internal bool TryNormalizeForAdjective()
         {
             var (main, alt) = this;
 
-            switch (type)
+            // If alternative stress is not specified, default to main
+            if (alt == RussianStress.Zero)
             {
-                case RussianDeclensionType.Noun:
-                    // Nouns don't have alternative stress
-                    if (alt != RussianStress.Zero) return false;
-                    // Noun stress can only be: 0, a through f, b′, d′, f′ and f″
-                    if ((uint)main > (uint)RussianStress.F && ((uint)main & 1) != 0) return false;
-                    break;
+                alt = main;
 
-                case RussianDeclensionType.Adjective:
-                    // If alternative stress is not specified, default to main
-                    if (alt == RussianStress.Zero)
-                    {
-                        alt = main;
-
-                        // If main stress has a prime, remove the stress from it (but keep it in alternative stress)
-                        if (main >= RussianStress.Ap)
-                        {
-                            if (main <= RussianStress.Cp)
-                                main -= (int)RussianStress.F;
-                            else if (main == RussianStress.Cpp)
-                                main = RussianStress.C;
-                            else
-                                return false;
-                        }
-                    }
-
-                    // Full-form stress can only be: 0, a, b or c
-                    if (main > RussianStress.C) return false;
-                    // Short-form stress can only be: 0, a, b, c, a′, b′, c′ and c″
-                    if (alt is > RussianStress.C and not (>= RussianStress.Ap and <= RussianStress.Cp) and not RussianStress.Cpp)
+                // If main stress has a prime, remove the stress from it (but keep it in alternative stress)
+                if (main >= RussianStress.Ap)
+                {
+                    if (main <= RussianStress.Cp)
+                        main -= (int)RussianStress.F;
+                    else if (main == RussianStress.Cpp)
+                        main = RussianStress.C;
+                    else
                         return false;
-                    break;
-
-                case RussianDeclensionType.Pronoun:
-                    // Pronouns don't have alternative stress
-                    if (alt != RussianStress.Zero) return false;
-                    // Pronoun stress can only be: 0, a, b or f
-                    if (main is > RussianStress.B and not RussianStress.F) return false;
-                    break;
-
-                // Otherwise, it's a verb
-                default:
-                    // If alternative stress is not specified, default to a
-                    if (alt == RussianStress.Zero)
-                        alt = RussianStress.A;
-
-                    // Present-tense stress can only be: a, b, c or c′
-                    if (main is RussianStress.Zero or > RussianStress.C and not RussianStress.Cp) return false;
-                    // Past-tense stress can only be: a, b, c, c′ or c″
-                    if (alt is > RussianStress.C and not RussianStress.Cp and not RussianStress.Cpp) return false;
-                    break;
+                }
             }
+
+            // Full form stress can only be: 0, a, b or c
+            if (main > RussianStress.C)
+                return false;
+            // Short form stress can only be: 0, a, b, c, a′, b′, c′ and c″
+            if (alt is > RussianStress.C and not (>= RussianStress.Ap and <= RussianStress.Cp) and not RussianStress.Cpp)
+                return false;
 
             _data = (byte)((int)main | ((int)alt << 4));
             return true;
         }
 
-        internal void NormalizeMut(RussianDeclensionType type, string paramName)
+        internal bool TryNormalizeForVerb()
         {
-            if (!NormalizeCore(type))
-                throw new ArgumentException($"{this} is not a valid stress pattern for {type}.", paramName);
-        }
-        internal void NormalizeMutForVerb(string paramName)
-        {
-            if (!NormalizeCore((RussianDeclensionType)3))
-                throw new ArgumentException($"{this} is not a valid stress schema for verbs.", paramName);
+            var (main, alt) = this;
+
+            // If alternative stress is not specified, default to a
+            if (alt == RussianStress.Zero) alt = RussianStress.A;
+
+            // Present-tense stress can only be: a, b, c or c′
+            if (main is RussianStress.Zero or > RussianStress.C and not RussianStress.Cp) return false;
+            // Past-tense stress can only be: a, b, c, c′ or c″
+            if (alt is > RussianStress.C and not RussianStress.Cp and not RussianStress.Cpp) return false;
+
+            _data = (byte)((int)main | ((int)alt << 4));
+            return true;
         }
 
     }

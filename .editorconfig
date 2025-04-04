@@ -25,9 +25,17 @@ spelling_exclusion_path = .\exclusion.dic
 # - specifying explicit types for tuples is way too redundant
 dotnet_diagnostic.IDE0008.severity = none
 
+# Disable 'Use expression body for constructor' message
+# - Having method bodies is more convenient when writing code with #if directives
+dotnet_diagnostic.IDE0021.severity = none
+
 # Disable 'Use expression body for method' message
 # - Having method bodies is more convenient when writing code with #if directives
 dotnet_diagnostic.IDE0022.severity = none
+
+# Disable 'Use expression body for property' message
+# - Having method bodies is more convenient when writing code with #if directives
+dotnet_diagnostic.IDE0025.severity = none
 
 # Disable 'if statement can be simplified' message
 # - Sometimes having separate if branches looks better

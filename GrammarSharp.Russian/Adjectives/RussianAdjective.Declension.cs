@@ -16,8 +16,14 @@ namespace GrammarSharp.Russian
             // Prepare the props for adjective/pronoun declension, store case in props
             props.PrepareForAdjectiveDeclension(@case, plural);
 
-            // TODO: how do you handle pronoun declension properly?
-            return DeclineCore(Stem, declension.ForAdjectiveUnsafe(), props, declension.Type == RussianDeclensionType.Pronoun);
+            if (declension.Type == RussianDeclensionType.Adjective)
+            {
+                return DeclineCore(Stem, declension.AsAdjectiveUnsafeRef(), props);
+            }
+            else // if (declension.Type == RussianDeclensionType.Pronoun)
+            {
+                return RussianPronoun.DeclineCore(Stem, declension.AsPronounUnsafeRef(), props);
+            }
         }
 
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
@@ -48,7 +54,7 @@ namespace GrammarSharp.Russian
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero || declension.Type != RussianDeclensionType.Adjective) return null;
             if ((Info.Flags & RussianAdjectiveFlags.NoComparativeForm) != 0) return null;
-            AdjDecl decl = declension.ForAdjectiveUnsafe();
+            AdjDecl decl = declension.AsAdjectiveUnsafeRef();
 
             ReadOnlySpan<char> stem = Stem;
             int length = stem.Length;
@@ -93,7 +99,7 @@ namespace GrammarSharp.Russian
             return buffer[..(length + 1)].ToString();
         }
 
-        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, AdjDecl decl, SubjProps props, bool isPronoun = false)
+        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, AdjDecl decl, SubjProps props)
         {
             if (decl.IsZero) return stem.ToString();
 
@@ -103,7 +109,7 @@ namespace GrammarSharp.Russian
             InflectionBuffer results = new(buffer);
 
             // Find the appropriate adjective ending
-            ReadOnlySpan<char> ending = DetermineEnding(decl, props, isPronoun);
+            ReadOnlySpan<char> ending = DetermineEnding(decl, props);
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);
 
@@ -127,10 +133,6 @@ namespace GrammarSharp.Russian
                         ProcessShortFormVowelAlternation(ref results, decl, props);
                 }
             }
-
-            // Process vowel alternation for adjectives with pronoun declension
-            if ((flags & RussianDeclensionFlags.Star) != 0 && isPronoun)
-                ProcessPronounVowelAlternation(ref results, decl, props);
 
             // If declension has an alternating ё, figure out if it needs to be moved
             if ((flags & RussianDeclensionFlags.AlternatingYo) != 0)
@@ -187,53 +189,6 @@ namespace GrammarSharp.Russian
                         ? RussianLowerCase.IsHissingConsonant(preLastChar) ? 'о' : 'ё'
                         : 'е'
                 );
-            }
-        }
-
-        private static void ProcessPronounVowelAlternation(ref InflectionBuffer buffer, AdjDecl decl, SubjProps props)
-        {
-            int lastVowelIndex = RussianLowerCase.LastIndexOfVowel(buffer.Stem);
-            if (lastVowelIndex == -1) throw new InvalidOperationException();
-
-            // Masculine nominative is unchanged (and accusative for inanimate nouns too)
-            if (props.Gender == RussianGender.Masculine && props.IsNominativeNormalized)
-                return;
-
-            switch (buffer.Buffer[lastVowelIndex])
-            {
-                case 'о': // 'о' is removed
-                    buffer.RemoveStemCharAt(lastVowelIndex);
-                    break;
-                case 'и': // 'и' is replaced with 'ь'
-                    buffer.Buffer[lastVowelIndex] = 'ь';
-                    break;
-                case 'е' or 'ё':
-                    char preceding = lastVowelIndex > 0 ? buffer.Buffer[lastVowelIndex - 1] : '\0';
-
-                    if (RussianLowerCase.IsVowel(preceding))
-                    {
-                        // 1) is replaced with 'й', when after a vowel
-                        buffer.Buffer[lastVowelIndex] = 'й';
-                    }
-                    else if (
-                        // 2)a) is *always* replaced with 'ь', when noun is masc 6*
-                        decl.StemType == 6 ||
-                        // 2)b) is replaced with 'ь', when noun is masc 3* and it's after a non-sibilant consonant
-                        decl.StemType == 3 && RussianLowerCase.IsNonSibilantConsonant(preceding) ||
-                        // 2)c) is replaced with 'ь', when after 'л'
-                        preceding == 'л'
-                    )
-                    {
-                        buffer.Buffer[lastVowelIndex] = 'ь';
-                    }
-                    else
-                    {
-                        // 3) in all other cases, is removed
-                        buffer.RemoveStemCharAt(lastVowelIndex);
-                    }
-                    break;
-                default:
-                    throw new InvalidOperationException();
             }
         }
 

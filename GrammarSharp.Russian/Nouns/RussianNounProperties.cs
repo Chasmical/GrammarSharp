@@ -71,9 +71,8 @@ namespace GrammarSharp.Russian
             => throw new InvalidEnumArgumentException(nameof(gender), gender, typeof(RussianGender));
 
         // Where ExtraData is used and what for:
-        // - in RussianDeclension, as "has special noun props" flag (value 1).
-        // - in RussianDeclension, as "is reflexive adjective" flag (value 2).
-        // - when declining nouns and adjectives, to store case.
+        // - in RussianNounDeclension, to store 3 extra bits of data.
+        // - during declension of all declensible words, to store case.
         internal int ExtraData
         {
             readonly get => _data >> 5;
@@ -81,9 +80,6 @@ namespace GrammarSharp.Russian
         }
         internal readonly bool IsPlural => (_data & 0b_000_01_000) != 0;
         internal readonly RussianCase Case => (RussianCase)ExtraData;
-
-        internal readonly RussianNounProperties WithoutExtraData()
-            => new RussianNounProperties((byte)(_data & 0b_000_11_111));
 
         internal void PrepareForNounDeclension(RussianCase @case, bool plural)
         {
@@ -103,8 +99,13 @@ namespace GrammarSharp.Russian
             // Preserve animacy, and add case as extra data
             _data = (byte)((_data & 0b_100) | pluralFlag | genderFlags | ((int)@case << 5));
         }
-        internal void CopyTantumsFrom(RussianNounProperties other)
-            => _data = (byte)((_data & 0b_111_00_111) | (other._data & 0b_000_11_000));
+
+        internal readonly RussianNounProperties WithoutExtraData()
+            => new RussianNounProperties((byte)(_data & 0b_000_11_111));
+        internal void StripTantumsAndSetBoolExtraData(bool extraData)
+            => _data = (byte)((_data & 0b_000_00_111) | (extraData ? 0b_001_00_000 : 0));
+        internal void CopyFromButKeepTantums(RussianNounProperties other)
+            => _data = (byte)((_data & 0b_000_11_000) | (other._data & 0b_111_00_111));
 
         internal readonly bool IsNominativeNormalized
         {

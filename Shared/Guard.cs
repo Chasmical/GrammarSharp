@@ -1,6 +1,7 @@
-﻿using System;
+﻿global using CAE = System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
+
+using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace GrammarSharp
 {
@@ -15,7 +16,7 @@ namespace GrammarSharp
         /// <param name="argument">The reference type argument to validate as non-null.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds. If you omit thi parameter, the name of <paramref name="argument"/> is used.</param>
         /// <exception cref="ArgumentNullException"><paramref name="argument"/> is <see langword="null"/>.</exception>
-        public static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+        public static void ThrowIfNull([NotNull] object? argument, [CAE(nameof(argument))] string? paramName = null)
         {
             if (argument is null) ThrowNull(paramName);
         }
@@ -43,7 +44,7 @@ namespace GrammarSharp
         /// <param name="other">The value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is equal to <paramref name="other"/>.</exception>
-        public static void ThrowIfEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfEqual<T>(T value, T other, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IEquatable<T>
         {
             if (value.Equals(other)) ThrowEqual(value, other, paramName);
@@ -56,7 +57,7 @@ namespace GrammarSharp
         /// <param name="other">The value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is not equal to <paramref name="other"/>.</exception>
-        public static void ThrowIfNotEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfNotEqual<T>(T value, T other, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IEquatable<T>
         {
             if (!value.Equals(other)) ThrowNotEqual(value, other, paramName);
@@ -69,7 +70,7 @@ namespace GrammarSharp
         /// <param name="other">The value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is less than or equal to <paramref name="other"/>.</exception>
-        public static void ThrowIfLessThanOrEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfLessThanOrEqual<T>(T value, T other, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(other) <= 0) ThrowLessEqual(value, other, paramName);
@@ -82,7 +83,7 @@ namespace GrammarSharp
         /// <param name="other">The value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is less than <paramref name="other"/>.</exception>
-        public static void ThrowIfLessThan<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfLessThan<T>(T value, T other, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(other) < 0) ThrowLess(value, other, paramName);
@@ -95,7 +96,7 @@ namespace GrammarSharp
         /// <param name="other">The value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is greater than or equal to <paramref name="other"/>.</exception>
-        public static void ThrowIfGreaterThanOrEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfGreaterThanOrEqual<T>(T value, T other, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(other) >= 0) ThrowGreaterEqual(value, other, paramName);
@@ -108,7 +109,7 @@ namespace GrammarSharp
         /// <param name="other">The value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is greater than <paramref name="other"/>.</exception>
-        public static void ThrowIfGreaterThan<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfGreaterThan<T>(T value, T other, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(other) > 0) ThrowGreater(value, other, paramName);
@@ -121,7 +122,7 @@ namespace GrammarSharp
         /// <param name="value">The argument to validate as non-zero.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is zero.</exception>
-        public static void ThrowIfZero<T>(T value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfZero<T>(T value, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IEquatable<T>
         {
             if (value.Equals(default)) ThrowZero(value, paramName);
@@ -133,7 +134,7 @@ namespace GrammarSharp
         /// <param name="value">The argument to validate as non-negative.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is negative.</exception>
-        public static void ThrowIfNegative<T>(T value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfNegative<T>(T value, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(default) < 0) ThrowNegative(value, paramName);
@@ -145,7 +146,7 @@ namespace GrammarSharp
         /// <param name="value">The argument to validate as non-negative and non-zero.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is negative or zero.</exception>
-        public static void ThrowIfNegativeOrZero<T>(T value, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfNegativeOrZero<T>(T value, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(default) <= 0) ThrowNegativeOrZero(value, paramName);
@@ -159,13 +160,13 @@ namespace GrammarSharp
         /// <param name="max">The maximum value to compare with <paramref name="value"/>.</param>
         /// <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is less than <paramref name="min"/> or greater than <paramref name="max"/>.</exception>
-        public static void ThrowIfNotInRange<T>(T value, T min, T max, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfNotInRange<T>(T value, T min, T max, [CAE(nameof(value))] string? paramName = null)
             where T : struct, IComparable<T>
         {
             if (value.CompareTo(min) < 0 || value.CompareTo(max) > 0) ThrowNotInRange(value, min, max, paramName);
         }
         /// <inheritdoc cref="ThrowIfNotInRange{T}"/>
-        public static void ThrowIfNotInRange(int value, int min, int max, [CallerArgumentExpression(nameof(value))] string? paramName = null)
+        public static void ThrowIfNotInRange(int value, int min, int max, [CAE(nameof(value))] string? paramName = null)
         {
             if ((uint)(value - min) > (uint)(max - min)) ThrowNotInRange(value, min, max, paramName);
         }
