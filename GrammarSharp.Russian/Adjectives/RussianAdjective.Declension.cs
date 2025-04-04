@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
-    using AdjDecl = RussianDeclension;
+    using AdjDecl = RussianAdjectiveDeclension;
     using SubjProps = RussianNounProperties;
 
     public sealed partial class RussianAdjective
@@ -16,7 +16,8 @@ namespace GrammarSharp.Russian
             // Prepare the props for adjective/pronoun declension, store case in props
             props.PrepareForAdjectiveDeclension(@case, plural);
 
-            return DeclineCore(Stem, Info, props);
+            // TODO: how do you handle pronoun declension properly?
+            return DeclineCore(Stem, declension.ForAdjectiveUnsafe(), props, declension.Type == RussianDeclensionType.Pronoun);
         }
 
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
@@ -45,8 +46,9 @@ namespace GrammarSharp.Russian
         [Pure] public string? DeclineComparative(bool force = false)
         {
             RussianDeclension declension = Info.Declension;
-            if (declension.Type != RussianDeclensionType.Adjective) return null;
+            if (declension.IsZero || declension.Type != RussianDeclensionType.Adjective) return null;
             if ((Info.Flags & RussianAdjectiveFlags.NoComparativeForm) != 0) return null;
+            AdjDecl decl = declension.ForAdjectiveUnsafe();
 
             ReadOnlySpan<char> stem = Stem;
             int length = stem.Length;
@@ -72,7 +74,7 @@ namespace GrammarSharp.Russian
                     // Replace 'ё' in the stem with 'е', since the stress is always on the 'ее' ending.
                     // (unless the stress pattern is exactly a/a, in which case it is on the stem)
                     yoIndex = stem.IndexOf('ё');
-                    if (yoIndex >= 0 && !declension.StressPattern.IsDoubleA())
+                    if (yoIndex >= 0 && !decl.StressPattern.IsDoubleA())
                         buffer[yoIndex] = 'е';
 
                     // Add the last 'е' to complete the 'ее' ending
@@ -91,9 +93,9 @@ namespace GrammarSharp.Russian
             return buffer[..(length + 1)].ToString();
         }
 
-        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, RussianAdjectiveInfo info, SubjProps props)
+        [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, AdjDecl decl, SubjProps props, bool isPronoun = false)
         {
-            if (info.Declension.IsZero) return stem.ToString();
+            if (decl.IsZero) return stem.ToString();
 
             // Allocate some memory for string manipulations
             const int extraCharCount = 8;
@@ -101,11 +103,11 @@ namespace GrammarSharp.Russian
             InflectionBuffer results = new(buffer);
 
             // Find the appropriate adjective ending
-            ReadOnlySpan<char> ending = DetermineEnding(info.Declension, props);
+            ReadOnlySpan<char> ending = DetermineEnding(decl, props, isPronoun);
             // Write the stem and ending into the buffer
             results.WriteInitialParts(stem, ending);
 
-            RussianDeclensionFlags flags = info.Declension.Flags;
+            RussianDeclensionFlags flags = decl.Flags;
 
             // Apply short form-specific transformations
             if (props.Case == (RussianCase)6)
@@ -122,20 +124,20 @@ namespace GrammarSharp.Russian
                 {
                     // If declension has a star, figure out the vowel and where to place it in short form
                     if ((flags & RussianDeclensionFlags.Star) != 0)
-                        ProcessShortFormVowelAlternation(ref results, info.Declension, props);
+                        ProcessShortFormVowelAlternation(ref results, decl, props);
                 }
             }
 
             // Process vowel alternation for adjectives with pronoun declension
-            if ((flags & RussianDeclensionFlags.Star) != 0 && info.Declension.Type == RussianDeclensionType.Pronoun)
-                ProcessPronounVowelAlternation(ref results, info.Declension, props);
+            if ((flags & RussianDeclensionFlags.Star) != 0 && isPronoun)
+                ProcessPronounVowelAlternation(ref results, decl, props);
 
             // If declension has an alternating ё, figure out if it needs to be moved
             if ((flags & RussianDeclensionFlags.AlternatingYo) != 0)
-                ProcessYoAlternation(ref results, info.Declension, props);
+                ProcessYoAlternation(ref results, decl, props);
 
             // Add 'ся' to the end, if it's a reflexive adjective
-            if ((info.Flags & RussianAdjectiveFlags.IsReflexive) != 0)
+            if (decl.IsReflexive)
                 results.AppendToEnding('с', 'я');
 
             return results.Result.ToString();

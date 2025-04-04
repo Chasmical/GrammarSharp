@@ -58,6 +58,8 @@ namespace GrammarSharp.Russian
             }
         }
 
+        public readonly bool IsZero => StemType == 0;
+
         // TODO: more constructors
         public RussianNounDeclension(int stemType, RussianStress stress, RussianDeclensionFlags flags, RussianNounProperties? specialProps)
         {
@@ -67,6 +69,12 @@ namespace GrammarSharp.Russian
             _stemTypeAndStress = (byte)(stemType | ((int)stress << 4));
             _declensionFlags = (byte)flags;
         }
+
+        // TODO: get rid of RemovePluraleTantum?
+        internal void RemovePluraleTantum()
+            => _typeAndProps.IsPluraleTantum = false;
+        internal void CopyTantumsFrom(RussianNounProperties props)
+            => _typeAndProps.CopyTantumsFrom(props);
 
         [Pure] public readonly bool Equals(RussianNounDeclension other)
             => _typeAndProps.Equals(other._typeAndProps) &&

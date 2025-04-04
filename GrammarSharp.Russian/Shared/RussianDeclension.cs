@@ -14,7 +14,13 @@ namespace GrammarSharp.Russian
         private byte _field2;
         private byte _field3;
 
-        public readonly bool IsZero => _field1 == 0 && _field2 == 0 && _field3 == 0;
+        public readonly bool IsZero => Type switch
+        {
+            RussianDeclensionType.Noun => ForNounUnsafe().IsZero,
+            RussianDeclensionType.Adjective => ForAdjectiveUnsafe().IsZero,
+            // TODO: use pronoun struct for IsZero?
+            _ => ForAdjectiveUnsafe().IsZero,
+        };
 
         public RussianDeclensionType Type
         {
@@ -40,6 +46,39 @@ namespace GrammarSharp.Russian
         }
         // TODO: implicit from PronounDeclension
         // TODO: implicit from PronounAdjectiveDeclension
+
+        public string ExtractStem(string word)
+        {
+            if (IsZero) return word;
+
+            switch (Type)
+            {
+                case RussianDeclensionType.Noun or RussianDeclensionType.Pronoun:
+                    return RussianNoun.ExtractStem(word);
+
+                case RussianDeclensionType.Adjective:
+                    string res = RussianAdjective.ExtractStem(word, out bool isAdjReflexive);
+                    if (isAdjReflexive)
+                    {
+                        ref var self = ref Unsafe.As<RussianDeclension, RussianAdjectiveDeclension>(ref this);
+                        self.IsReflexive = true;
+                    }
+                    return res;
+
+                default:
+                    throw new NotImplementedException("pro-adj declension: extract stem");
+            }
+        }
+
+        // TODO: get rid of RemovePluraleTantum?
+        internal void RemovePluraleTantum()
+        {
+            if (Type == RussianDeclensionType.Noun)
+            {
+                ref var forNoun = ref Unsafe.As<RussianDeclension, RussianNounDeclension>(ref this);
+                forNoun.RemovePluraleTantum();
+            }
+        }
 
         public readonly bool Equals(RussianDeclension other)
             => _field1 == other._field1 && _field2 == other._field2 && _field3 == other._field3;

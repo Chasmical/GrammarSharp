@@ -58,6 +58,19 @@ namespace GrammarSharp.Russian
                     buffer[offset++] = ' ';
                     break;
                 }
+                case RussianDeclensionType.Pronoun:
+                {
+                    var forAdjective = ForAdjectiveUnsafe();
+                    stemType = forAdjective.StemType;
+                    stress = forAdjective.StressPattern;
+                    flags = forAdjective.Flags;
+
+                    // Append the declension type identifier
+                    buffer[offset++] = 'м';
+                    buffer[offset++] = 'с';
+                    buffer[offset++] = ' ';
+                    break;
+                }
                 default:
                     throw new NotImplementedException("Pro/pro-adj declension: formatting");
             }

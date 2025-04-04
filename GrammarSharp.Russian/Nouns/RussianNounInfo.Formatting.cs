@@ -15,12 +15,12 @@ namespace GrammarSharp.Russian
 
             RussianDeclension decl = Declension;
 
-            bool isSpecialDeclension = decl.Type != RussianDeclensionType.Noun || decl.SpecialNounProperties.HasValue;
+            bool isSpecialDeclension = decl.Type != RussianDeclensionType.Noun || decl.ForNounUnsafe().SpecialProperties.HasValue;
 
             // If it's a special declension or has special declension properties, put it in braces
             if (isSpecialDeclension) sb.Append('<');
 
-            // Append the actual declension, without tantums (and special declension properties too)
+            // Append the actual declension and special props, but without tantums
             decl.RemovePluraleTantum();
             sb.Append(decl);
 

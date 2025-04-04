@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
-    using NounDecl = RussianDeclension;
+    using NounDecl = RussianNounDeclension;
     using NounProps = RussianNounProperties;
 
     public sealed partial class RussianNoun
@@ -90,7 +90,7 @@ namespace GrammarSharp.Russian
             if (normCase == RussianCase.Accusative)
                 normCase = props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative;
 
-            return decl.StressPattern.Main switch
+            return decl.Stress switch
             {
                 RussianStress.A => false,
                 RussianStress.B => true,
@@ -102,7 +102,7 @@ namespace GrammarSharp.Russian
                 RussianStress.Dp => !plural && props.Case != RussianCase.Accusative,
                 RussianStress.Fp => plural ? normCase != RussianCase.Nominative : props.Case != RussianCase.Accusative,
                 RussianStress.Fpp => plural ? normCase != RussianCase.Nominative : normCase != RussianCase.Instrumental,
-                _ => throw new InvalidOperationException($"{decl.StressPattern} is not a valid stress pattern for nouns."),
+                _ => throw new InvalidOperationException($"{decl.Stress} is not a valid stress pattern for nouns."),
             };
         }
 

@@ -10,11 +10,7 @@ namespace GrammarSharp.Russian
 
         public RussianNoun(string word, RussianNounInfo info)
         {
-            string stem = info.Declension.ExtractStem(word, out bool isAdjReflexive);
-            // Store "is reflexive adjective" flag in ExtraData (it's then retrieved during declension)
-            if (isAdjReflexive) info.Declension.IsReflexiveAdjective = isAdjReflexive;
-
-            Stem = stem;
+            Stem = info.Declension.ExtractStem(word);
             Info = info;
         }
 

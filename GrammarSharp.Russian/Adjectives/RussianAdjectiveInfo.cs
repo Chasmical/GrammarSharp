@@ -10,14 +10,19 @@ namespace GrammarSharp.Russian
         public RussianAdjectiveFlags Flags;
 
         public RussianAdjectiveInfo(RussianDeclension declension)
-            : this(declension, declension.IsReflexiveAdjective ? RussianAdjectiveFlags.IsReflexive : 0) { }
-
+            : this(declension, RussianAdjectiveFlags.None) { }
         public RussianAdjectiveInfo(RussianDeclension declension, RussianAdjectiveFlags flags)
         {
-            declension.Normalize(RussianDeclensionType.Adjective, nameof(declension));
+            // TODO: validate and normalize declension (optimize this normalization)
+            if (declension.Type == RussianDeclensionType.Adjective)
+            {
+                var decl = declension.ForAdjectiveUnsafe();
+                var stress = decl.StressPattern;
+                stress.NormalizeMut(RussianDeclensionType.Adjective, nameof(declension));
+                decl.StressPattern = stress;
+                declension = decl;
+            }
 
-            if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
-                throw new ArgumentException($"Declension {declension} is not valid for adjectives.", nameof(declension));
             if (flags != 0 && declension.Type != RussianDeclensionType.Adjective)
                 throw new ArgumentException("Only pure adjectives (with adjective declension) can have flags.", nameof(flags));
 

@@ -3,25 +3,27 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
-    using NounDecl = RussianDeclension;
+    using NounDecl = RussianNounDeclension;
     using NounProps = RussianNounProperties;
 
     public sealed partial class RussianNoun
     {
         [Pure] public string Decline(RussianCase @case, bool plural)
         {
-            NounDecl declension = Info.Declension;
+            RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
             NounProps props;
             if (declension.Type == RussianDeclensionType.Noun)
             {
+                NounDecl decl = declension.ForNounUnsafe();
                 // Use special declension properties, if they're specified
-                props = declension.SpecialNounProperties ?? Info.Properties;
+                props = decl.SpecialProperties ?? Info.Properties;
+                props.CopyTantumsFrom(Info.Properties);
                 // Prepare the props for noun declension, store case in props
                 props.PrepareForNounDeclension(@case, plural);
 
-                return DeclineCore(Stem, declension, props);
+                return DeclineCore(Stem, decl, props);
             }
             else // if(declension.Type == RussianDeclensionType.Adjective)
             {
@@ -29,7 +31,7 @@ namespace GrammarSharp.Russian
                 // Prepare the props for adjective declension, store case in props
                 props.PrepareForAdjectiveDeclension(@case, plural);
 
-                return RussianAdjective.DeclineCore(Stem, new(declension), props);
+                return RussianAdjective.DeclineCore(Stem, declension.ForAdjectiveUnsafe(), props);
             }
         }
 
@@ -246,7 +248,7 @@ namespace GrammarSharp.Russian
                 if (props.IsPlural && props.IsGenitiveNormalized)
                 {
                     // Undocumented exceptions to the rule (2*b, 2*f, 2*②, and neuter ②)
-                    if (decl.StemType == 2 && decl.StressPattern.Main is RussianStress.B or RussianStress.F)
+                    if (decl.StemType == 2 && decl.Stress is RussianStress.B or RussianStress.F)
                         return;
 
                     // If the noun is marked with ②, then it uses a different gender's endings,
@@ -328,7 +330,7 @@ namespace GrammarSharp.Russian
                 if (
                     RussianLowerCase.LastIndexOfVowel(buffer.Ending) == -1 ||
                     !IsEndingStressed(decl, props) && (
-                        decl.StressPattern.Main is not RussianStress.F and not RussianStress.Fp and not RussianStress.Fpp ||
+                        decl.Stress is not RussianStress.F and not RussianStress.Fp and not RussianStress.Fpp ||
                         letterIndex == RussianLowerCase.IndexOfVowel(buffer.Stem)
                     )
                 )

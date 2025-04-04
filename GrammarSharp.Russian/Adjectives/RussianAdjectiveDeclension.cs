@@ -50,6 +50,8 @@ namespace GrammarSharp.Russian
             set => _typesAndReflexive = (byte)((_typesAndReflexive & 0xEF) | (value ? 0x10 : 0));
         }
 
+        public readonly bool IsZero => StemType == 0;
+
         // TODO: more constructors
         public RussianAdjectiveDeclension(int stemType, RussianStressPattern stressPattern, RussianDeclensionFlags flags)
         {

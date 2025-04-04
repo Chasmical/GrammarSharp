@@ -10,10 +10,7 @@ namespace GrammarSharp.Russian
 
         public RussianAdjective(string word, RussianAdjectiveInfo info)
         {
-            string stem = info.Declension.ExtractStem(word, out bool isAdjReflexive);
-            if (isAdjReflexive) info.Flags |= RussianAdjectiveFlags.IsReflexive;
-
-            Stem = stem;
+            Stem = info.Declension.ExtractStem(word);
             Info = info;
         }
 

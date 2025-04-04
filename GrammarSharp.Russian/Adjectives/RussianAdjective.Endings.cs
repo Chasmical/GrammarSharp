@@ -3,14 +3,16 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
-    using AdjDecl = RussianDeclension;
+    using AdjDecl = RussianAdjectiveDeclension;
     using SubjProps = RussianNounProperties;
 
     public sealed partial class RussianAdjective
     {
-        [Pure] private static ReadOnlySpan<char> DetermineEnding(AdjDecl decl, SubjProps props)
+        [Pure] private static ReadOnlySpan<char> DetermineEnding(AdjDecl decl, SubjProps props, bool isPronoun = false)
         {
-            var (unStressedIndex, stressedIndex) = RussianEndings.GetAdjectiveEndingIndices(decl, props);
+            var (unStressedIndex, stressedIndex) = isPronoun
+                ? RussianEndings.GetPronounEndingIndices(decl, props)
+                : RussianEndings.GetAdjectiveEndingIndices(decl, props);
 
             // If the ending depends on the stress, determine the one needed here.
             // If the endings are the same, it doesn't matter which one is used.

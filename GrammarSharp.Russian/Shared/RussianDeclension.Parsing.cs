@@ -17,7 +17,7 @@ namespace GrammarSharp.Russian
             declension = default;
 
             RussianDeclensionType type;
-            RussianNounProperties specialNounProps = default;
+            RussianNounProperties? specialNounProps = default;
 
             if (parser.Skip('м', 'с'))
             {
@@ -33,14 +33,24 @@ namespace GrammarSharp.Russian
             else
             {
                 type = RussianDeclensionType.Noun;
-                var code2 = RussianNounProperties.ParseInternal(ref parser, out specialNounProps);
-                if (code2 == ParseCode.Success) parser.SkipWhitespaces();
+                var code2 = RussianNounProperties.ParseInternal(ref parser, out var specialProps);
+                if (code2 > ParseCode.GenderNotFound) return code2;
+                if (code2 <= ParseCode.Leftovers)
+                {
+                    specialNounProps = specialProps;
+                    parser.SkipWhitespaces();
+                }
             }
 
             if (!parser.OnAsciiDigit) return ParseCode.StemTypeNotFound;
             int stemType = parser.Read() - '0';
 
-            if (stemType == 0) return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
+            if (stemType == 0)
+            {
+                declension.Type = type;
+                return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
+            }
+
             if (stemType > 8) return ParseCode.InvalidStemType;
 
             RussianDeclensionFlags flags = 0;
@@ -83,6 +93,13 @@ namespace GrammarSharp.Russian
                 case RussianDeclensionType.Adjective:
                 {
                     declension = new RussianAdjectiveDeclension(stemType, stressPattern, flags);
+                    break;
+                }
+                case RussianDeclensionType.Pronoun:
+                {
+                    // TODO: PRIORITY! add separate type for pronoun declension?
+                    declension = new RussianAdjectiveDeclension(stemType, stressPattern, flags);
+                    declension.Type = RussianDeclensionType.Pronoun;
                     break;
                 }
                 default:

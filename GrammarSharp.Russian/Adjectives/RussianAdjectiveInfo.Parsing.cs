@@ -15,31 +15,27 @@ namespace GrammarSharp.Russian
         [Pure] private static ParseCode ParseInternal(ref SpanParser parser, out RussianAdjectiveInfo info)
         {
             info = default;
-            if (!parser.Skip('п')) return ParseCode.InvalidDeclension;
-            parser.SkipWhitespaces();
+            RussianDeclension declension;
 
-            RussianDeclensionType declensionType = RussianDeclensionType.Adjective;
-
-            // See if the adjective uses a different declension
-            bool hasEnteredDeclensionBraces = parser.Skip('<');
+            bool hasEnteredDeclensionBraces = parser.Skip('п', ' ', '<');
             if (hasEnteredDeclensionBraces)
             {
-                if (parser.Skip('п'))
-                {
-                    // An adjective using adjective declension (???)
-                    declensionType = RussianDeclensionType.Adjective;
-                }
-                else if (parser.Skip('м', 'с'))
-                {
-                    // An adjective using pronoun declension
-                    declensionType = RussianDeclensionType.Pronoun;
-                }
-                parser.SkipWhitespaces();
-            }
+                // Parse full declension, allowing a different type
+                var code = RussianDeclension.ParseInternal(ref parser, out declension);
+                if (code > ParseCode.Leftovers) return code;
 
-            // Parse the adjective's declension type/class/info
-            var code = RussianDeclension.ParseInternal(ref parser, out RussianDeclension declension, declensionType);
-            if (code > ParseCode.Leftovers) return code;
+                if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
+                    return ParseCode.InvalidDeclension;
+            }
+            else
+            {
+                // Parse simple declension of adjective type
+                var code = RussianDeclension.ParseInternal(ref parser, out declension);
+                if (code > ParseCode.Leftovers) return code;
+
+                if (declension.Type != RussianDeclensionType.Adjective)
+                    return ParseCode.InvalidDeclension;
+            }
 
             RussianAdjectiveFlags flags = 0;
 
