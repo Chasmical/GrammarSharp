@@ -46,7 +46,7 @@ namespace GrammarSharp.Russian
         /// </summary>
         public readonly bool IsZero => _data == 0;
 
-        private RussianStressPattern(byte data)
+        internal RussianStressPattern(byte data)
             => _data = data;
 
         /// <summary>
@@ -94,6 +94,9 @@ namespace GrammarSharp.Russian
         /// <exception cref="ArgumentException"><paramref name="stressPattern"/> is not a valid Russian stress pattern.</exception>
         public RussianStressPattern(ReadOnlySpan<char> stressPattern)
             => this = Parse(stressPattern);
+
+        [Pure] public static implicit operator RussianStressPattern(RussianStress stress)
+            => new(stress);
 
         private static void ValidateStress(RussianStress stress, string paramName)
         {
@@ -235,7 +238,7 @@ namespace GrammarSharp.Russian
         }
         internal void NormalizeMutForVerb(string paramName)
         {
-            if (!NormalizeCore(RussianDeclensionType.Unknown))
+            if (!NormalizeCore((RussianDeclensionType)3))
                 throw new ArgumentException($"{this} is not a valid stress schema for verbs.", paramName);
         }
 

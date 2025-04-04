@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using System;
 using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
@@ -11,38 +11,78 @@ namespace GrammarSharp.Russian
         /// <returns>The string representation of this Russian declension.</returns>
         [Pure] public readonly override string ToString()
         {
-            // Longest form (20 chars): мо-жо 1*°f″/f″①②③, ё
-            StringBuilder sb = new(32);
+            // Longest form (noun): мо-жо 8*°f″①②③, ё (17 chars)
+            // Longest form (adj) : п 7*f″/f″①②, ё (14 chars)
+            // Longest form (pro) : TODO
+            Span<char> buffer = stackalloc char[32];
+            int offset = 0;
 
+            int stemType;
+            RussianStressPattern stress;
+            RussianDeclensionFlags flags;
+
+            // Retrieve common declension values depending on the type
             switch (Type)
             {
                 case RussianDeclensionType.Noun:
-                    if (SpecialNounProperties is { } props)
-                        sb.Append(props).Append(' ');
+                {
+                    var forNoun = ForNounUnsafe();
+                    stemType = forNoun.StemType;
+                    stress = new(forNoun.Stress);
+                    flags = forNoun.Flags;
+
+                    // Append special declension properties
+                    if (forNoun.SpecialProperties is { } specialProps)
+                    {
+                        string specialPropsStr = specialProps.ToString();
+                        specialPropsStr
+#if !NET6_0_OR_GREATER
+                            .AsSpan()
+#endif
+                            .CopyTo(buffer);
+                        offset += specialPropsStr.Length;
+
+                        buffer[offset++] = ' ';
+                    }
                     break;
+                }
                 case RussianDeclensionType.Adjective:
-                    sb.Append('п').Append(' ');
+                {
+                    var forAdjective = ForAdjectiveUnsafe();
+                    stemType = forAdjective.StemType;
+                    stress = forAdjective.StressPattern;
+                    flags = forAdjective.Flags;
+
+                    // Append the declension type identifier
+                    buffer[offset++] = 'п';
+                    buffer[offset++] = ' ';
                     break;
-                case RussianDeclensionType.Pronoun:
-                    sb.Append('м').Append('с').Append(' ');
-                    break;
+                }
+                default:
+                    throw new NotImplementedException("Pro/pro-adj declension: formatting");
             }
 
             // Append the stem type
-            sb.Append((char)(StemType + '0'));
+            buffer[offset++] = (char)('0' + stemType);
 
             // Append the star and the circle
-            RussianDeclensionFlags flags = Flags;
             if ((flags & (RussianDeclensionFlags.Star | RussianDeclensionFlags.Circle)) != 0)
             {
                 if ((flags & RussianDeclensionFlags.Star) != 0)
-                    sb.Append('*');
+                    buffer[offset++] = '*';
                 if ((flags & RussianDeclensionFlags.Circle) != 0)
-                    sb.Append('°');
+                    buffer[offset++] = '°';
             }
 
             // Append the stress pattern
-            sb.Append(StressPattern.ToString(Type));
+            // TODO: format stress pattern directly to span buffer
+            string stressStr = stress.ToString();
+            stressStr
+#if !NET6_0_OR_GREATER
+                .AsSpan()
+#endif
+                .CopyTo(buffer[offset..]);
+            offset += stressStr.Length;
 
             const RussianDeclensionFlags trailingFlags
                 = RussianDeclensionFlags.CircledOne
@@ -54,23 +94,23 @@ namespace GrammarSharp.Russian
             {
                 // Append the numbers in circles
                 if ((flags & RussianDeclensionFlags.CircledOne) != 0)
-                    sb.Append('①');
+                    buffer[offset++] = '①';
                 if ((flags & RussianDeclensionFlags.CircledTwo) != 0)
-                    sb.Append('②');
+                    buffer[offset++] = '②';
                 if ((flags & RussianDeclensionFlags.CircledThree) != 0)
-                    sb.Append('③');
+                    buffer[offset++] = '③';
 
                 // Append the ё mark
                 if ((flags & RussianDeclensionFlags.AlternatingYo) != 0)
                 {
-                    sb.Append(',');
-                    sb.Append(' ');
-                    sb.Append('ё');
+                    buffer[offset++] = ',';
+                    buffer[offset++] = ' ';
+                    buffer[offset++] = 'ё';
                 }
             }
 
             // Build and return the string
-            return sb.ToString();
+            return new string(buffer[..offset]);
         }
 
     }

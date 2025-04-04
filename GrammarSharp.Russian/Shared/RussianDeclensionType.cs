@@ -6,10 +6,6 @@
     public enum RussianDeclensionType
     {
         /// <summary>
-        ///   <para>Specifies that the declension type is unknown.</para>
-        /// </summary>
-        Unknown,
-        /// <summary>
         ///   <para>Specifies a noun declension.</para>
         /// </summary>
         Noun,

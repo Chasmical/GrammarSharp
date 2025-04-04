@@ -10,11 +10,32 @@ namespace GrammarSharp.Russian
         [Pure] private static ParseCode ParseInternal(ReadOnlySpan<char> text, out RussianDeclension declension)
         {
             SpanParser parser = new SpanParser(text);
-            return ParseInternal(ref parser, out declension, RussianDeclensionType.Unknown);
+            return ParseInternal(ref parser, out declension);
         }
-        [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianDeclension declension, RussianDeclensionType type)
+        [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianDeclension declension)
         {
             declension = default;
+
+            RussianDeclensionType type;
+            RussianNounProperties specialNounProps = default;
+
+            if (parser.Skip('м', 'с'))
+            {
+                type = RussianDeclensionType.Pronoun;
+                parser.SkipWhitespaces();
+                // TODO: handle pro-adj declension identifier
+            }
+            else if (parser.Skip('п'))
+            {
+                type = RussianDeclensionType.Adjective;
+                parser.SkipWhitespaces();
+            }
+            else
+            {
+                type = RussianDeclensionType.Noun;
+                var code2 = RussianNounProperties.ParseInternal(ref parser, out specialNounProps);
+                if (code2 == ParseCode.Success) parser.SkipWhitespaces();
+            }
 
             if (!parser.OnAsciiDigit) return ParseCode.StemTypeNotFound;
             int stemType = parser.Read() - '0';
@@ -51,7 +72,25 @@ namespace GrammarSharp.Russian
             if (parser.Skip(',', ' ', 'ё') || parser.Skip(' ', 'ё'))
                 flags |= RussianDeclensionFlags.AlternatingYo;
 
-            declension = new RussianDeclension(type, stemType, stressPattern, flags);
+            switch (type)
+            {
+                case RussianDeclensionType.Noun:
+                {
+                    // TODO: handle invalid alt stress
+                    declension = new RussianNounDeclension(stemType, stressPattern.Main, flags, specialNounProps);
+                    break;
+                }
+                case RussianDeclensionType.Adjective:
+                {
+                    declension = new RussianAdjectiveDeclension(stemType, stressPattern, flags);
+                    break;
+                }
+                default:
+                {
+                    throw new NotImplementedException("Pro/pro-adj declension: parsing");
+                }
+            }
+
             return parser.CanRead() ? ParseCode.Leftovers : ParseCode.Success;
         }
 

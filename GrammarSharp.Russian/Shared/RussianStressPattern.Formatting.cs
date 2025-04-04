@@ -84,7 +84,6 @@ namespace GrammarSharp.Russian
         {
             char stressFormat = type switch
             {
-                RussianDeclensionType.Unknown => 'g',
                 RussianDeclensionType.Noun => 'n',
                 RussianDeclensionType.Adjective => 'a',
                 RussianDeclensionType.Pronoun => 'p',
@@ -93,8 +92,8 @@ namespace GrammarSharp.Russian
             return ToString([stressFormat]);
         }
 
-        private static readonly string[] singleStressLookup =
-            [null!, "a", "b", "c", "d", "e", "f", "a′", "b′", "c′", "d′", "e′", "f′", "c″", "f″"];
+        internal static readonly string[] singleStressLookup =
+            ["", "a", "b", "c", "d", "e", "f", "a′", "b′", "c′", "d′", "e′", "f′", "c″", "f″"];
 
         [Pure] private static string ToStringBoth(RussianStress main, RussianStress alt)
         {
