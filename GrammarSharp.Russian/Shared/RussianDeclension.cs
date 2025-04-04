@@ -85,13 +85,9 @@ namespace GrammarSharp.Russian
                     return RussianNoun.ExtractStem(word);
 
                 case RussianDeclensionType.Adjective:
-                    string res = RussianAdjective.ExtractStem(word, out bool isAdjReflexive);
-                    if (isAdjReflexive)
-                    {
-                        ref var self = ref Unsafe.As<RussianDeclension, RussianAdjectiveDeclension>(ref this);
-                        self.IsReflexive = true;
-                    }
-                    return res;
+                    string stem = RussianAdjective.ExtractStem(word, out bool isAdjReflexive);
+                    if (isAdjReflexive) this.AsAdjectiveUnsafeRef().IsReflexive = true;
+                    return stem;
 
                 default:
                     // TODO: pro-adj declension: extract stem

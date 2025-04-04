@@ -10,7 +10,7 @@ namespace GrammarSharp.Russian
 
         public RussianNoun(string word, RussianNounInfo info)
         {
-            Stem = info.Declension.ExtractStem(word);
+            Stem = info._declension.ExtractStem(word);
             Info = info;
         }
 

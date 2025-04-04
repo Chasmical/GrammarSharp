@@ -6,7 +6,8 @@ namespace GrammarSharp.Russian
 {
     public partial struct RussianAdjectiveInfo : IEquatable<RussianAdjectiveInfo>
     {
-        private RussianDeclension _declension;
+        // Note: access needed by RussianAdjective ctor, to set IsReflexive when extracting adjective stem
+        internal RussianDeclension _declension;
         private RussianAdjectiveFlags _flags;
 
         public RussianDeclension Declension
