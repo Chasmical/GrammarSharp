@@ -31,6 +31,7 @@ namespace GrammarSharp.Russian
             readonly get => _declension;
             set
             {
+                if (value.IsZero) value = default(RussianNounDeclension);
                 ValidateDeclension(value);
                 _declension = value;
             }
@@ -44,6 +45,7 @@ namespace GrammarSharp.Russian
         /// <exception cref="ArgumentException"><paramref name="declension"/> is not a noun or adjective declension.</exception>
         public RussianNounInfo(RussianNounProperties properties, RussianDeclension declension)
         {
+            if (declension.IsZero) declension = default(RussianNounDeclension);
             ValidateDeclension(declension);
             _properties = properties;
             _declension = declension;

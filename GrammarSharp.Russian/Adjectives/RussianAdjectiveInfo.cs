@@ -22,6 +22,7 @@ namespace GrammarSharp.Russian
             readonly get => _declension;
             set
             {
+                if (value.IsZero) value = default(RussianAdjectiveDeclension);
                 ValidateDeclension(value);
                 _declension = value;
             }
@@ -56,6 +57,7 @@ namespace GrammarSharp.Russian
         /// <exception cref="ArgumentException"><paramref name="flags"/> is not a valid <seealso cref="RussianAdjectiveFlags"/> value.</exception>
         public RussianAdjectiveInfo(RussianDeclension declension, RussianAdjectiveFlags flags)
         {
+            if (declension.IsZero) declension = default(RussianAdjectiveDeclension);
             ValidateDeclension(declension);
             ValidateFlags(flags);
             _declension = declension;
@@ -70,7 +72,6 @@ namespace GrammarSharp.Russian
             static void Throw(RussianDeclension declension, string? paramName)
                 => throw new ArgumentException($"Adjectives cannot have a declension of type {declension.Type}.", paramName);
         }
-
         private static void ValidateFlags(RussianAdjectiveFlags flags, [CAE(nameof(flags))] string? paramName = null)
         {
             const RussianAdjectiveFlags allFlags

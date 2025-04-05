@@ -28,8 +28,7 @@ namespace GrammarSharp.Russian
             readonly get => (RussianGender)(_data & 0b_000_00_011);
             set
             {
-                if ((uint)value > (uint)RussianGender.Common)
-                    ThrowInvalidGender((int)value);
+                ValidateGender(value);
                 _data = (byte)((_data & 0b_111_11_100) | (int)value);
             }
         }
@@ -74,8 +73,6 @@ namespace GrammarSharp.Russian
         private RussianNounProperties(byte data)
             => _data = data;
 
-        public RussianNounProperties(char gender, bool isAnimate)
-            : this(RussianGrammar.ParseGender(gender), isAnimate, 0) { }
         /// <summary>
         ///   <para>Initializes a new instance of the <seealso cref="RussianNounProperties"/> structure with the specified <paramref name="gender"/> and animacy.</para>
         /// </summary>
@@ -83,7 +80,10 @@ namespace GrammarSharp.Russian
         /// <param name="isAnimate">The noun's grammatical animacy: <see langword="true"/> - animate, <see langword="false"/> - inanimate.</param>
         /// <exception cref="InvalidEnumArgumentException"><paramref name="gender"/> is not a valid <seealso cref="RussianGender"/> value.</exception>
         public RussianNounProperties(RussianGender gender, bool isAnimate)
-            : this(gender, isAnimate, 0) { }
+        {
+            ValidateGender(gender);
+            _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0));
+        }
         /// <summary>
         ///   <para>Initializes a new instance of the <seealso cref="RussianNounProperties"/> structure with the specified <paramref name="gender"/>, animacy and <paramref name="flags"/>.</para>
         /// </summary>
@@ -93,14 +93,27 @@ namespace GrammarSharp.Russian
         /// <exception cref="InvalidEnumArgumentException"><paramref name="gender"/> is not a valid <seealso cref="RussianGender"/> value.</exception>
         public RussianNounProperties(RussianGender gender, bool isAnimate, RussianNounFlags flags)
         {
-            if ((uint)gender > (uint)RussianGender.Common)
-                ThrowInvalidGender((int)gender);
-
+            ValidateGender(gender);
+            ValidateFlags(flags);
             _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0) | ((int)flags << 3));
         }
 
-        private static void ThrowInvalidGender(int gender)
-            => throw new InvalidEnumArgumentException(nameof(gender), gender, typeof(RussianGender));
+        private static void ValidateGender(RussianGender gender, [CAE(nameof(gender))] string? paramName = null)
+        {
+            if ((uint)gender > (uint)RussianGender.Common)
+                Throw(gender, paramName);
+
+            static void Throw(RussianGender gender, string? paramName)
+                => throw new InvalidEnumArgumentException(paramName, (int)gender, typeof(RussianGender));
+        }
+        private static void ValidateFlags(RussianNounFlags flags, [CAE(nameof(flags))] string? paramName = null)
+        {
+            if ((uint)flags is 1 or > (uint)RussianNounFlags.IsPluraleTantum)
+                Throw(flags, paramName);
+
+            static void Throw(RussianNounFlags flags, string? paramName)
+                => throw new InvalidEnumArgumentException(paramName, (int)flags, typeof(RussianNounFlags));
+        }
 
         // Where ExtraData is used and what for:
         // - in RussianNounDeclension, to store 3 extra bits of data.

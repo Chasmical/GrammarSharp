@@ -108,7 +108,6 @@ namespace GrammarSharp.Russian
             static void Throw(int stemType, string? paramName)
                 => throw new ArgumentOutOfRangeException(paramName, stemType, $"{stemType} is not a valid stem type for pronouns.");
         }
-
         private static void ValidateStress(RussianStress stress, [CAE(nameof(stress))] string? paramName = null)
         {
             // Pronouns can only have 0, a, b and f stress schemas
@@ -118,7 +117,6 @@ namespace GrammarSharp.Russian
             static void Throw(RussianStress stress, string? paramName)
                 => throw new ArgumentException($"{stress} is not a valid stress schema for pronouns.", paramName);
         }
-
         private static void ValidateFlags(RussianDeclensionFlags flags, [CAE(nameof(flags))] string? paramName = null)
         {
             // Pronouns can only have a * flag

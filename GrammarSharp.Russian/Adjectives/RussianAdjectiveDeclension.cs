@@ -117,7 +117,6 @@ namespace GrammarSharp.Russian
             static void Throw(int stemType, string? paramName)
                 => throw new ArgumentOutOfRangeException(paramName, stemType, $"{stemType} is not a valid stem type for adjectives.");
         }
-
         private static void ValidateStress(ref RussianStressPattern pattern, [CAE(nameof(pattern))] string? paramName = null)
         {
             if (!pattern.TryNormalizeForAdjective())
@@ -126,7 +125,6 @@ namespace GrammarSharp.Russian
             static void Throw(RussianStressPattern pattern, string? paramName)
                 => throw new ArgumentException($"{pattern} is not a valid stress schema for adjectives.", paramName);
         }
-
         private static void ValidateFlags(RussianDeclensionFlags flags, [CAE(nameof(flags))] string? paramName = null)
         {
             // Adjectives can only have *, ①, ② and ё flags
