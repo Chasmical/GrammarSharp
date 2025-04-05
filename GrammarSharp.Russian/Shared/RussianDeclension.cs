@@ -72,9 +72,7 @@ namespace GrammarSharp.Russian
             return Type == RussianDeclensionType.Pronoun;
         }
 
-#pragma warning disable IDE0251 // Make member 'readonly' — method uses mutating AsAdjectiveUnsafeRef() method
         public string ExtractStem(string word)
-#pragma warning restore IDE0251
         {
             if (IsZero) return word;
 
@@ -82,7 +80,7 @@ namespace GrammarSharp.Russian
             {
                 case RussianDeclensionType.Adjective:
                     string stem = RussianAdjective.ExtractStem(word, out bool isAdjReflexive);
-                    if (isAdjReflexive) this.AsAdjectiveUnsafeRef().IsReflexive = true;
+                    if (isAdjReflexive) this.AsAdjectiveUnsafeRefMutable().IsReflexive = true;
                     return stem;
 
                 default: // case RussianDeclensionType.Noun or RussianDeclensionType.Pronoun:
