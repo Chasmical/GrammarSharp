@@ -12,6 +12,5 @@ namespace GrammarSharp.Russian
         [Pure] public static ref RussianPronounDeclension AsPronounUnsafeRef(ref readonly this RussianDeclension decl)
             => ref Unsafe.As<RussianDeclension, RussianPronounDeclension>(ref Unsafe.AsRef(in decl));
 
-        // TODO: pro-adj declension: AsPronounAdjectiveUnsafeRef()
     }
 }

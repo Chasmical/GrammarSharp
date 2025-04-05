@@ -15,9 +15,27 @@ namespace GrammarSharp.Russian
         [Pure] private static ParseCode ParseInternal(ref SpanParser parser, out RussianAdjectiveInfo info)
         {
             info = default;
+            RussianDeclensionType defaultDeclensionType = RussianDeclensionType.Adjective;
             RussianDeclension declension;
+            RussianAdjectiveFlags flags = 0;
 
-            bool hasEnteredDeclensionBraces = parser.Skip('п', ' ', '<');
+            if (parser.Skip('ч', 'и', 'с', 'л'))
+            {
+                flags = RussianAdjectiveFlags.IsNumeral;
+                parser.Skip('.');
+                if (!parser.Skip('-')) return ParseCode.InvalidDeclension;
+            }
+            else if (parser.Skip('м', 'с'))
+            {
+                flags = RussianAdjectiveFlags.IsPronoun;
+                defaultDeclensionType = RussianDeclensionType.Pronoun;
+                if (!parser.Skip('-')) return ParseCode.InvalidDeclension;
+            }
+
+            if (!parser.Skip('п')) return ParseCode.InvalidDeclension;
+            parser.SkipWhitespaces();
+
+            bool hasEnteredDeclensionBraces = parser.Skip('<');
             if (hasEnteredDeclensionBraces)
             {
                 // Parse full declension, allowing a different type
@@ -29,15 +47,10 @@ namespace GrammarSharp.Russian
             }
             else
             {
-                // Parse simple declension of adjective type
-                var code = RussianDeclension.ParseInternal(ref parser, out declension);
+                // Parse simple declension of a strictly adjective/pronoun type
+                var code = RussianDeclension.ParseInternal(ref parser, out declension, defaultDeclensionType);
                 if (code > ParseCode.Leftovers) return code;
-
-                if (declension.Type != RussianDeclensionType.Adjective)
-                    return ParseCode.InvalidDeclension;
             }
-
-            RussianAdjectiveFlags flags = 0;
 
             if (hasEnteredDeclensionBraces)
             {

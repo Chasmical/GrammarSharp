@@ -26,13 +26,8 @@ namespace GrammarSharp.Russian
         [Pure] public static ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word, out bool isAdjReflexive)
         {
             // If adjective ends with 'ся', remove the last four letters
-            if (word.Length > 4 && word[^2] == 'с' && word[^1] == 'я')
-            {
-                isAdjReflexive = true;
-                return word[..^4];
-            }
-            // Otherwise, remove just the last two letters
-            isAdjReflexive = false;
+            isAdjReflexive = word.Length > 4 && word[^2] == 'с' && word[^1] == 'я';
+            if (isAdjReflexive) return word[..^4];
             return word.Length > 2 ? word[..^2] : word;
         }
 

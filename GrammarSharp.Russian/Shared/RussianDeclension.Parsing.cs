@@ -12,33 +12,36 @@ namespace GrammarSharp.Russian
             SpanParser parser = new SpanParser(text);
             return ParseInternal(ref parser, out declension);
         }
-        [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianDeclension declension)
+        [Pure] internal static ParseCode ParseInternal(
+            ref SpanParser parser, out RussianDeclension declension,
+            RussianDeclensionType type = (RussianDeclensionType)(-1)
+        )
         {
             declension = default;
-
-            RussianDeclensionType type;
             RussianNounProperties? specialNounProps = default;
 
-            if (parser.Skip('м', 'с'))
+            if (type < 0)
             {
-                type = RussianDeclensionType.Pronoun;
-                parser.SkipWhitespaces();
-                // TODO: pro-adj declension: parsing identifier
-            }
-            else if (parser.Skip('п'))
-            {
-                type = RussianDeclensionType.Adjective;
-                parser.SkipWhitespaces();
-            }
-            else
-            {
-                type = RussianDeclensionType.Noun;
-                var code2 = RussianNounProperties.ParseInternal(ref parser, out var specialProps);
-                if (code2 > ParseCode.GenderNotFound) return code2;
-                if (code2 <= ParseCode.Leftovers)
+                if (parser.Skip('м', 'с'))
                 {
-                    specialNounProps = specialProps;
+                    type = RussianDeclensionType.Pronoun;
                     parser.SkipWhitespaces();
+                }
+                else if (parser.Skip('п'))
+                {
+                    type = RussianDeclensionType.Adjective;
+                    parser.SkipWhitespaces();
+                }
+                else
+                {
+                    type = RussianDeclensionType.Noun;
+                    var code2 = RussianNounProperties.ParseInternal(ref parser, out var specialProps);
+                    if (code2 > ParseCode.GenderNotFound) return code2;
+                    if (code2 <= ParseCode.Leftovers)
+                    {
+                        specialNounProps = specialProps;
+                        parser.SkipWhitespaces();
+                    }
                 }
             }
 
@@ -100,11 +103,6 @@ namespace GrammarSharp.Russian
                     if (stressPattern.Alt != 0) return ParseCode.InvalidStress;
                     declension = new RussianPronounDeclension(stemType, stressPattern.Main, flags);
                     break;
-                }
-                default:
-                {
-                    // TODO: pro-adj declension: parsing construction
-                    throw new NotImplementedException();
                 }
             }
 

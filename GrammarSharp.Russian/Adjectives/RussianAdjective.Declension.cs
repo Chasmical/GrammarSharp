@@ -29,6 +29,7 @@ namespace GrammarSharp.Russian
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
         {
             if (Info.Declension.Type != RussianDeclensionType.Adjective) return null;
+            if ((Info.Flags & (RussianAdjectiveFlags.IsNumeral | RussianAdjectiveFlags.IsPronoun)) != 0) return null;
 
             RussianAdjectiveFlags flags = Info.Flags & RussianAdjectiveFlags.BoxedCross;
             if (flags != 0)

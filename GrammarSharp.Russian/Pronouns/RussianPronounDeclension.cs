@@ -27,7 +27,7 @@ namespace GrammarSharp.Russian
             set
             {
                 ValidateStemType(value);
-                SetStemTypeUnsafe(value);
+                _stemTypeAndStress = (byte)((_stemTypeAndStress & 0xF0) | value);
             }
         }
         public RussianStress Stress
@@ -67,8 +67,8 @@ namespace GrammarSharp.Russian
 
         private static void ValidateStemType(int stemType, [CAE(nameof(stemType))] string? paramName = null)
         {
-            // Pronouns can only have 0, 1, 2 and 6 stem types (and 4 as an edge case, which is set separately)
-            if (stemType is not 0 and not 1 and not 2 and not 6)
+            // Pronouns can only have 0, 1, 2, 4 and 6 stem types
+            if (stemType is not 0 and not 1 and not 2 and not 4 and not 6)
                 Throw(stemType, paramName);
 
             static void Throw(int stemType, string? paramName)
@@ -96,10 +96,6 @@ namespace GrammarSharp.Russian
                 throw new ArgumentException($"{flags & invalidFlags} is not a valid declension flag for pronouns.", paramName);
             }
         }
-
-        // Used by RussianEndings.GetPronounEndingIndices() for an edge case
-        internal void SetStemTypeUnsafe(int stemType)
-            => _stemTypeAndStress = (byte)((_stemTypeAndStress & 0xF0) | stemType);
 
         [Pure] public readonly bool Equals(RussianPronounDeclension other)
             => _stemTypeAndStress == other._stemTypeAndStress &&

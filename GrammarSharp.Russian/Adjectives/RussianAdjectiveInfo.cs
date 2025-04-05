@@ -50,7 +50,9 @@ namespace GrammarSharp.Russian
 
         private static void ValidateFlags(RussianAdjectiveFlags flags, [CAE(nameof(flags))] string? paramName = null)
         {
-            const RussianAdjectiveFlags allFlags = RussianAdjectiveFlags.BoxedCross | RussianAdjectiveFlags.NoComparativeForm;
+            const RussianAdjectiveFlags allFlags
+                = RussianAdjectiveFlags.BoxedCross | RussianAdjectiveFlags.NoComparativeForm | RussianAdjectiveFlags.IsPronoun;
+
             if ((uint)flags > (uint)allFlags) Throw(flags, paramName);
 
             static void Throw(RussianAdjectiveFlags flags, string? paramName)

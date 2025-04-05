@@ -11,15 +11,40 @@ namespace GrammarSharp.Russian
             StringBuilder sb = new();
 
             RussianDeclension decl = Declension;
-            bool isNonAdjectiveDeclension = decl.Type != RussianDeclensionType.Adjective;
+            RussianAdjectiveFlags flags = Flags;
+            RussianDeclensionType defaultDeclensionType = RussianDeclensionType.Adjective;
 
-            // Append "п <", if the adjective uses a non-adjective declension
-            if (isNonAdjectiveDeclension) sb.Append('п').Append(' ').Append('<');
+            const RussianAdjectiveFlags typeFlags = RussianAdjectiveFlags.IsNumeral | RussianAdjectiveFlags.IsPronoun;
+            if ((flags & typeFlags) != 0)
+            {
+                if ((flags & typeFlags) == RussianAdjectiveFlags.IsNumeral)
+                {
+                    sb.Append("числ.-п");
+                    // Always specify numeral adjectives' declension as irregular
+                    defaultDeclensionType = (RussianDeclensionType)(-1);
+                }
+                else
+                {
+                    sb.Append("мс-п");
+                    defaultDeclensionType = RussianDeclensionType.Pronoun;
+                }
+            }
+            else
+            {
+                sb.Append('п');
+            }
+            sb.Append(' ');
+
+            bool irregularDeclensionType = decl.Type != defaultDeclensionType;
+
+            // Append " <", if the adjective uses an irregular declension
+            if (irregularDeclensionType) sb.Append('<');
 
             // Append the actual declension
-            sb.Append(decl);
+            // TODO: format RussianDeclension directly into span buffer
+            sb.Append(decl.ToString(irregularDeclensionType));
 
-            if (isNonAdjectiveDeclension)
+            if (irregularDeclensionType)
             {
                 // Close the declension braces
                 sb.Append('>');

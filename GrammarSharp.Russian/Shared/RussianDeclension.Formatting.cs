@@ -10,12 +10,13 @@ namespace GrammarSharp.Russian
         /// </summary>
         /// <returns>The string representation of this Russian declension.</returns>
         [Pure] public readonly override string ToString()
+            => ToString(true);
+        [Pure] internal readonly string ToString(bool includeType)
         {
             // Longest forms of types:
             // Noun      (17 chars): мо-жо 8*°f″①②③, ё
             // Adjective (14 chars): п 7*f″/f″①②, ё
             // Pronoun    (6 chars): мс 6*f
-            // Pro-Adj    (  chars): TODO: pro-adj declension: formatting
             Span<char> buffer = stackalloc char[32];
             int offset = 0;
 
@@ -34,7 +35,7 @@ namespace GrammarSharp.Russian
                     flags = forNoun.Flags;
 
                     // Append special declension properties
-                    if (forNoun.SpecialProperties is { } specialProps)
+                    if (includeType && forNoun.SpecialProperties is { } specialProps)
                     {
                         string specialPropsStr = specialProps.ToString();
                         specialPropsStr
@@ -56,8 +57,11 @@ namespace GrammarSharp.Russian
                     flags = forAdjective.Flags;
 
                     // Append the declension type identifier
-                    buffer[offset++] = 'п';
-                    buffer[offset++] = ' ';
+                    if (includeType)
+                    {
+                        buffer[offset++] = 'п';
+                        buffer[offset++] = ' ';
+                    }
                     break;
                 }
                 case RussianDeclensionType.Pronoun:
@@ -68,14 +72,16 @@ namespace GrammarSharp.Russian
                     flags = forAdjective.Flags;
 
                     // Append the declension type identifier
-                    buffer[offset++] = 'м';
-                    buffer[offset++] = 'с';
-                    buffer[offset++] = ' ';
+                    if (includeType)
+                    {
+                        buffer[offset++] = 'м';
+                        buffer[offset++] = 'с';
+                        buffer[offset++] = ' ';
+                    }
                     break;
                 }
                 default:
-                    // TODO: pro-adj declension: formatting
-                    throw new NotImplementedException();
+                    throw new InvalidOperationException();
             }
 
             // Append the stem type
@@ -92,7 +98,7 @@ namespace GrammarSharp.Russian
 
             // Append the stress pattern
             // TODO: format stress pattern directly to span buffer
-            string stressStr = stress.ToString();
+            string stressStr = stress.ToString(Type);
             stressStr
 #if !NET6_0_OR_GREATER
                 .AsSpan()

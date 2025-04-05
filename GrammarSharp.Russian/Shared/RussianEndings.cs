@@ -98,7 +98,7 @@ namespace GrammarSharp.Russian
                 // Stem type 2 pronouns' accusative case is not consistent. Normally, the endings of either
                 // Genitive or Nominative of the same stem type are used, but those are "shortened", while
                 // Accusative still uses the full form of those.
-                if (decl.StemType == 2) decl.SetStemTypeUnsafe(4);
+                if (decl.StemType == 2) decl.StemType = 4;
 
                 lookupIndex = ComposePronounEndingIndex(decl, props, props.IsAnimate ? RussianCase.Genitive : RussianCase.Nominative);
                 unStrIndex = lookup[lookupIndex];

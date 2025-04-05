@@ -30,8 +30,7 @@ namespace GrammarSharp.Russian
             RussianDeclensionType.Noun => this.AsNounUnsafeRef().IsZero,
             RussianDeclensionType.Adjective => this.AsAdjectiveUnsafeRef().IsZero,
             RussianDeclensionType.Pronoun => this.AsPronounUnsafeRef().IsZero,
-            // TODO: pro-adj declension: IsZero property
-            _ => throw new NotImplementedException(),
+            _ => throw new InvalidOperationException(),
         };
 
         public RussianDeclensionType Type
@@ -56,7 +55,6 @@ namespace GrammarSharp.Russian
             decl._field1 |= (int)RussianDeclensionType.Pronoun << 6;
             return decl;
         }
-        // TODO: pro-adj declension: implicit from PronounAdjectiveDeclension
 
         public readonly bool TryAsNoun(out RussianNounDeclension nounDeclension)
         {
@@ -73,25 +71,22 @@ namespace GrammarSharp.Russian
             pronounDeclension = this.AsPronounUnsafeRef();
             return Type == RussianDeclensionType.Pronoun;
         }
-        // TODO: pro-adj declension: TryAsPronounAdjective()
 
+#pragma warning disable IDE0251 // Make member 'readonly' — method uses mutating AsAdjectiveUnsafeRef() method
         public string ExtractStem(string word)
+#pragma warning restore IDE0251
         {
             if (IsZero) return word;
 
             switch (Type)
             {
-                case RussianDeclensionType.Noun or RussianDeclensionType.Pronoun:
-                    return RussianNoun.ExtractStem(word);
-
                 case RussianDeclensionType.Adjective:
                     string stem = RussianAdjective.ExtractStem(word, out bool isAdjReflexive);
                     if (isAdjReflexive) this.AsAdjectiveUnsafeRef().IsReflexive = true;
                     return stem;
 
-                default:
-                    // TODO: pro-adj declension: extract stem
-                    throw new NotImplementedException();
+                default: // case RussianDeclensionType.Noun or RussianDeclensionType.Pronoun:
+                    return RussianNoun.ExtractStem(word);
             }
         }
 
