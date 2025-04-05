@@ -4,6 +4,9 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
+    /// <summary>
+    ///   <para>Represents a Russian declension of noun type, according to Zaliznyak's classification.</para>
+    /// </summary>
     public struct RussianNounDeclension : IEquatable<RussianNounDeclension>
     {
         // Representation (_typeAndProps):
@@ -20,6 +23,10 @@ namespace GrammarSharp.Russian
         private byte _stemTypeAndStress;
         private byte _declensionFlags;
 
+        /// <summary>
+        ///   <para>Gets or sets the noun declension's stem type.</para>
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is not between 0 and 8.</exception>
         public int StemType
         {
             readonly get => _stemTypeAndStress & 0x0F;
@@ -29,6 +36,10 @@ namespace GrammarSharp.Russian
                 _stemTypeAndStress = (byte)((_stemTypeAndStress & 0xF0) | value);
             }
         }
+        /// <summary>
+        ///   <para>Gets or sets the noun declension's stress schema.</para>
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="value"/> is not one of the following: 0, a, b, c, d, e, f, b′, d′, f′, f″.</exception>
         public RussianStress Stress
         {
             readonly get => (RussianStress)(_stemTypeAndStress >> 4);
@@ -38,6 +49,10 @@ namespace GrammarSharp.Russian
                 _stemTypeAndStress = (byte)((_stemTypeAndStress & 0x0F) | ((int)value << 4));
             }
         }
+        /// <summary>
+        ///   <para>Gets or sets the noun declension's flags.</para>
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="value"/> is not a valid <seealso cref="RussianDeclensionFlags"/> value.</exception>
         public RussianDeclensionFlags Flags
         {
             readonly get => (RussianDeclensionFlags)_declensionFlags;
@@ -48,6 +63,9 @@ namespace GrammarSharp.Russian
             }
         }
 
+        /// <summary>
+        ///   <para>Gets or sets the noun declension's special properties.</para>
+        /// </summary>
         public RussianNounProperties? SpecialProperties
         {
             readonly get => _typeAndProps.ExtraData != 0 ? _typeAndProps.WithoutExtraData() : null;
@@ -57,21 +75,49 @@ namespace GrammarSharp.Russian
                 _typeAndProps.StripTantumsAndSetBoolExtraData(value.HasValue);
             }
         }
-
+        /// <summary>
+        ///   <para>Determines whether this noun declension is zero.</para>
+        /// </summary>
         public readonly bool IsZero => StemType == 0;
 
+        /// <summary>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounDeclension"/> structure with the specified <paramref name="stemType"/> and <paramref name="stress"/>.</para>
+        /// </summary>
+        /// <param name="stemType">The noun declension's stem type.</param>
+        /// <param name="stress">The noun declension's stress schema.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stemType"/> is not between 0 and 8.</exception>
+        /// <exception cref="ArgumentException"><paramref name="stress"/> is not one of the following: 0, a, b, c, d, e, f, b′, d′, f′, f″.</exception>
         public RussianNounDeclension(int stemType, RussianStress stress)
         {
             ValidateStemType(stemType);
             ValidateStress(stress);
             _stemTypeAndStress = (byte)(stemType | ((int)stress << 4));
         }
+        /// <summary>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounDeclension"/> structure with the specified <paramref name="stemType"/>, <paramref name="stress"/> and <paramref name="flags"/>.</para>
+        /// </summary>
+        /// <param name="stemType">The noun declension's stem type.</param>
+        /// <param name="stress">The noun declension's stress schema.</param>
+        /// <param name="flags">The noun declension's flags.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stemType"/> is not between 0 and 8.</exception>
+        /// <exception cref="ArgumentException"><paramref name="stress"/> is not one of the following: 0, a, b, c, d, e, f, b′, d′, f′, f″.</exception>
+        /// <exception cref="ArgumentException"><paramref name="flags"/> is not a valid <seealso cref="RussianDeclensionFlags"/> value.</exception>
         public RussianNounDeclension(int stemType, RussianStress stress, RussianDeclensionFlags flags)
             : this(stemType, stress)
         {
             ValidateFlags(flags);
             _declensionFlags = (byte)flags;
         }
+        /// <summary>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounDeclension"/> structure with the specified <paramref name="stemType"/>, <paramref name="stress"/> and <paramref name="flags"/>.</para>
+        /// </summary>
+        /// <param name="stemType">The noun declension's stem type.</param>
+        /// <param name="stress">The noun declension's stress schema.</param>
+        /// <param name="flags">The noun declension's flags.</param>
+        /// <param name="specialProps">The noun declension's special properties.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stemType"/> is not between 0 and 8.</exception>
+        /// <exception cref="ArgumentException"><paramref name="stress"/> is not one of the following: 0, a, b, c, d, e, f, b′, d′, f′, f″.</exception>
+        /// <exception cref="ArgumentException"><paramref name="flags"/> is not a valid <seealso cref="RussianDeclensionFlags"/> value.</exception>
         public RussianNounDeclension(int stemType, RussianStress stress, RussianDeclensionFlags flags, RussianNounProperties? specialProps)
             : this(stemType, stress, flags)
         {
@@ -111,20 +157,50 @@ namespace GrammarSharp.Russian
             }
         }
 
+        /// <summary>
+        ///   <para>Determines whether this Russian noun declension is equal to another specified Russian noun declension.</para>
+        /// </summary>
+        /// <param name="other">The Russian declension to compare with this Russian noun declension.</param>
+        /// <returns><see langword="true"/>, if this Russian noun declension is equal to <paramref name="other"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly bool Equals(RussianNounDeclension other)
             => _typeAndProps.Equals(other._typeAndProps) &&
                _stemTypeAndStress == other._stemTypeAndStress &&
                _declensionFlags == other._declensionFlags;
+        /// <summary>
+        ///   <para>Determines whether this Russian noun declension is equal to the specified <paramref name="obj"/>.</para>
+        /// </summary>
+        /// <param name="obj">The object to compare with this Russian noun declension.</param>
+        /// <returns><see langword="true"/>, if <paramref name="obj"/> is a <see cref="RussianNounDeclension"/> instance equal to this Russian noun declension; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly override bool Equals([NotNullWhen(true)] object? obj)
             => obj is RussianNounDeclension other && Equals(other);
+        /// <summary>
+        ///   <para>Returns a hash code for this Russian noun declension.</para>
+        /// </summary>
+        /// <returns>A hash code for this Russian noun declension.</returns>
         [Pure] public readonly override int GetHashCode()
             => HashCode.Combine(_typeAndProps, _stemTypeAndStress, _declensionFlags);
 
+        /// <summary>
+        ///   <para>Determines whether the two specified Russian noun declensions are not equal.</para>
+        /// </summary>
+        /// <param name="left">The first Russian noun declension to compare.</param>
+        /// <param name="right">The second Russian noun declension to compare.</param>
+        /// <returns><see langword="true"/>, if <paramref name="left"/> is not equal to <paramref name="right"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool operator ==(RussianNounDeclension left, RussianNounDeclension right)
             => left.Equals(right);
+        /// <summary>
+        ///   <para>Determines whether the two specified Russian noun declensions are not equal.</para>
+        /// </summary>
+        /// <param name="left">The first Russian noun declension to compare.</param>
+        /// <param name="right">The second Russian noun declension to compare.</param>
+        /// <returns><see langword="true"/>, if <paramref name="left"/> is not equal to <paramref name="right"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool operator !=(RussianNounDeclension left, RussianNounDeclension right)
             => !(left == right);
 
+        /// <summary>
+        ///   <para>Returns a string representation of this Russian noun declension.</para>
+        /// </summary>
+        /// <returns>The string representation of this Russian noun declension.</returns>
         [Pure] public readonly override string ToString()
             => ((RussianDeclension)this).ToString();
 
