@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
@@ -97,14 +98,9 @@ namespace GrammarSharp.Russian
             }
 
             // Append the stress pattern
-            // TODO: format stress pattern directly to span buffer
-            string stressStr = stress.ToString(Type);
-            stressStr
-#if !NET6_0_OR_GREATER
-                .AsSpan()
-#endif
-                .CopyTo(buffer[offset..]);
-            offset += stressStr.Length;
+            bool success = stress.TryFormat(buffer[offset..], out int stressStrLength, Type);
+            Debug.Assert(success);
+            offset += stressStrLength;
 
             const RussianDeclensionFlags trailingFlags
                 = RussianDeclensionFlags.CircledOne
