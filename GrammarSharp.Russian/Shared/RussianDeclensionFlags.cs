@@ -24,7 +24,7 @@ namespace GrammarSharp.Russian
         /// <summary>
         ///   <para>
         ///     Specifies a <c>①</c> flag, indicating a type 1 deviation from common declension patterns.<br/>
-        ///     Nouns (nominative plural): use endings a different gender.
+        ///     Nouns (nominative plural): use endings a different gender.<br/>
         ///     Adjectives (short forms): remove extra trailing 'н' in masculine short form.
         ///   </para>
         /// </summary>
@@ -32,7 +32,7 @@ namespace GrammarSharp.Russian
         /// <summary>
         ///   <para>
         ///     Specifies a <c>②</c> flag, indicating a type 2 deviation from common declension patterns.<br/>
-        ///     Nouns (genitive plural): use endings a different gender.
+        ///     Nouns (genitive plural): use endings a different gender.<br/>
         ///     Adjectives (short forms): remove extra trailing 'н' in all short forms.
         ///   </para>
         /// </summary>
@@ -41,7 +41,7 @@ namespace GrammarSharp.Russian
         ///   <para>
         ///     Specifies a <c>③</c> flag, indicating a type 3 deviation from common declension patterns.<br/>
         ///     Nouns (singular prepositional, or singular dative feminine): ending '-е' is used instead of '-и'.<br/>
-        ///     Though '-и' is more grammatically correct, '-е' is used more often and is easier to comprehend.
+        ///     Though '-и' is more grammatically correct, '-е' is used more often in modern language, since it's easier to comprehend.
         ///   </para>
         /// </summary>
         CircledThree  = 1 << 4,

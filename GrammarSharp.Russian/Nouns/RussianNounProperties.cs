@@ -5,6 +5,9 @@ using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
 {
+    /// <summary>
+    ///   <para>Represents a Russian noun's properties: grammatical gender, animacy and tantums.</para>
+    /// </summary>
     public partial struct RussianNounProperties : IEquatable<RussianNounProperties>
     {
         // Representation (_data field):
@@ -16,6 +19,10 @@ namespace GrammarSharp.Russian
         //
         private byte _data;
 
+        /// <summary>
+        ///   <para>Gets or sets the noun's grammatical gender.</para>
+        /// </summary>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="value"/> is not a valid <seealso cref="RussianGender"/> value.</exception>
         public RussianGender Gender
         {
             readonly get => (RussianGender)(_data & 0b_000_00_011);
@@ -26,13 +33,22 @@ namespace GrammarSharp.Russian
                 _data = (byte)((_data & 0b_111_11_100) | (int)value);
             }
         }
+        /// <summary>
+        ///   <para>Gets or sets the noun's grammatical animacy.</para>
+        /// </summary>
         public bool IsAnimate
         {
             readonly get => (_data & 0b_000_00_100) != 0;
             set => _data = (byte)((_data & 0b_111_11_011) | (value ? 0b_100 : 0));
         }
 
+        /// <summary>
+        ///   <para>Determines whether the noun is a tantum (only appears in either singular or plural form).</para>
+        /// </summary>
         public readonly bool IsTantum => (_data & 0b_000_10_000) != 0;
+        /// <summary>
+        ///   <para>Gets or sets whether the noun is a singulare tantum (only appears in singular form).</para>
+        /// </summary>
         public bool IsSingulareTantum
         {
             readonly get => (_data & 0b_000_11_000) == 0b_000_10_000;
@@ -42,6 +58,9 @@ namespace GrammarSharp.Russian
                 _data = (byte)((_data & 0b_111_00_111) | (value ? 0b_10_000 : 0));
             }
         }
+        /// <summary>
+        ///   <para>Gets or sets whether the noun is a plurale tantum (only appears in plural form).</para>
+        /// </summary>
         public bool IsPluraleTantum
         {
             readonly get => (_data & 0b_000_11_000) == 0b_000_11_000;
@@ -57,8 +76,21 @@ namespace GrammarSharp.Russian
 
         public RussianNounProperties(char gender, bool isAnimate)
             : this(RussianGrammar.ParseGender(gender), isAnimate, 0) { }
+        /// <summary>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounProperties"/> structure with the specified <paramref name="gender"/> and animacy.</para>
+        /// </summary>
+        /// <param name="gender">The noun's grammatical gender.</param>
+        /// <param name="isAnimate">The noun's grammatical animacy: <see langword="true"/> - animate, <see langword="false"/> - inanimate.</param>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="gender"/> is not a valid <seealso cref="RussianGender"/> value.</exception>
         public RussianNounProperties(RussianGender gender, bool isAnimate)
             : this(gender, isAnimate, 0) { }
+        /// <summary>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounProperties"/> structure with the specified <paramref name="gender"/>, animacy and <paramref name="flags"/>.</para>
+        /// </summary>
+        /// <param name="gender">The noun's grammatical gender.</param>
+        /// <param name="isAnimate">The noun's grammatical animacy: <see langword="true"/> - animate, <see langword="false"/> - inanimate.</param>
+        /// <param name="flags">The noun's flags.</param>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="gender"/> is not a valid <seealso cref="RussianGender"/> value.</exception>
         public RussianNounProperties(RussianGender gender, bool isAnimate, RussianNounFlags flags)
         {
             if ((uint)gender > (uint)RussianGender.Common)
@@ -124,15 +156,41 @@ namespace GrammarSharp.Russian
             }
         }
 
+        /// <summary>
+        ///   <para>Determines whether this Russian noun property set is equal to another specified Russian noun property set.</para>
+        /// </summary>
+        /// <param name="other">The Russian noun property set to compare with this Russian noun property set.</param>
+        /// <returns><see langword="true"/>, if this Russian noun property set is equal to <paramref name="other"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly bool Equals(RussianNounProperties other)
             => _data == other._data;
+        /// <summary>
+        ///   <para>Determines whether this Russian noun property set is equal to the specified <paramref name="obj"/>.</para>
+        /// </summary>
+        /// <param name="obj">The object to compare with this Russian noun property set.</param>
+        /// <returns><see langword="true"/>, if <paramref name="obj"/> is a <see cref="RussianNounInfo"/> instance equal to this Russian noun property set; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly override bool Equals([NotNullWhen(true)] object? obj)
             => obj is RussianNounProperties other && Equals(other);
+        /// <summary>
+        ///   <para>Returns a hash code for this Russian noun property set.</para>
+        /// </summary>
+        /// <returns>A hash code for this Russian noun property set.</returns>
         [Pure] public readonly override int GetHashCode()
             => _data;
 
+        /// <summary>
+        ///   <para>Determines whether the two specified Russian noun property sets are equal.</para>
+        /// </summary>
+        /// <param name="left">The first Russian noun property set to compare.</param>
+        /// <param name="right">The second Russian noun property set to compare.</param>
+        /// <returns><see langword="true"/>, if <paramref name="left"/> is equal to <paramref name="right"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool operator ==(RussianNounProperties left, RussianNounProperties right)
             => left.Equals(right);
+        /// <summary>
+        ///   <para>Determines whether the two specified Russian noun property sets are not equal.</para>
+        /// </summary>
+        /// <param name="left">The first Russian noun property set to compare.</param>
+        /// <param name="right">The second Russian noun property set to compare.</param>
+        /// <returns><see langword="true"/>, if <paramref name="left"/> is not equal to <paramref name="right"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool operator !=(RussianNounProperties left, RussianNounProperties right)
             => !(left == right);
 

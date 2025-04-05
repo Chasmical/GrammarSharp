@@ -134,7 +134,7 @@ namespace GrammarSharp.Russian
         /// <summary>
         ///   <para>Determines whether this Russian pronoun declension is equal to another specified Russian pronoun declension.</para>
         /// </summary>
-        /// <param name="other">The Russian declension to compare with this Russian pronoun declension.</param>
+        /// <param name="other">The Russian pronoun declension to compare with this Russian pronoun declension.</param>
         /// <returns><see langword="true"/>, if this Russian pronoun declension is equal to <paramref name="other"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly bool Equals(RussianPronounDeclension other)
             => _stemTypeAndStress == other._stemTypeAndStress &&

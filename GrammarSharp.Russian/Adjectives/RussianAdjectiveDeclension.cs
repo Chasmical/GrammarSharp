@@ -143,7 +143,7 @@ namespace GrammarSharp.Russian
         /// <summary>
         ///   <para>Determines whether this Russian adjective declension is equal to another specified Russian adjective declension.</para>
         /// </summary>
-        /// <param name="other">The Russian declension to compare with this Russian adjective declension.</param>
+        /// <param name="other">The Russian adjective declension to compare with this Russian adjective declension.</param>
         /// <returns><see langword="true"/>, if this Russian adjective declension is equal to <paramref name="other"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly bool Equals(RussianAdjectiveDeclension other)
             => (_typesAndReflexive | AdjectiveTypeId).Equals(other._typesAndReflexive | AdjectiveTypeId) &&

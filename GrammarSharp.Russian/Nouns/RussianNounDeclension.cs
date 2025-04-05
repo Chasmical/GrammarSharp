@@ -160,7 +160,7 @@ namespace GrammarSharp.Russian
         /// <summary>
         ///   <para>Determines whether this Russian noun declension is equal to another specified Russian noun declension.</para>
         /// </summary>
-        /// <param name="other">The Russian declension to compare with this Russian noun declension.</param>
+        /// <param name="other">The Russian noun declension to compare with this Russian noun declension.</param>
         /// <returns><see langword="true"/>, if this Russian noun declension is equal to <paramref name="other"/>; otherwise, <see langword="false"/>.</returns>
         [Pure] public readonly bool Equals(RussianNounDeclension other)
             => _typeAndProps.Equals(other._typeAndProps) &&

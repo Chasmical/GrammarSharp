@@ -5,6 +5,10 @@ namespace GrammarSharp.Russian
 {
     public partial struct RussianNounInfo
     {
+        /// <summary>
+        ///   <para>Returns a string representation of this noun info.</para>
+        /// </summary>
+        /// <returns>The string representation of this noun info.</returns>
         [Pure] public readonly override string ToString()
         {
             // Longest form (28 chars): мо-жо <мо-жо 1*°f″/f″①②③, ё>

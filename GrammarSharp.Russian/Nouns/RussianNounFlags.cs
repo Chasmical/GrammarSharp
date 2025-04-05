@@ -1,7 +1,7 @@
 ﻿namespace GrammarSharp.Russian
 {
     /// <summary>
-    ///   <para>Specifies some Russian noun properties.</para>
+    ///   <para>Defines some Russian noun properties.</para>
     /// </summary>
     public enum RussianNounFlags
     {

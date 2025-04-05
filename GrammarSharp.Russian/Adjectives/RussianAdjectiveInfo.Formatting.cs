@@ -5,6 +5,10 @@ namespace GrammarSharp.Russian
 {
     public partial struct RussianAdjectiveInfo
     {
+        /// <summary>
+        ///   <para>Returns a string representation of this adjective info.</para>
+        /// </summary>
+        /// <returns>The string representation of this adjective info.</returns>
         [Pure] public readonly override string ToString()
         {
             // TODO: use a span buffer to format RussianAdjectiveInfo
