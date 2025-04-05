@@ -98,6 +98,21 @@ namespace GrammarSharp.Russian
             _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0) | ((int)flags << 3));
         }
 
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianNounProperties"/> structure from the specified <paramref name="nounProperties"/> string.</para>
+        /// </summary>
+        /// <param name="nounProperties">The string containing Russian noun properties to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="nounProperties"/> are not valid Russian noun properties.</exception>
+        public RussianNounProperties(string nounProperties)
+            => this = Parse(nounProperties);
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianNounProperties"/> structure from the specified <paramref name="nounProperties"/> span.</para>
+        /// </summary>
+        /// <param name="nounProperties">The read-only span of characters containing Russian noun properties to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="nounProperties"/> are not valid Russian noun properties.</exception>
+        public RussianNounProperties(ReadOnlySpan<char> nounProperties)
+            => this = Parse(nounProperties);
+
         private static void ValidateGender(RussianGender gender, [CAE(nameof(gender))] string? paramName = null)
         {
             if ((uint)gender > (uint)RussianGender.Common)

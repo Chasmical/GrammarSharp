@@ -51,6 +51,21 @@ namespace GrammarSharp.Russian
             _declension = declension;
         }
 
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianNounInfo"/> structure from the specified <paramref name="nounInfo"/> string.</para>
+        /// </summary>
+        /// <param name="nounInfo">The string containing Russian noun info to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="nounInfo"/> is not valid Russian noun info.</exception>
+        public RussianNounInfo(string nounInfo)
+            => this = Parse(nounInfo);
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianNounInfo"/> structure from the specified <paramref name="nounInfo"/> span.</para>
+        /// </summary>
+        /// <param name="nounInfo">The read-only span of characters containing Russian noun info to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="nounInfo"/> is not valid Russian noun info.</exception>
+        public RussianNounInfo(ReadOnlySpan<char> nounInfo)
+            => this = Parse(nounInfo);
+
         private static void ValidateDeclension(RussianDeclension declension, [CAE(nameof(declension))] string? paramName = null)
         {
             if (declension.Type is not RussianDeclensionType.Noun and not RussianDeclensionType.Adjective)

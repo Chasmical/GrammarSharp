@@ -131,6 +131,21 @@ namespace GrammarSharp.Russian
         public readonly bool IsZero => StemType == 0;
 
         /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianDeclension"/> structure from the specified <paramref name="declension"/> string.</para>
+        /// </summary>
+        /// <param name="declension">The string containing a Russian declension to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="declension"/> is not a valid Russian declension.</exception>
+        public RussianDeclension(string declension)
+            => this = Parse(declension);
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianDeclension"/> structure from the specified <paramref name="declension"/> span.</para>
+        /// </summary>
+        /// <param name="declension">The read-only span of characters containing a Russian declension to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="declension"/> is not a valid Russian declension.</exception>
+        public RussianDeclension(ReadOnlySpan<char> declension)
+            => this = Parse(declension);
+
+        /// <summary>
         ///   <para>Defines an implicit conversion of a <seealso cref="RussianNounDeclension"/> to a <seealso cref="RussianDeclension"/>.</para>
         /// </summary>
         /// <param name="declension">The Russian noun declension to convert.</param>

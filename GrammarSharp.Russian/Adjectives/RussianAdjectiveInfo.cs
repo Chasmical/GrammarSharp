@@ -64,6 +64,21 @@ namespace GrammarSharp.Russian
             _flags = flags;
         }
 
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianAdjectiveInfo"/> structure from the specified <paramref name="adjectiveInfo"/> string.</para>
+        /// </summary>
+        /// <param name="adjectiveInfo">The string containing Russian adjective info to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="adjectiveInfo"/> is not valid Russian adjective info.</exception>
+        public RussianAdjectiveInfo(string adjectiveInfo)
+            => this = Parse(adjectiveInfo);
+        /// <summary>
+        ///   <para>Initializes a new instance of the <see cref="RussianAdjectiveInfo"/> structure from the specified <paramref name="adjectiveInfo"/> span.</para>
+        /// </summary>
+        /// <param name="adjectiveInfo">The read-only span of characters containing Russian adjective info to convert.</param>
+        /// <exception cref="ArgumentException"><paramref name="adjectiveInfo"/> is not valid Russian adjective info.</exception>
+        public RussianAdjectiveInfo(ReadOnlySpan<char> adjectiveInfo)
+            => this = Parse(adjectiveInfo);
+
         private static void ValidateDeclension(RussianDeclension declension, [CAE(nameof(declension))] string? paramName = null)
         {
             if (declension.Type is not RussianDeclensionType.Adjective and not RussianDeclensionType.Pronoun)
