@@ -39,6 +39,90 @@ namespace GrammarSharp.Russian
             private set => _field1 = (byte)((_field1 & 0x3F) | ((int)value << 6));
         }
 
+        public int StemType
+        {
+            readonly get => Type switch
+            {
+                RussianDeclensionType.Noun => this.AsNounUnsafeRef().StemType,
+                RussianDeclensionType.Adjective => this.AsAdjectiveUnsafeRef().StemType,
+                RussianDeclensionType.Pronoun => this.AsPronounUnsafeRef().StemType,
+                _ => throw new InvalidOperationException(),
+            };
+            set
+            {
+                switch (Type)
+                {
+                    case RussianDeclensionType.Noun:
+                        this.AsNounUnsafeRefMutable().StemType = value;
+                        break;
+                    case RussianDeclensionType.Adjective:
+                        this.AsAdjectiveUnsafeRefMutable().StemType = value;
+                        break;
+                    case RussianDeclensionType.Pronoun:
+                        this.AsPronounUnsafeRefMutable().StemType = value;
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+        }
+
+        public RussianStressPattern StressPattern
+        {
+            readonly get => Type switch
+            {
+                RussianDeclensionType.Noun => new((byte)this.AsNounUnsafeRef().Stress),
+                RussianDeclensionType.Adjective => this.AsAdjectiveUnsafeRef().StressPattern,
+                RussianDeclensionType.Pronoun => new((byte)this.AsPronounUnsafeRef().Stress),
+                _ => throw new InvalidOperationException(),
+            };
+            set
+            {
+                switch (Type)
+                {
+                    case RussianDeclensionType.Noun:
+                        this.AsNounUnsafeRefMutable().Stress = value.Main;
+                        break;
+                    case RussianDeclensionType.Adjective:
+                        this.AsAdjectiveUnsafeRefMutable().StressPattern = value;
+                        break;
+                    case RussianDeclensionType.Pronoun:
+                        this.AsPronounUnsafeRefMutable().Stress = value.Main;
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+        }
+
+        public RussianDeclensionFlags Flags
+        {
+            readonly get => Type switch
+            {
+                RussianDeclensionType.Noun => this.AsNounUnsafeRef().Flags,
+                RussianDeclensionType.Adjective => this.AsAdjectiveUnsafeRef().Flags,
+                RussianDeclensionType.Pronoun => this.AsPronounUnsafeRef().Flags,
+                _ => throw new InvalidOperationException(),
+            };
+            set
+            {
+                switch (Type)
+                {
+                    case RussianDeclensionType.Noun:
+                        this.AsNounUnsafeRefMutable().Flags = value;
+                        break;
+                    case RussianDeclensionType.Adjective:
+                        this.AsAdjectiveUnsafeRefMutable().Flags = value;
+                        break;
+                    case RussianDeclensionType.Pronoun:
+                        this.AsPronounUnsafeRefMutable().Flags = value;
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+        }
+
         [Pure] public static implicit operator RussianDeclension(RussianNounDeclension declension)
             => Unsafe.As<RussianNounDeclension, RussianDeclension>(ref declension);
         [Pure] public static implicit operator RussianDeclension(RussianAdjectiveDeclension declension)
