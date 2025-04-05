@@ -18,20 +18,20 @@ namespace GrammarSharp.Tests
 
             StringBuilder sb = new();
 
-            string? Decline(int num, char gender, bool plural = false)
+            string? Decline(int num, RussianGender gender, bool plural = false)
             {
                 if (num == 6) return adjective.DeclineShort(plural, new(gender, true));
                 return adjective.Decline((RussianCase)num, plural, new(gender, true));
             }
 
             // Decline for every gender, and then for plural
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'n')));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, RussianGender.Neuter)));
             sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'm')));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, RussianGender.Masculine)));
             sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'f')));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, RussianGender.Feminine)));
             sb.Append(" // ");
-            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, 'n', true)));
+            sb.AppendJoin(", ", Enumerable.Range(0, 7).Select(i => Decline(i, RussianGender.Neuter, true)));
 
             string result = sb.ToString();
 
@@ -46,26 +46,26 @@ namespace GrammarSharp.Tests
             var info = RussianAdjectiveInfo.Parse("п 1a—");
             var adjective = new RussianAdjective("углекислый", info);
 
-            Assert.Equal("углекисла", adjective.DeclineShort(false, new('f', true)));
-            Assert.Equal("углекисла", adjective.DeclineShort(false, new('f', true), true));
-            Assert.Null(adjective.DeclineShort(false, new('m', true)));
-            Assert.Equal("углекисл", adjective.DeclineShort(false, new('m', true), true));
+            Assert.Equal("углекисла", adjective.DeclineShort(false, new("жо")));
+            Assert.Equal("углекисла", adjective.DeclineShort(false, new("жо"), true));
+            Assert.Null(adjective.DeclineShort(false, new("мо")));
+            Assert.Equal("углекисл", adjective.DeclineShort(false, new("мо"), true));
 
             info = RussianAdjectiveInfo.Parse("п 4a✕");
             adjective = new RussianAdjective("лучший", info);
 
-            Assert.Null(adjective.DeclineShort(false, new('f', true)));
-            Assert.Equal("лучша", adjective.DeclineShort(false, new('f', true), true));
-            Assert.Null(adjective.DeclineShort(false, new('m', true)));
-            Assert.Equal("лучш", adjective.DeclineShort(false, new('m', true), true));
+            Assert.Null(adjective.DeclineShort(false, new("жо")));
+            Assert.Equal("лучша", adjective.DeclineShort(false, new("жо"), true));
+            Assert.Null(adjective.DeclineShort(false, new("мо")));
+            Assert.Equal("лучш", adjective.DeclineShort(false, new("мо"), true));
 
             info = RussianAdjectiveInfo.Parse("п 1b⌧");
             adjective = new RussianAdjective("золотой", info);
 
-            Assert.Null(adjective.DeclineShort(false, new('f', true)));
-            Assert.Equal("золота", adjective.DeclineShort(false, new('f', true), true));
-            Assert.Null(adjective.DeclineShort(false, new('m', true)));
-            Assert.Null(adjective.DeclineShort(false, new('m', true), true));
+            Assert.Null(adjective.DeclineShort(false, new("жо")));
+            Assert.Equal("золота", adjective.DeclineShort(false, new("жо"), true));
+            Assert.Null(adjective.DeclineShort(false, new("мо")));
+            Assert.Null(adjective.DeclineShort(false, new("мо"), true));
 
         }
 
