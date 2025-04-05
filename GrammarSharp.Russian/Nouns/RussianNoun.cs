@@ -8,8 +8,14 @@ namespace GrammarSharp.Russian
         public string Stem { get; }
         public RussianNounInfo Info { get; }
 
+        public RussianNoun(ReadOnlySpan<char> word, RussianNounInfo info)
+        {
+            Stem = info._declension.ExtractStem(word).ToString();
+            Info = info;
+        }
         public RussianNoun(string word, RussianNounInfo info)
         {
+            Guard.ThrowIfNull(word);
             Stem = info._declension.ExtractStem(word);
             Info = info;
         }
@@ -21,19 +27,11 @@ namespace GrammarSharp.Russian
             Info = info;
         }
 
-        [Pure] public static string ExtractStem(string word)
-        {
-            // Remove the last vowel/'й'/'ь' to get the stem
-            return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
-        }
-        [Pure] public static ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
-        {
-            // Remove the last vowel/'й'/'ь' to get the stem
-            return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? word[..^1] : word;
-        }
-
         [Pure] public static RussianNoun FromStem(string stem, RussianNounInfo info)
-            => new RussianNoun(stem, info, false);
+        {
+            Guard.ThrowIfNull(stem);
+            return new RussianNoun(stem, info, false);
+        }
 
     }
 }

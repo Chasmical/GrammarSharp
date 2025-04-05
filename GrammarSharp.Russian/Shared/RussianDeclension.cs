@@ -214,17 +214,34 @@ namespace GrammarSharp.Russian
         public string ExtractStem(string word)
         {
             Guard.ThrowIfNull(word);
-            if (IsZero) return word;
+            return word[..^GetEndingLength(word)];
+        }
+        /// <summary>
+        ///   <para>Extracts the stem of the specified <paramref name="word"/>, according to this declension's type.</para>
+        /// </summary>
+        /// <param name="word">The word to extract the stem of.</param>
+        /// <returns>The stem of the specified <paramref name="word"/>.</returns>
+        public ReadOnlySpan<char> ExtractStem(ReadOnlySpan<char> word)
+            => word[..^GetEndingLength(word)];
+        private int GetEndingLength(ReadOnlySpan<char> word)
+        {
+            if (IsZero) return 0;
 
             switch (Type)
             {
                 case RussianDeclensionType.Adjective:
-                    string stem = RussianAdjective.ExtractStem(word, out bool isAdjReflexive);
+                {
+                    // If adjective ends with 'ся', remove the last four letters
+                    bool isAdjReflexive = word.Length > 4 && word[^2] == 'с' && word[^1] == 'я';
+                    int endingLength = isAdjReflexive ? 4 : word.Length > 2 ? 2 : 0;
                     if (isAdjReflexive) this.AsAdjectiveUnsafeRefMutable().IsReflexive = true;
-                    return stem;
-
+                    return endingLength;
+                }
                 default: // case RussianDeclensionType.Noun or RussianDeclensionType.Pronoun:
-                    return RussianNoun.ExtractStem(word);
+                {
+                    // Remove the last vowel/'й'/'ь' to get the stem
+                    return word.Length > 1 && RussianLowerCase.IsTrimNounStemChar(word[^1]) ? 1 : 0;
+                }
             }
         }
 
