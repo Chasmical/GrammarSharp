@@ -95,8 +95,13 @@ namespace GrammarSharp.Russian
         public RussianStressPattern(ReadOnlySpan<char> stressPattern)
             => this = Parse(stressPattern);
 
-        [Pure] public static implicit operator RussianStressPattern(RussianStress stress)
-            => new(stress);
+        /// <summary>
+        ///   <para>Defines an implicit conversion of a <seealso cref="RussianStress"/> to a <seealso cref="RussianStressPattern"/>.</para>
+        /// </summary>
+        /// <param name="mainStress">The main form stress schema.</param>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="mainStress"/> is not a valid stress schema.</exception>
+        [Pure] public static implicit operator RussianStressPattern(RussianStress mainStress)
+            => new(mainStress);
 
         private static void ValidateStress(RussianStress stress, string paramName)
         {
