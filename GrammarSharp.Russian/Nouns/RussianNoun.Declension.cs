@@ -10,6 +10,11 @@ namespace GrammarSharp.Russian
     {
         [Pure] public string Decline(RussianCase @case, bool plural)
         {
+            // See if the noun has any anomalous forms for this case and count
+            if (_anomalies.Get((int)@case + (plural ? RussianGrammar.CaseEnumCount : 0)) is { } anomaly) return anomaly;
+            // Normalize "2nd" cases to the main 6 cases
+            RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
+
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 

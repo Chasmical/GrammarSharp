@@ -17,6 +17,8 @@ namespace GrammarSharp.Russian
         /// </summary>
         public RussianNounInfo Info { get; }
 
+        private AnomalousFormList _anomalies;
+
         /// <summary>
         ///   <para>Initializes a new instance of the <see cref="RussianNoun"/> class with the specified <paramref name="word"/> and <paramref name="info"/>.</para>
         /// </summary>

@@ -30,12 +30,18 @@
         /// </summary>
         Prepositional,
 
-        // TODO: add Ablative case, "от/из/с чего - из дому" (did it turn into just the Locative case?)
-        // TODO: add Vocative case (not a case???)
-        // TODO: add Locative case "в чём, где - в лесу" (usually same as prepositional, with stress on ending)
-        // TODO: add Partitive case "чего - сахару" (usually same as dative)
-        // TODO: add Waitive(???) case (seems to be just a context-dependent usage of genitive and accusative)
-        // TODO: add Translative case (в что/кого - в солдаты) (usually same as plural nominative)
+        /// <summary>
+        ///   <para>Specifies an optional partitive (2nd genitive) grammatical case.</para>
+        /// </summary>
+        Partitive,
+        /// <summary>
+        ///   <para>Specifies an optional translative (2nd accusative; though defaults to plural nominative) grammatical case.</para>
+        /// </summary>
+        Translative,
+        /// <summary>
+        ///   <para>Specifies an optional locative (2nd prepositional) grammatical case.</para>
+        /// </summary>
+        Locative,
     }
     /// <summary>
     ///   <para>Defines grammatical tenses used in Russian language.</para>
