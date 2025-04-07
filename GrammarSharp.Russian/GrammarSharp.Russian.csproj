@@ -23,9 +23,9 @@
     <!-- Title, Description, Tags -->
     <Title>$(AssemblyName)</Title>
     <Description>
-
+      Provides a bunch of classes, structures and methods pertaining to Russian declension of nouns, adjectives and pronouns.
     </Description>
-    <PackageTags>grammar russian linguistics</PackageTags>
+    <PackageTags>grammar linguistics russian inflection declension zaliznyak noun adjective pronoun</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
