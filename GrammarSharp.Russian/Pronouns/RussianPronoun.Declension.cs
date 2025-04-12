@@ -45,8 +45,11 @@ namespace GrammarSharp.Russian
                 case 'о': // 'о' is removed
                     buffer.RemoveStemCharAt(lastVowelIndex);
                     break;
-                case 'и': // 'и' is replaced with 'ь'
-                    buffer.Buffer[lastVowelIndex] = 'ь';
+                case 'и': // 'и' is replaced with 'ь' in 6* pronouns, and is removed otherwise (один, 1*b)
+                    if (decl.StemType == 6)
+                        buffer.Buffer[lastVowelIndex] = 'ь';
+                    else
+                        buffer.RemoveStemCharAt(lastVowelIndex);
                     break;
                 case 'е' or 'ё':
                     char preceding = lastVowelIndex > 0 ? buffer.Buffer[lastVowelIndex - 1] : '\0';

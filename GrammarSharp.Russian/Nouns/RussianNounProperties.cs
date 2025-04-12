@@ -166,6 +166,8 @@ namespace GrammarSharp.Russian
             => _data = (byte)((_data & 0b_000_00_111) | (extraData ? 0b_001_00_000 : 0));
         internal void CopyFromButKeepTantums(RussianNounProperties other)
             => _data = (byte)((_data & 0b_000_11_000) | (other._data & 0b_111_00_111));
+        internal readonly RussianNounProperties WithGenderInanimate(RussianGender gender)
+            => new((byte)((_data & 0b_111_11_000) | (int)gender));
 
         internal readonly bool IsNominativeNormalized
         {

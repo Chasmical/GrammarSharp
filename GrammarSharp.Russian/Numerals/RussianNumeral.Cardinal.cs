@@ -5,39 +5,47 @@ namespace GrammarSharp.Russian
 {
     public sealed partial class RussianNumeral
     {
-        public static string CreateCardinal(int number, RussianNounProperties props)
+        public static string CreateCardinal(int number, RussianCase @case, RussianNoun noun)
         {
             StringBuilder sb = new();
 
-            var form = DeclineAppendCardinal(sb, props, number);
+            // Larger numbers ending with 2, 3 or 4 "lose animacy";
+            // "Proper" animate accusative is sometimes used colloquially.
+            // TODO: move deeper to final unit's resolution
+            //if (@case == RussianCase.Accusative && number > 4 && number % 10 is 2 or 3 or 4)
+            //    @case = RussianCase.Nominative;
 
-            // TODO: append quantified word?
+            RussianNounProperties props = noun.Info.Properties;
+            props.PrepareForAdjectiveDeclension(@case, noun.Info.Properties.IsPluraleTantum);
 
-            return sb.ToString();
-        }
-        public static string CreateCardinal(int number, RussianNoun noun)
-        {
-            StringBuilder sb = new();
+            var nounForm = DeclineAppendCardinal(sb, props, number);
+            sb.Append(' ');
 
-            var form = DeclineAppendCardinal(sb, noun.Info.Properties, number);
-
-            // TODO: append quantified word?
+            sb.Append(nounForm switch
+            {
+                Number.DeclineSingular => noun.Decline(@case, false),
+                Number.DeclinePlural => noun.Decline(@case, true),
+                Number.PaucalCountForm => noun.Decline(RussianCase.Genitive, false),
+                Number.PluralCountForm => noun.Decline(RussianCase.Genitive, true),
+            });
 
             return sb.ToString();
         }
 
         private static Number DeclineAppendCardinal(StringBuilder sb, RussianNounProperties props, int number)
         {
-            if (number < 0)
+            if (number <= 0)
             {
+                if (number == 0)
+                {
+                    DeclineAppendZero(sb, props);
+                    return Number.PluralCountForm;
+                }
                 sb.Append("минус ");
                 number = -number;
             }
-            else if (number == 0)
-            {
-                DeclineAppendZero(sb, props);
-                return Number.Plural;
-            }
+
+            bool isBigEnoughToLoseAnimacy = number > 4;
 
             // TODO: handle larger numbers
 
@@ -45,19 +53,79 @@ namespace GrammarSharp.Russian
             {
                 int thousands = Math.DivRem(number, 1000, out number);
 
-                var thousandForm = DeclineAppendBetween1And999(sb, new(RussianGender.Feminine, false), thousands);
+                RussianNounProperties thousandProps = props.WithGenderInanimate(RussianGender.Feminine);
+                var thousandForm = DeclineAppendBetween1And999(sb, thousandProps, thousands, true);
 
-                // TODO: append thousandWord (with appropriate count form)
+                DeclineAppendThousandWord(sb, props, thousandForm);
             }
 
             if (number > 0)
             {
-                return DeclineAppendBetween1And999(sb, props, number);
+                return DeclineAppendBetween1And999(sb, props, number, isBigEnoughToLoseAnimacy);
             }
-            return Number.Plural;
+            return Number.PluralCountForm;
         }
 
-        private static Number DeclineAppendBetween1And999(StringBuilder sb, RussianNounProperties props, int number)
+        private static void DeclineAppendThousandWord(StringBuilder sb, RussianNounProperties props, Number number)
+        {
+            if (sb.Length > 0) sb.Append(' ');
+            sb.Append("тысяч");
+
+            switch (props.Case)
+            {
+                case RussianCase.Nominative:
+                    switch (number)
+                    {
+                        case Number.DeclineSingular:
+                            sb.Append('а');
+                            break;
+                        case Number.PaucalCountForm:
+                            sb.Append('и');
+                            break;
+                    }
+                    break;
+
+                case RussianCase.Genitive:
+                    if (number == Number.DeclineSingular)
+                        sb.Append('и');
+                    break;
+
+                case RussianCase.Dative:
+                    if (number == Number.DeclineSingular)
+                        sb.Append('е');
+                    else
+                        sb.Append('а').Append('м');
+                    break;
+
+                case RussianCase.Accusative:
+                    switch (number)
+                    {
+                        case Number.DeclineSingular:
+                            sb.Append('у');
+                            break;
+                        case Number.PaucalCountForm:
+                            sb.Append('и');
+                            break;
+                    }
+                    break;
+
+                case RussianCase.Instrumental:
+                    if (number == Number.DeclineSingular)
+                        sb.Append('ь').Append('ю');
+                    else
+                        sb.Append('а').Append('м').Append('и');
+                    break;
+
+                default: // case RussianCase.Prepositional:
+                    if (number == Number.DeclineSingular)
+                        sb.Append('е');
+                    else
+                        sb.Append('а').Append('х');
+                    break;
+            }
+        }
+
+        private static Number DeclineAppendBetween1And999(StringBuilder sb, RussianNounProperties props, int number, bool isBigEnoughToLoseAnimacy)
         {
             if (number >= 100)
             {
@@ -95,23 +163,18 @@ namespace GrammarSharp.Russian
                 // Continue to resolve the remaining 0-9
             }
 
-            if (number == 0) return Number.Plural;
+            if (number == 0) return props.Case == RussianCase.Nominative ? Number.PluralCountForm : Number.DeclinePlural;
             if (sb.Length > 0) sb.Append(' ');
 
             switch (number)
             {
                 case 1:
                     DeclineAppendOne(sb, props);
-                    return Number.Singular;
+                    return Number.DeclineSingular;
                 case 2:
-                    DeclineAppendTwo(sb, props);
-                    break;
-                case 3:
-                    DeclineAppendThree(sb, props);
-                    break;
-                case 4:
-                    DeclineAppendFour(sb, props);
-                    break;
+                    return DeclineAppendTwo(sb, props, isBigEnoughToLoseAnimacy);
+                case 3 or 4:
+                    return DeclineAppendThreeOrFour(sb, props, number, isBigEnoughToLoseAnimacy);
                 case >= 5 and <= 10:
                     DeclineAppendFiveToTen(sb, props, number);
                     break;
@@ -119,7 +182,11 @@ namespace GrammarSharp.Russian
                     DeclineAppendElevenToNineteen(sb, props, number);
                     break;
             }
-            return number >= 5 ? Number.Plural : Number.Paucal;
+
+            if (props.Case == RussianCase.Nominative)
+                return number >= 5 ? Number.PluralCountForm : Number.PaucalCountForm;
+
+            return Number.DeclinePlural;
         }
 
         private static void DeclineAppendZero(StringBuilder sb, RussianNounProperties props)
@@ -150,14 +217,14 @@ namespace GrammarSharp.Russian
             RussianPronounDeclension decl = new(1, RussianStress.B, RussianDeclensionFlags.Star);
             sb.Append(RussianPronoun.DeclineCore("один", decl, props));
         }
-        private static void DeclineAppendTwo(StringBuilder sb, RussianNounProperties props)
+        private static Number DeclineAppendTwo(StringBuilder sb, RussianNounProperties props, bool isBigEnoughToLoseAnimacy)
         {
             sb.Append('д').Append('в');
             switch (props.Case)
             {
                 case RussianCase.Nominative:
                     sb.Append(props.Gender is RussianGender.Feminine ? 'е' : 'а');
-                    break;
+                    return Number.PaucalCountForm;
                 case RussianCase.Genitive:
                     sb.Append('у').Append('х');
                     break;
@@ -165,7 +232,7 @@ namespace GrammarSharp.Russian
                     sb.Append('у').Append('м');
                     break;
                 case RussianCase.Accusative:
-                    if (props.IsAnimate)
+                    if (!isBigEnoughToLoseAnimacy && props.IsAnimate)
                         goto case RussianCase.Genitive;
                     goto case RussianCase.Nominative;
                 case RussianCase.Instrumental:
@@ -174,15 +241,20 @@ namespace GrammarSharp.Russian
                 default: // case RussianCase.Prepositional:
                     goto case RussianCase.Genitive;
             }
+            return Number.DeclinePlural;
         }
-        private static void DeclineAppendThree(StringBuilder sb, RussianNounProperties props)
+        private static Number DeclineAppendThreeOrFour(StringBuilder sb, RussianNounProperties props, int number, bool isBigEnoughToLoseAnimacy)
         {
-            sb.Append('т').Append('р');
+            if (number == 3)
+                sb.Append('т').Append('р');
+            else
+                sb.Append("четыр");
+
             switch (props.Case)
             {
                 case RussianCase.Nominative:
-                    sb.Append('и');
-                    break;
+                    sb.Append(number == 3 ? 'и' : 'е');
+                    return Number.PaucalCountForm;
                 case RussianCase.Genitive:
                     sb.Append('ё').Append('х');
                     break;
@@ -190,40 +262,16 @@ namespace GrammarSharp.Russian
                     sb.Append('ё').Append('м');
                     break;
                 case RussianCase.Accusative:
-                    if (props.IsAnimate)
+                    if (!isBigEnoughToLoseAnimacy && props.IsAnimate)
                         goto case RussianCase.Genitive;
                     goto case RussianCase.Nominative;
                 case RussianCase.Instrumental:
-                    sb.Append('е').Append('м').Append('я');
+                    sb.Append(number == 3 ? 'е' : 'ь').Append('м').Append('я');
                     break;
                 default: // case RussianCase.Prepositional:
                     goto case RussianCase.Genitive;
             }
-        }
-        private static void DeclineAppendFour(StringBuilder sb, RussianNounProperties props)
-        {
-            sb.Append("четыр");
-            switch (props.Case)
-            {
-                case RussianCase.Nominative:
-                    sb.Append('е');
-                    break;
-                case RussianCase.Genitive:
-                    sb.Append('ё').Append('х');
-                    break;
-                case RussianCase.Dative:
-                    sb.Append('ё').Append('м');
-                    break;
-                case RussianCase.Accusative:
-                    if (props.IsAnimate)
-                        goto case RussianCase.Genitive;
-                    goto case RussianCase.Nominative;
-                case RussianCase.Instrumental:
-                    sb.Append('ь').Append('м').Append('я');
-                    break;
-                default: // case RussianCase.Prepositional:
-                    goto case RussianCase.Genitive;
-            }
+            return Number.DeclinePlural;
         }
         private static void DeclineAppendFiveToTen(StringBuilder sb, RussianNounProperties props, int number)
         {
@@ -232,7 +280,7 @@ namespace GrammarSharp.Russian
         }
         private static void DeclineAppendElevenToNineteen(StringBuilder sb, RussianNounProperties props, int number)
         {
-            DeclineAppendDigitStem(sb, default, number);
+            DeclineAppendDigitStem(sb, default, number - 10);
             sb.Append("надцат");
             DeclineAppendTensEnding(sb, props.Case);
         }
@@ -316,13 +364,10 @@ namespace GrammarSharp.Russian
             switch (hundreds)
             {
                 case 2:
-                    DeclineAppendTwo(sb, new(RussianGender.Feminine, false));
+                    DeclineAppendTwo(sb, new(RussianGender.Feminine, false), false);
                     break;
-                case 3:
-                    DeclineAppendThree(sb, new(RussianGender.Masculine, false));
-                    break;
-                case 4:
-                    DeclineAppendFour(sb, new(RussianGender.Masculine, false));
+                case 3 or 4:
+                    DeclineAppendThreeOrFour(sb, new(RussianGender.Masculine, false), hundreds, false);
                     break;
                 default:
                     DeclineAppendFiveToTen(sb, props, hundreds);
@@ -353,7 +398,13 @@ namespace GrammarSharp.Russian
             }
         }
 
-        private enum Number { Singular, Paucal, Plural }
+        private enum Number
+        {
+            DeclineSingular,
+            DeclinePlural,
+            PaucalCountForm,
+            PluralCountForm,
+        }
 
         // All the numeral declensions for 1-900:
         //  1: мс-п 1*b (gender and count)
