@@ -168,6 +168,8 @@ namespace GrammarSharp.Russian
             => _data = (byte)((_data & 0b_000_11_000) | (other._data & 0b_111_00_111));
         internal readonly RussianNounProperties WithGenderInanimate(RussianGender gender)
             => new((byte)((_data & 0b_111_11_000) | (int)gender));
+        internal static RussianNounProperties WithGenderAndCase(RussianGender gender, RussianCase @case)
+            => new((byte)(((int)@case << 5) | (int)gender));
 
         internal readonly bool IsNominativeNormalized
         {
