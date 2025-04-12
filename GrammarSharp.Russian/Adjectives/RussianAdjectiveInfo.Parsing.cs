@@ -1,6 +1,5 @@
 ﻿using System;
 using Chasm.Formatting;
-using Chasm.Utilities;
 using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
@@ -115,7 +114,11 @@ namespace GrammarSharp.Russian
         /// <returns><see langword="true"/>, if the conversion was successful; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool TryParse(string? text, out RussianAdjectiveInfo info)
         {
-            if (text is null) return Util.Fail(out info);
+            if (text is null)
+            {
+                info = default;
+                return false;
+            }
             return TryParse(text.AsSpan(), out info);
         }
         /// <summary>

@@ -44,7 +44,6 @@
     <InternalsVisibleTo Include="GrammarSharp.Tests" />
     <InternalsVisibleTo Include="GrammarSharp.Benchmarks" />
     <ProjectReference Include="..\GrammarSharp\GrammarSharp.csproj" />
-    <PackageReference Include="Chasm.Utilities" Version="2.5.1" />
     <PackageReference Include="Chasm.Formatting" Version="2.3.5" />
   </ItemGroup>
 

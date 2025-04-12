@@ -1,6 +1,5 @@
 ﻿using System;
 using Chasm.Formatting;
-using Chasm.Utilities;
 using JetBrains.Annotations;
 
 namespace GrammarSharp.Russian
@@ -138,7 +137,11 @@ namespace GrammarSharp.Russian
         /// <returns><see langword="true"/>, if the conversion was successful; otherwise, <see langword="false"/>.</returns>
         [Pure] public static bool TryParse(string? text, out RussianDeclension declension)
         {
-            if (text is null) return Util.Fail(out declension);
+            if (text is null)
+            {
+                declension = default;
+                return false;
+            }
             return TryParse(text.AsSpan(), out declension);
         }
         /// <summary>
