@@ -11,10 +11,11 @@ namespace GrammarSharp.Russian
         [Pure] public string Decline(RussianCase @case, bool plural)
         {
             // See if the noun has any anomalous forms for this case and count
-            if (_anomalies.Get((int)@case + (plural ? RussianGrammar.CaseEnumCount : 0)) is { } anomaly) return anomaly;
+            if (_anomalies.GetForNoun(@case, plural) is { } anomaly) return anomaly;
             // Normalize "2nd" cases to the main 6 cases
             RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
 
+            // Start attempting to decline the noun using its declension
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
@@ -27,17 +28,25 @@ namespace GrammarSharp.Russian
                     props.CopyFromButKeepTantums(specialProps);
 
                 // Prepare the props for noun declension, store case in props
-                props.PrepareForNounDeclension(@case, plural);
+                props.PrepareForDeclensionCase(@case, plural);
 
                 return DeclineCore(Stem, decl, props);
             }
             else // if (declension.Type == RussianDeclensionType.Adjective)
             {
                 // Prepare the props for adjective declension, store case in props
-                props.PrepareForAdjectiveDeclension(@case, plural);
+                props.PrepareForDeclensionGenderCount(@case, plural);
 
                 return RussianAdjective.DeclineCore(Stem, declension.AsAdjectiveUnsafeRef(), props);
             }
+        }
+
+        [Pure] public string DeclineCountForm(bool plural)
+        {
+            // See if the noun has an anomalous count form for this count
+            if (_anomalies.GetCountFormForNoun(plural) is { } anomaly) return anomaly;
+            // Otherwise, decline as if it were a genitive case
+            return Decline(RussianCase.Genitive, plural);
         }
 
         [Pure] internal static string DeclineCore(ReadOnlySpan<char> stem, NounDecl decl, NounProps props)

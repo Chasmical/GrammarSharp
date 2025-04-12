@@ -141,7 +141,7 @@ namespace GrammarSharp.Russian
         internal readonly bool IsPlural => (_data & 0b_000_01_000) != 0;
         internal readonly RussianCase Case => (RussianCase)ExtraData;
 
-        internal void PrepareForNounDeclension(RussianCase @case, bool plural)
+        internal void PrepareForDeclensionCase(RussianCase @case, bool plural)
         {
             // If it doesn't have a tantum, apply specified count
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
@@ -150,7 +150,7 @@ namespace GrammarSharp.Russian
             // Preserve animacy, and add case as extra data
             _data = (byte)((_data & 0b_100) | pluralFlag | genderFlags | ((int)@case << 5));
         }
-        internal void PrepareForAdjectiveDeclension(RussianCase @case, bool plural)
+        internal void PrepareForDeclensionGenderCount(RussianCase @case, bool plural)
         {
             // If it doesn't have a tantum, apply specified count
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;

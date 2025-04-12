@@ -4,9 +4,6 @@ namespace GrammarSharp.Russian
 {
     public static class RussianGrammar
     {
-        // Number of supported cases may be subject to change
-        internal const int CaseEnumCount = (int)RussianCase.Locative + 1;
-
         internal static void ValidateAndNormalizeCase(ref RussianCase @case, ref bool plural, [CAE(nameof(@case))] string? paramName = null)
         {
             if ((uint)@case > (uint)RussianCase.Prepositional)

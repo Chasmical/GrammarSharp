@@ -10,16 +10,17 @@ namespace GrammarSharp.Russian
     {
         [Pure] public string Decline(RussianCase @case, bool plural, SubjProps properties)
         {
-            // See if the adjective has any anomalous forms for this case and count
-            if (_anomalies.Get((int)@case + (plural ? RussianGrammar.CaseEnumCount : 0)) is { } anomaly) return anomaly;
-            // Normalize "2nd" cases to the main 6 cases
+            // Normalize "2nd" cases to the main 6 cases (anomalies can only be in main 6 cases)
             RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
+            // Prepare the props for adjective/pronoun declension, store case in props, prepare gender-count
+            properties.PrepareForDeclensionGenderCount(@case, plural);
 
+            // See if the adjective has any anomalous forms for this case and gender
+            if (_anomalies.GetForAdjective(@case, properties.Gender) is { } anomaly) return anomaly;
+
+            // Start attempting to decline the adjective using its declension
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
-
-            // Prepare the props for adjective/pronoun declension, store case in props
-            properties.PrepareForAdjectiveDeclension(@case, plural);
 
             if (declension.Type == RussianDeclensionType.Adjective)
             {
@@ -33,8 +34,11 @@ namespace GrammarSharp.Russian
 
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
         {
+            // Prepare the props for adjective declension, store "7th case" in props
+            properties.PrepareForDeclensionGenderCount((RussianCase)6, plural);
+
             // See if the adjective has any anomalous forms for this count
-            if (_anomalies.Get(RussianGrammar.CaseEnumCount * 2 + (plural ? 1 : 0)) is { } anomaly) return anomaly;
+            if (_anomalies.GetShortFormForAdjective(properties.Gender) is { } anomaly) return anomaly;
 
             if (Info.Declension.Type != RussianDeclensionType.Adjective) return null;
             if ((Info.Flags & (RussianAdjectiveFlags.IsNumeral | RussianAdjectiveFlags.IsPronoun)) != 0) return null;
@@ -58,15 +62,14 @@ namespace GrammarSharp.Russian
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero) return Stem;
 
-            // Prepare the props for adjective declension, store "7th case" in props
-            properties.PrepareForAdjectiveDeclension((RussianCase)6, plural);
-
             // Decline like an adjective with "7th case" (used in the ending lookup)
             return DeclineCore(Stem, declension.AsAdjectiveUnsafeRef(), properties);
         }
 
         [Pure] public string? DeclineComparative(bool force = false)
         {
+            if (_anomalies.GetComparativeForAdjective() is { } anomaly) return anomaly;
+
             RussianDeclension declension = Info.Declension;
             if (declension.IsZero || declension.Type != RussianDeclensionType.Adjective) return null;
             if ((Info.Flags & RussianAdjectiveFlags.NoComparativeForm) != 0) return null;
