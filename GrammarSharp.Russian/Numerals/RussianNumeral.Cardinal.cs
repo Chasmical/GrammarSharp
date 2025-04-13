@@ -29,6 +29,7 @@ namespace GrammarSharp.Russian
             return sb.ToString();
         }
 
+        // TODO: generalize this method to make it work for multiple numeric types
         private static Agreement AppendCardinal(StringBuilder sb, RussianNounProperties props, int number)
         {
             if (number <= 0)
@@ -46,16 +47,37 @@ namespace GrammarSharp.Russian
             // "Proper" animate accusative is sometimes used colloquially though.
             bool isSimple = number <= 4;
 
-            // TODO: handle larger numbers
+            if (number >= (int)1e9)
+            {
+                int billions = Math.DivRem(number, (int)1e9, out number);
+
+                var billionProps = RussianNounProperties.WithGenderAndCase(RussianGender.Masculine, props.Case);
+                var billionAgreement = DeclineAppendBetween1And999(sb, billionProps, billions, false);
+
+                if (sb.Length > 0) sb.Append(' ');
+                DeclineAppendLlionWord(sb, "миллиард", props.Case, billionAgreement);
+            }
+
+            if (number >= (int)1e6)
+            {
+                int millions = Math.DivRem(number, (int)1e6, out number);
+
+                var millionProps = RussianNounProperties.WithGenderAndCase(RussianGender.Masculine, props.Case);
+                var millionAgreement = DeclineAppendBetween1And999(sb, millionProps, millions, false);
+
+                if (sb.Length > 0) sb.Append(' ');
+                DeclineAppendLlionWord(sb, "миллион", props.Case, millionAgreement);
+            }
 
             if (number >= 1000)
             {
                 int thousands = Math.DivRem(number, 1000, out number);
 
                 var thousandProps = RussianNounProperties.WithGenderAndCase(RussianGender.Feminine, props.Case);
-                var thousandForm = DeclineAppendBetween1And999(sb, thousandProps, thousands, false);
+                var thousandAgreement = DeclineAppendBetween1And999(sb, thousandProps, thousands, false);
 
-                DeclineAppendThousandWord(sb, thousandProps, thousandForm);
+                if (sb.Length > 0) sb.Append(' ');
+                DeclineAppendThousandWord(sb, props.Case, thousandAgreement);
             }
 
             if (number > 0)
@@ -65,15 +87,15 @@ namespace GrammarSharp.Russian
             return Agreement.PluralCountForm;
         }
 
-        private static void DeclineAppendThousandWord(StringBuilder sb, RussianNounProperties props, Agreement number)
+        // TODO: turn these two huge word declension methods into lookups or something
+        private static void DeclineAppendThousandWord(StringBuilder sb, RussianCase @case, Agreement agreement)
         {
-            if (sb.Length > 0) sb.Append(' ');
             sb.Append("тысяч");
 
-            switch (props.Case)
+            switch (@case)
             {
                 case RussianCase.Nominative:
-                    switch (number)
+                    switch (agreement)
                     {
                         case Agreement.DeclineSingular:
                             sb.Append('а');
@@ -85,19 +107,19 @@ namespace GrammarSharp.Russian
                     break;
 
                 case RussianCase.Genitive:
-                    if (number == Agreement.DeclineSingular)
+                    if (agreement == Agreement.DeclineSingular)
                         sb.Append('и');
                     break;
 
                 case RussianCase.Dative:
-                    if (number == Agreement.DeclineSingular)
+                    if (agreement == Agreement.DeclineSingular)
                         sb.Append('е');
                     else
                         sb.Append('а').Append('м');
                     break;
 
                 case RussianCase.Accusative:
-                    switch (number)
+                    switch (agreement)
                     {
                         case Agreement.DeclineSingular:
                             sb.Append('у');
@@ -109,14 +131,66 @@ namespace GrammarSharp.Russian
                     break;
 
                 case RussianCase.Instrumental:
-                    if (number == Agreement.DeclineSingular)
+                    if (agreement == Agreement.DeclineSingular)
                         sb.Append('ь').Append('ю');
                     else
                         sb.Append('а').Append('м').Append('и');
                     break;
 
                 default: // case RussianCase.Prepositional:
-                    if (number == Agreement.DeclineSingular)
+                    if (agreement == Agreement.DeclineSingular)
+                        sb.Append('е');
+                    else
+                        sb.Append('а').Append('х');
+                    break;
+            }
+        }
+        private static void DeclineAppendLlionWord(StringBuilder sb, string stem, RussianCase @case, Agreement agreement)
+        {
+            sb.Append(stem);
+
+            switch (@case)
+            {
+                case RussianCase.Nominative or RussianCase.Accusative:
+                    switch (agreement)
+                    {
+                        case Agreement.DeclineSingular:
+                            break;
+                        case Agreement.DeclinePlural:
+                            sb.Append('ы');
+                            break;
+                        case Agreement.PaucalCountForm:
+                            sb.Append('а');
+                            break;
+                        case Agreement.PluralCountForm:
+                            sb.Append('о').Append('в');
+                            break;
+                    }
+                    break;
+
+                case RussianCase.Genitive:
+                    if (agreement == Agreement.DeclineSingular)
+                        sb.Append('а');
+                    else
+                        sb.Append('о').Append('в');
+                    break;
+
+                case RussianCase.Dative:
+                    if (agreement == Agreement.DeclineSingular)
+                        sb.Append('у');
+                    else
+                        sb.Append('а').Append('м');
+                    break;
+
+                case RussianCase.Instrumental:
+                    if (agreement == Agreement.DeclineSingular)
+                        sb.Append('о').Append('м');
+                    else
+                        sb.Append('а').Append('м').Append('и');
+                    break;
+
+                default: // case RussianCase.Prepositional:
+                    if (agreement == Agreement.DeclineSingular)
                         sb.Append('е');
                     else
                         sb.Append('а').Append('х');
@@ -147,25 +221,39 @@ namespace GrammarSharp.Russian
                 // Continue to resolve the remaining 0-9
             }
 
-            if (number == 0) return props.Case == RussianCase.Nominative ? Agreement.PluralCountForm : Agreement.DeclinePlural;
-            if (sb.Length > 0) sb.Append(' ');
-
-            switch (number)
+            // If number is not zero, append 1-19
+            if (number != 0)
             {
-                case 1:
-                    DeclineAppendOne(sb, props);
-                    return Agreement.DeclineSingular;
-                case 2 or 3 or 4:
-                    return DeclineAppendTwoToFour(sb, props, number, isSimple);
-                default: // case >= 5 and <= 19:
-                    DeclineAppendFiveToNineteen(sb, props.Case, number);
-                    break;
+                if (sb.Length > 0) sb.Append(' ');
+
+                switch (number)
+                {
+                    case 1:
+                        // Decline "one" and the quantified noun together
+                        DeclineAppendOne(sb, props);
+                        return Agreement.DeclineSingular;
+
+                    case 2 or 3 or 4:
+                        // Decline "two"/"three"/"four" and determine the agreement inside the method
+                        return DeclineAppendTwoToFour(sb, props, number, isSimple);
+
+                    case >= 5 and <= 10:
+                        // Append 5-10 stem, and a voiced soft ending that 5-10 have
+                        DeclineAppendOneToTenStem(sb, props.Case, number);
+                        DeclineAppendVoicedSoftEnding(sb, props.Case);
+                        break;
+
+                    default: // case >= 11 and <= 19:
+                        // Append 1-9 stem, and "надцат" with a voiced soft ending
+                        DeclineAppendOneToTenStem(sb, RussianCase.Nominative, number - 10);
+                        sb.Append("надцат");
+                        DeclineAppendVoicedSoftEnding(sb, props.Case);
+                        break;
+                }
             }
+            // "пять грамм" (nominative, plural count form), but "пятью граммами" (instrumental)
+            return props.Case == RussianCase.Nominative ? Agreement.PluralCountForm : Agreement.DeclinePlural;
 
-            if (props.Case == RussianCase.Nominative)
-                return number >= 5 ? Agreement.PluralCountForm : Agreement.PaucalCountForm;
-
-            return Agreement.DeclinePlural;
         }
 
         private static void DeclineAppendZero(StringBuilder sb, RussianCase @case)
@@ -221,6 +309,8 @@ namespace GrammarSharp.Russian
                     break;
 
                 case RussianCase.Accusative:
+                    // Larger numbers ending with 2, 3 or 4 "lose animacy" in accusative case;
+                    // "Proper" animate accusative is sometimes used colloquially though.
                     if (isSimple && props.IsAnimate) goto default;
                     goto case RussianCase.Nominative;
 
@@ -236,61 +326,17 @@ namespace GrammarSharp.Russian
             return Agreement.DeclinePlural;
         }
 
-        private static void DeclineAppendDigitStem(StringBuilder sb, RussianCase @case, int number)
-        {
-            sb.Append(number switch
-            {
-                1 => "один",
-                2 => "две",
-                3 => "три",
-                4 => "четыр",
-                5 => "пят",
-                6 => "шест",
-                7 => "сем",
-                8 => @case is RussianCase.Nominative or RussianCase.Accusative ? "восем" : "восьм",
-                _ => "девят",
-            });
-        }
-        private static void DeclineAppendTensEnding(StringBuilder sb, RussianCase @case)
-        {
-            switch (@case)
-            {
-                case RussianCase.Nominative or RussianCase.Accusative:
-                    sb.Append('ь');
-                    break;
-                case RussianCase.Instrumental:
-                    sb.Append('ь').Append('ю');
-                    break;
-                default:
-                    sb.Append('и');
-                    break;
-            }
-        }
-
-        private static void DeclineAppendFiveToNineteen(StringBuilder sb, RussianCase @case, int number)
-        {
-            if (number <= 10)
-            {
-                DeclineAppendDigitStem(sb, @case, number);
-            }
-            else
-            {
-                DeclineAppendDigitStem(sb, RussianCase.Nominative, number - 10);
-                sb.Append("надцат");
-            }
-            DeclineAppendTensEnding(sb, @case);
-        }
         private static void DeclineAppendTwentyToNinety(StringBuilder sb, RussianCase @case, int tens)
         {
             switch (tens)
             {
                 case 2:
                     sb.Append("двадцат");
-                    DeclineAppendTensEnding(sb, @case);
+                    DeclineAppendVoicedSoftEnding(sb, @case);
                     break;
                 case 3:
                     sb.Append("тридцат");
-                    DeclineAppendTensEnding(sb, @case);
+                    DeclineAppendVoicedSoftEnding(sb, @case);
                     break;
                 case 4:
                     sb.Append("сорок");
@@ -298,8 +344,10 @@ namespace GrammarSharp.Russian
                         sb.Append('а');
                     break;
                 case >= 5 and <= 8:
-                    DeclineAppendFiveToNineteen(sb, @case, tens / 10);
-                    DeclineAppendFiveToNineteen(sb, @case, 10);
+                    DeclineAppendOneToTenStem(sb, @case, tens);
+                    DeclineAppendVoicedSoftEnding(sb, @case);
+                    sb.Append("десят");
+                    DeclineAppendVoicedSoftEnding(sb, @case);
 
                     // Remove trailing 'ь' in nominative of 'десять'
                     if (@case is RussianCase.Nominative or RussianCase.Accusative)
@@ -322,7 +370,8 @@ namespace GrammarSharp.Russian
                     DeclineAppendTwoToFour(sb, RussianNounProperties.WithGenderAndCase(RussianGender.Feminine, @case), hundreds, true);
                     break;
                 default:
-                    DeclineAppendFiveToNineteen(sb, @case, hundreds);
+                    DeclineAppendOneToTenStem(sb, @case, hundreds);
+                    DeclineAppendVoicedSoftEnding(sb, @case);
                     break;
             }
             sb.Append('с');
@@ -350,6 +399,39 @@ namespace GrammarSharp.Russian
             }
         }
 
+        private static void DeclineAppendOneToTenStem(StringBuilder sb, RussianCase @case, int number)
+        {
+            sb.Append(number switch
+            {
+                1 => "один",
+                2 => "две", // "две" and "три" aren't stems in a classic sense, but just nominative forms,
+                3 => "три", // but whatever, these forms are used only in the "-надцать" construction.
+                4 => "четыр",
+                5 => "пят",
+                6 => "шест",
+                7 => "сем",
+                8 => @case is RussianCase.Nominative or RussianCase.Accusative ? "восем" : "восьм",
+                9 => "девят",
+                _ => "десят",
+            });
+        }
+        private static void DeclineAppendVoicedSoftEnding(StringBuilder sb, RussianCase @case)
+        {
+            // Applicable for cardinals: 5-19, 20-30, 50-80.
+            switch (@case)
+            {
+                case RussianCase.Nominative or RussianCase.Accusative:
+                    sb.Append('ь');
+                    break;
+                case RussianCase.Instrumental:
+                    sb.Append('ь').Append('ю');
+                    break;
+                default:
+                    sb.Append('и');
+                    break;
+            }
+        }
+
         private enum Agreement
         {
             DeclineSingular,
@@ -357,71 +439,6 @@ namespace GrammarSharp.Russian
             PaucalCountForm,
             PluralCountForm,
         }
-
-        // All the numeral declensions for 1-900:
-        //  1: мс-п 1*b (gender and count)
-        //  2: два/две/двух (gender/animacy)
-        //  3: три/трёх, четыре/четырёх (animacy)
-        //  4: пять, шесть, семь, восемь, девять, десять
-        //  5: -надцать
-        //  6: -дцать
-        //  7: сорок
-        //  8: -десят
-        //  9: девяносто/девяноста, сто/ста
-        // 10: -сти/-ста/-сот
-
-        //     И             Р              Д               В             И                 П
-        // 1 тысяча,     1 тысячи,      1 тысяче,       1 тысячу,     1 тысячью,        1 тысяче
-        // 2 тысячи,     2 тысяч,       2 тысячам,      2 тысячи,     2 тысячами,       2 тысячах
-        // 5 тысяч,      5 тысяч,       5 тысячам,      5 тысяч,      5 тысячами,       5 тысячах
-        //
-        // 1 миллион,    1 миллиона,    1 миллиону,     1 миллион,    1 миллионом,      1 миллионе
-        // 2 миллиона,   2 миллионов,   2 миллионам,    2 миллиона,   2 миллионами,     2 миллионах
-        // 5 миллионов,  5 миллионов,   5 миллионам,    5 миллионов,  5 миллионами,     5 миллионах
-
-        //     И             Р              Д               В             И                 П
-        // один - мс-п 1*b
-        // два/две,      двух,          двум,           два/две/двух, двумя,            двух
-        // три,          трёх,          трём,           три/трёх,     тремя,            трёх
-        // четыре,       четырёх,       четырём,        четыре[х]?,   четырьмя,         четырёх
-        // пять,         пяти,          пяти,           пять,         пятью,            пяти
-        // шесть,        шести,         шести,          шесть,        шестью,           шести
-        // семь,         семи,          семи,           семь,         семью,            семи
-        // восемь,       восьми,        восьми,         восемь,       восьмью,          восьми
-        // девять,       девяти,        девяти,         девять,       девятью,          девяти
-
-        //     И             Р              Д               В             И                 П
-        // одиннадцать,  одиннадцати,   одиннадцати,    одиннадцать,  одиннадцатью,     одиннадцати
-        // двенадцать,   двенадцати,    двенадцати,     двенадцать,   двенадцатью,      двенадцати
-        // тринадцать,   тринадцати,    тринадцати,     тринадцать,   тринадцатью,      тринадцати
-        // четырнадцать, четырнадцати,  четырнадцати,   четырнадцать, четырнадцатью,    четырнадцати
-        // пятнадцать,   пятнадцати,    пятнадцати,     пятнадцать,   пятнадцатью,      пятнадцати
-        // шестнадцать,  шестнадцати,   шестнадцати,    шестнадцать,  шестнадцатью,     шестнадцати
-        // семнадцать,   семнадцати,    семнадцати,     семнадцать,   семнадцатью,      семнадцати
-        // восемнадцать, восемнадцати,  восемнадцати,   восемнадцать, восемнадцатью,    восемнадцати
-        // девятнадцать, девятнадцати,  девятнадцати,   девятнадцать, девятнадцатью,    девятнадцати
-
-        //     И             Р              Д               В             И                 П
-        // десять,       десяти,        десяти,         десять,       десятью,          десяти
-        // двадцать,     двадцати,      двадцати,       двадцать,     двадцатью,        двадцати
-        // тридцать,     тридцати,      тридцати,       тридцать,     тридцатью,        тридцати
-        // сорок,        сорока,        сорока,         сорок,        сорока,           сорока
-        // пятьдесят,    пятидесяти,    пятидесяти,     пятьдесят,    пятьюдесятью,     пятидесяти
-        // шестьдесят,   шестидесяти,   шестидесяти,    шестьдесят,   шестьюдесятью,    шестидесяти
-        // семьдесят,    семидесяти,    семидесяти,     семьдесят,    семьюдесятью,     семидесяти
-        // восемьдесят,  восьмидесяти,  восьмидесяти,   восемьдесят,  восьмьюдесятью,   восьмидесяти
-        // девяносто,    девяноста,     девяноста,      девяносто,    девяноста,        девяноста
-
-        //     И             Р              Д               В             И                 П
-        // сто,          ста,           ста,            сто,          ста,              ста
-        // двести,       двухсот,       двумстам,       двести,       двумястами,       двухстах
-        // триста,       трёхсот,       трёмстам,       триста,       тремястами,       трёхстах
-        // четыреста,    четырёхсот,    четырёмстам,    четыреста,    четырьмястами,    четырёхстах
-        // пятьсот,      пятисот,       пятистам,       пятьсот,      пятьюстами,       пятистах
-        // шестьсот,     шестисот,      шестистам,      шестьсот,     шестьюстами,      шестистах
-        // семьсот,      семисот,       семистам,       семьсот,      семьюстами,       семистах
-        // восемьсот,    восьмисот,     восьмистам,     восемьсот,    восьмьюстами,     восьмистах
-        // девятьсот,    девятисот,     девятистам,     девятьсот,    девятьюстами,     девятистах
 
     }
 }
