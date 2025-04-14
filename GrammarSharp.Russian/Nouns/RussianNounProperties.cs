@@ -113,6 +113,9 @@ namespace GrammarSharp.Russian
         public RussianNounProperties(ReadOnlySpan<char> nounProperties)
             => this = Parse(nounProperties);
 
+        internal RussianNounProperties(RussianGender gender, RussianCase @case)
+            => _data = (byte)(((int)@case << 5) | (int)gender);
+
         private static void ValidateGender(RussianGender gender, [CAE(nameof(gender))] string? paramName = null)
         {
             if ((uint)gender > (uint)RussianGender.Common)
@@ -168,8 +171,6 @@ namespace GrammarSharp.Russian
             => _data = (byte)((_data & 0b_000_11_000) | (other._data & 0b_111_00_111));
         internal readonly RussianNounProperties WithGenderInanimate(RussianGender gender)
             => new((byte)((_data & 0b_111_11_000) | (int)gender));
-        internal static RussianNounProperties WithGenderAndCase(RussianGender gender, RussianCase @case)
-            => new((byte)(((int)@case << 5) | (int)gender));
 
         internal readonly bool IsNominativeNormalized
         {
