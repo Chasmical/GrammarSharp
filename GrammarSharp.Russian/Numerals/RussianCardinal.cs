@@ -3,7 +3,7 @@ using System.Text;
 
 namespace GrammarSharp.Russian
 {
-    public sealed partial class RussianNumeral
+    internal sealed class RussianCardinal
     {
         public static string CreateCardinal(int number, RussianCase @case, RussianNoun noun)
         {
