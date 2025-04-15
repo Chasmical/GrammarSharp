@@ -5,31 +5,43 @@ namespace GrammarSharp.Russian
 {
     internal sealed class RussianCardinal
     {
-        public static string CreateCardinal(int number, RussianCase @case, RussianNoun noun)
+        public static Agreement Decline(StringBuilder sb, int number, RussianCase @case, RussianNoun noun)
         {
-            StringBuilder sb = new();
-
             RussianNounProperties props = noun.Info.Properties;
             bool plural = props.IsPluraleTantum;
+            // TODO: handle plurale tantums
 
             // Normalize "2nd" cases to the main 6 cases
             RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
 
             props.PrepareForDeclensionGenderCount(@case, plural);
 
-            var agreement = AppendCardinalInt32(sb, props, number);
+            var agreement = DeclineInt32(sb, props, number);
             AppendAgreeingNoun(sb, noun, @case, agreement);
 
-            return sb.ToString();
+            return agreement;
         }
 
-        private static Agreement AppendCardinalInt32(StringBuilder sb, RussianNounProperties props, int number)
+        public static Agreement GetAgreementSimple(int number, RussianCase @case)
+        {
+            switch (number % 10)
+            {
+                case 1 when number % 100 != 11:
+                    return Agreement.DeclineSingular;
+                case 2 or 3 or 4 when number % 100 is not (>= 12 and <= 14):
+                    return @case == RussianCase.Nominative ? Agreement.PaucalCountForm : Agreement.DeclinePlural;
+                default:
+                    return @case == RussianCase.Nominative ? Agreement.PluralCountForm : Agreement.DeclinePlural;
+            }
+        }
+
+        private static Agreement DeclineInt32(StringBuilder sb, RussianNounProperties props, int number)
         {
             if (number <= 0)
             {
                 if (number == 0)
                 {
-                    AppendCardinalZero(sb, props.Case);
+                    DeclineZero(sb, props.Case);
                     return Agreement.PluralCountForm;
                 }
                 sb.Append("минус ");
@@ -40,37 +52,64 @@ namespace GrammarSharp.Russian
             if (number >= (int)1e9)
             {
                 int billions = Math.DivRem(number, (int)1e9, out number);
-                AppendCardinalMillions(sb, billions, "миллиард", props.Case);
+                DeclineMillions(sb, billions, "миллиард", props.Case);
             }
             if (number >= (int)1e6)
             {
                 int millions = Math.DivRem(number, (int)1e6, out number);
-                AppendCardinalMillions(sb, millions, "миллион", props.Case);
+                DeclineMillions(sb, millions, "миллион", props.Case);
             }
             if (number >= 1000)
             {
                 int thousands = Math.DivRem(number, 1000, out number);
-                AppendCardinalThousands(sb, thousands, props.Case);
+                DeclineThousands(sb, thousands, props.Case);
             }
 
-            if (number == 0)
-            {
-                return Agreement.PluralCountForm;
-            }
-            return AppendCardinalBetween1And999(sb, props, number, fullNumber);
+            if (number == 0) return Agreement.PluralCountForm;
+            return DeclineBetween1And999(sb, props, number, fullNumber);
         }
 
-        private static void AppendCardinalMillions(StringBuilder sb, int millions, string stem, RussianCase @case)
+        private static void DeclineMillions(StringBuilder sb, int millions, string stem, RussianCase @case)
         {
-            var millionAgreement = AppendCardinalBetween1And999(sb, new(RussianGender.Masculine, @case), millions, millions);
+            var agreement = DeclineBetween1And999(sb, new(RussianGender.Masculine, @case), millions, millions);
             sb.Append(' ').Append(stem);
-            AppendLlionWordEnding(sb, @case, millionAgreement);
+
+            _ = (@case, agreement) switch
+            {
+                (RussianCase.Nominative or RussianCase.Accusative, Agreement.DeclinePlural) => sb.Append('ы'),
+                (RussianCase.Nominative or RussianCase.Accusative, Agreement.PaucalCountForm) => sb.Append('а'),
+                (RussianCase.Nominative or RussianCase.Accusative, Agreement.PluralCountForm) => sb.Append('о').Append('в'),
+                (RussianCase.Genitive, Agreement.DeclineSingular) => sb.Append('а'),
+                (RussianCase.Genitive, _) => sb.Append('о').Append('в'),
+                (RussianCase.Dative, Agreement.DeclineSingular) => sb.Append('у'),
+                (RussianCase.Dative, _) => sb.Append('а').Append('м'),
+                (RussianCase.Instrumental, Agreement.DeclineSingular) => sb.Append('о').Append('м'),
+                (RussianCase.Instrumental, _) => sb.Append('а').Append('м').Append('и'),
+                (RussianCase.Prepositional, Agreement.DeclineSingular) => sb.Append('е'),
+                (RussianCase.Prepositional, _) => sb.Append('а').Append('х'),
+                (_, _) => sb,
+            };
         }
-        private static void AppendCardinalThousands(StringBuilder sb, int thousands, RussianCase @case)
+        private static void DeclineThousands(StringBuilder sb, int thousands, RussianCase @case)
         {
-            var thousandAgreement = AppendCardinalBetween1And999(sb, new(RussianGender.Feminine, @case), thousands, thousands);
+            var agreement = DeclineBetween1And999(sb, new(RussianGender.Feminine, @case), thousands, thousands);
             sb.Append(" тысяч");
-            AppendThousandWordEnding(sb, @case, thousandAgreement);
+
+            _ = (@case, agreement) switch
+            {
+                (RussianCase.Nominative, Agreement.DeclineSingular) => sb.Append('а'),
+                (RussianCase.Nominative, Agreement.PaucalCountForm) => sb.Append('и'),
+                (RussianCase.Genitive, Agreement.DeclineSingular) => sb.Append('и'),
+                (RussianCase.Dative, Agreement.DeclineSingular) => sb.Append('е'),
+                (RussianCase.Dative, _) => sb.Append('а').Append('м'),
+                (RussianCase.Accusative, Agreement.DeclineSingular) => sb.Append('у'),
+                (RussianCase.Accusative, Agreement.PaucalCountForm) => sb.Append('и'),
+                (RussianCase.Instrumental, Agreement.DeclineSingular) => sb.Append('ь').Append('ю'),
+                (RussianCase.Instrumental, _) => sb.Append('а').Append('м').Append('и'),
+                (RussianCase.Prepositional, Agreement.DeclineSingular) => sb.Append('е'),
+                (RussianCase.Prepositional, _) => sb.Append('а').Append('х'),
+                (_, _) => sb,
+            };
         }
         private static void AppendAgreeingNoun(StringBuilder sb, RussianNoun noun, RussianCase @case, Agreement agreement)
         {
@@ -83,119 +122,14 @@ namespace GrammarSharp.Russian
             });
         }
 
-        // TODO: turn these two huge word declension methods into lookups or something
-        private static void AppendThousandWordEnding(StringBuilder sb, RussianCase @case, Agreement agreement)
-        {
-            switch (@case)
-            {
-                case RussianCase.Nominative:
-                    switch (agreement)
-                    {
-                        case Agreement.DeclineSingular:
-                            sb.Append('а');
-                            break;
-                        case Agreement.PaucalCountForm:
-                            sb.Append('и');
-                            break;
-                    }
-                    break;
-
-                case RussianCase.Genitive:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('и');
-                    break;
-
-                case RussianCase.Dative:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('е');
-                    else
-                        sb.Append('а').Append('м');
-                    break;
-
-                case RussianCase.Accusative:
-                    switch (agreement)
-                    {
-                        case Agreement.DeclineSingular:
-                            sb.Append('у');
-                            break;
-                        case Agreement.PaucalCountForm:
-                            sb.Append('и');
-                            break;
-                    }
-                    break;
-
-                case RussianCase.Instrumental:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('ь').Append('ю');
-                    else
-                        sb.Append('а').Append('м').Append('и');
-                    break;
-
-                default: // case RussianCase.Prepositional:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('е');
-                    else
-                        sb.Append('а').Append('х');
-                    break;
-            }
-        }
-        private static void AppendLlionWordEnding(StringBuilder sb, RussianCase @case, Agreement agreement)
-        {
-            switch (@case)
-            {
-                case RussianCase.Nominative or RussianCase.Accusative:
-                    switch (agreement)
-                    {
-                        case Agreement.DeclinePlural:
-                            sb.Append('ы');
-                            break;
-                        case Agreement.PaucalCountForm:
-                            sb.Append('а');
-                            break;
-                        case Agreement.PluralCountForm:
-                            sb.Append('о').Append('в');
-                            break;
-                    }
-                    break;
-
-                case RussianCase.Genitive:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('а');
-                    else
-                        sb.Append('о').Append('в');
-                    break;
-
-                case RussianCase.Dative:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('у');
-                    else
-                        sb.Append('а').Append('м');
-                    break;
-
-                case RussianCase.Instrumental:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('о').Append('м');
-                    else
-                        sb.Append('а').Append('м').Append('и');
-                    break;
-
-                default: // case RussianCase.Prepositional:
-                    if (agreement == Agreement.DeclineSingular)
-                        sb.Append('е');
-                    else
-                        sb.Append('а').Append('х');
-                    break;
-            }
-        }
-
-        private static Agreement AppendCardinalBetween1And999(StringBuilder sb, RussianNounProperties props, int number, int fullNumber)
+        private static Agreement DeclineBetween1And999(StringBuilder sb, RussianNounProperties props, int number, int fullNumber)
         {
             if (number >= 100)
             {
                 if (sb.Length > 0) sb.Append(' ');
                 int hundreds = Math.DivRem(number, 100, out number);
                 // Append 100, 200, 300, 400, 500, 600, 700, 800, or 900
-                AppendCardinalHundredToNineHundred(sb, props.Case, hundreds);
+                DeclineHundredToNineHundred(sb, props.Case, hundreds);
                 // Continue to resolve the remaining 0-99
             }
             if (number >= 20)
@@ -203,7 +137,7 @@ namespace GrammarSharp.Russian
                 if (sb.Length > 0) sb.Append(' ');
                 int tens = Math.DivRem(number, 10, out number);
                 // Append 20, 30, 40, 50, 60, 70, 80, or 90
-                AppendCardinalTwentyToNinety(sb, props.Case, tens);
+                DeclineTwentyToNinety(sb, props.Case, tens);
                 // Continue to resolve the remaining 0-9
             }
 
@@ -216,12 +150,13 @@ namespace GrammarSharp.Russian
                 {
                     case 1:
                         // Decline "one" and the quantified noun together
-                        AppendCardinalOne(sb, props);
+                        RussianPronounDeclension decl = new(1, RussianStress.B, RussianDeclensionFlags.Star);
+                        sb.Append(RussianPronoun.DeclineCore("один", decl, props));
                         return Agreement.DeclineSingular;
 
                     case 2 or 3 or 4:
                         // Decline "two"/"three"/"four" and determine the agreement inside the method
-                        return AppendCardinalTwoToFour(sb, props, number, fullNumber);
+                        return DeclineTwoToFour(sb, props, number, fullNumber);
 
                     case >= 5 and <= 10:
                         // Append 5-10 stem, and a voiced soft ending that 5-10 have
@@ -241,35 +176,20 @@ namespace GrammarSharp.Russian
             return props.Case == RussianCase.Nominative ? Agreement.PluralCountForm : Agreement.DeclinePlural;
         }
 
-        private static void AppendCardinalZero(StringBuilder sb, RussianCase @case)
+        private static void DeclineZero(StringBuilder sb, RussianCase @case)
         {
             sb.Append('н').Append(@case is RussianCase.Nominative or RussianCase.Accusative ? 'о' : 'у').Append('л');
 
-            switch (@case)
+            _ = @case switch
             {
-                case RussianCase.Nominative or RussianCase.Accusative:
-                    sb.Append('ь');
-                    break;
-                case RussianCase.Genitive:
-                    sb.Append('я');
-                    break;
-                case RussianCase.Dative:
-                    sb.Append('ю');
-                    break;
-                case RussianCase.Instrumental:
-                    sb.Append('ё').Append('м');
-                    break;
-                default: // case RussianCase.Prepositional:
-                    sb.Append('е');
-                    break;
-            }
+                RussianCase.Nominative or RussianCase.Accusative => sb.Append('ь'),
+                RussianCase.Genitive => sb.Append('я'),
+                RussianCase.Dative => sb.Append('ю'),
+                RussianCase.Instrumental => sb.Append('ё').Append('м'),
+                _ /* RussianCase.Prepositional */ => sb.Append('е'),
+            };
         }
-        private static void AppendCardinalOne(StringBuilder sb, RussianNounProperties props)
-        {
-            RussianPronounDeclension decl = new(1, RussianStress.B, RussianDeclensionFlags.Star);
-            sb.Append(RussianPronoun.DeclineCore("один", decl, props));
-        }
-        private static Agreement AppendCardinalTwoToFour(StringBuilder sb, RussianNounProperties props, int number, int fullNumber)
+        private static Agreement DeclineTwoToFour(StringBuilder sb, RussianNounProperties props, int number, int fullNumber)
         {
             _ = number switch
             {
@@ -300,8 +220,7 @@ namespace GrammarSharp.Russian
                     goto case RussianCase.Nominative;
 
                 case RussianCase.Instrumental:
-                    sb.Append(number switch { 2 => 'у', 3 => 'е', _ => 'ь' });
-                    sb.Append('м').Append('я');
+                    sb.Append(number switch { 2 => 'у', 3 => 'е', _ => 'ь' }).Append('м').Append('я');
                     break;
 
                 default: // case RussianCase.Genitive or RussianCase.Prepositional:
@@ -310,8 +229,7 @@ namespace GrammarSharp.Russian
             }
             return Agreement.DeclinePlural;
         }
-
-        private static void AppendCardinalTwentyToNinety(StringBuilder sb, RussianCase @case, int tens)
+        private static void DeclineTwentyToNinety(StringBuilder sb, RussianCase @case, int tens)
         {
             switch (tens)
             {
@@ -344,42 +262,47 @@ namespace GrammarSharp.Russian
                     break;
             }
         }
-        private static void AppendCardinalHundredToNineHundred(StringBuilder sb, RussianCase @case, int hundreds)
+        private static void DeclineHundredToNineHundred(StringBuilder sb, RussianCase @case, int hundreds)
         {
             switch (hundreds)
             {
                 case 1:
+                    // Append 'сто'/'ста' and return
                     sb.Append('с').Append('т').Append(@case is RussianCase.Nominative or RussianCase.Accusative ? 'о' : 'а');
                     return;
+
                 case 2 or 3 or 4:
-                    AppendCardinalTwoToFour(sb, new(RussianGender.Feminine, @case), hundreds, hundreds);
+                    // Append 'две', 'три' or 'четыреста', and continue
+                    DeclineTwoToFour(sb, new(RussianGender.Feminine, @case), hundreds, hundreds);
                     break;
                 default:
+                    // Append 'пять'-'девять', and continue
                     AppendOneToTenStem(sb, @case, hundreds);
                     AppendVoicedSoftEnding(sb, @case);
                     break;
             }
-            sb.Append('с');
 
+            // Decline 'сто' according to the specified case
+            sb.Append('с');
             switch (@case)
             {
-                default: // case RussianCase.Nominative or RussianCase.Accusative:
-                    if (hundreds <= 4)
+                case RussianCase.Nominative or RussianCase.Accusative:
+                    if (hundreds <= 4) // special: двести, триста, четыреста
                         sb.Append('т').Append(hundreds == 2 ? 'и' : 'а');
-                    else
-                        sb.Append('о').Append('т');
+                    else // otherwise: пятьсот, шестьсот, семьсот, восемьсот, девятьсот
+                        goto case RussianCase.Genitive;
                     break;
-                case RussianCase.Genitive:
+                case RussianCase.Genitive: // -сот
                     sb.Append('о').Append('т');
                     break;
-                case RussianCase.Dative:
-                    sb.Append("там");
+                case RussianCase.Dative: // -стам
+                    sb.Append('т').Append('а').Append('м');
                     break;
-                case RussianCase.Instrumental:
-                    sb.Append("тами");
+                case RussianCase.Instrumental: // -стами
+                    sb.Append('т').Append('а').Append('м').Append('и');
                     break;
-                case RussianCase.Prepositional:
-                    sb.Append("тах");
+                case RussianCase.Prepositional: // -стах
+                    sb.Append('т').Append('а').Append('х');
                     break;
             }
         }
@@ -388,9 +311,10 @@ namespace GrammarSharp.Russian
         {
             sb.Append(number switch
             {
+                // 1/2/3/4 are nominative forms (not stems), and used only for "-дцать" and "-надцать"
                 1 => "один",
-                2 => "две", // "две" and "три" aren't stems in a classic sense, but just nominative forms,
-                3 => "три", // but whatever, these forms are used only in the "-надцать" construction.
+                2 => "две",
+                3 => "три",
                 4 => "четыр",
                 5 => "пят",
                 6 => "шест",
@@ -402,7 +326,7 @@ namespace GrammarSharp.Russian
         }
         private static void AppendVoicedSoftEnding(StringBuilder sb, RussianCase @case)
         {
-            // Applicable for cardinals: 5-19, 20-30, 50-80.
+            // Endings of type "ж 8b", for cardinals: 5-19, 20-30, 50-80.
             switch (@case)
             {
                 case RussianCase.Nominative or RussianCase.Accusative:
@@ -417,7 +341,7 @@ namespace GrammarSharp.Russian
             }
         }
 
-        private enum Agreement
+        public enum Agreement
         {
             DeclineSingular,
             DeclinePlural,

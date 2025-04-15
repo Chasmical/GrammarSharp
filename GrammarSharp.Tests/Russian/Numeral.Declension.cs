@@ -21,7 +21,7 @@ namespace GrammarSharp.Tests
 
             foreach (var (@case, expected) in fixture.TestCases)
             {
-                string actual = RussianNumeral.CreateCardinal(number, @case, noun);
+                string actual = RussianCardinal.Create(number, @case, noun);
                 Output.WriteLine($"{@case.ToString().ToUpper()[..3]}: {actual}");
 
                 expectedList.Add(expected);
