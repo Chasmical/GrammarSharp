@@ -85,17 +85,17 @@ namespace GrammarSharp.Russian
             _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0));
         }
         /// <summary>
-        ///   <para>Initializes a new instance of the <seealso cref="RussianNounProperties"/> structure with the specified <paramref name="gender"/>, animacy and <paramref name="flags"/>.</para>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounProperties"/> structure with the specified <paramref name="gender"/>, animacy and <paramref name="tantums"/>.</para>
         /// </summary>
         /// <param name="gender">The noun's grammatical gender.</param>
         /// <param name="isAnimate">The noun's grammatical animacy: <see langword="true"/> - animate, <see langword="false"/> - inanimate.</param>
-        /// <param name="flags">The noun's flags.</param>
+        /// <param name="tantums">The noun's flags.</param>
         /// <exception cref="InvalidEnumArgumentException"><paramref name="gender"/> is not a valid <seealso cref="RussianGender"/> value.</exception>
-        public RussianNounProperties(RussianGender gender, bool isAnimate, RussianNounFlags flags)
+        public RussianNounProperties(RussianGender gender, bool isAnimate, RussianTantums tantums)
         {
             ValidateGender(gender);
-            ValidateFlags(flags);
-            _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0) | ((int)flags << 3));
+            ValidateTantums(tantums);
+            _data = (byte)((int)gender | (isAnimate ? 0b_100 : 0) | ((int)tantums << 3));
         }
 
         /// <summary>
@@ -124,13 +124,13 @@ namespace GrammarSharp.Russian
             static void Throw(RussianGender gender, string? paramName)
                 => throw new InvalidEnumArgumentException(paramName, (int)gender, typeof(RussianGender));
         }
-        private static void ValidateFlags(RussianNounFlags flags, [CAE(nameof(flags))] string? paramName = null)
+        private static void ValidateTantums(RussianTantums tantums, [CAE(nameof(tantums))] string? paramName = null)
         {
-            if ((uint)flags is 1 or > (uint)RussianNounFlags.IsPluraleTantum)
-                Throw(flags, paramName);
+            if ((uint)tantums is 1 or > (uint)RussianTantums.IsPluraleTantum)
+                Throw(tantums, paramName);
 
-            static void Throw(RussianNounFlags flags, string? paramName)
-                => throw new InvalidEnumArgumentException(paramName, (int)flags, typeof(RussianNounFlags));
+            static void Throw(RussianTantums tantums, string? paramName)
+                => throw new InvalidEnumArgumentException(paramName, (int)tantums, typeof(RussianTantums));
         }
 
         // Where ExtraData is used and what for:
@@ -169,8 +169,6 @@ namespace GrammarSharp.Russian
             => _data = (byte)((_data & 0b_000_00_111) | (extraData ? 0b_001_00_000 : 0));
         internal void CopyFromButKeepTantums(RussianNounProperties other)
             => _data = (byte)((_data & 0b_000_11_000) | (other._data & 0b_111_00_111));
-        internal readonly RussianNounProperties WithGenderInanimate(RussianGender gender)
-            => new((byte)((_data & 0b_111_11_000) | (int)gender));
 
         internal readonly bool IsNominativeNormalized
         {

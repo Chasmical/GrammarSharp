@@ -14,7 +14,7 @@ namespace GrammarSharp.Russian
         [Pure] internal static ParseCode ParseInternal(ref SpanParser parser, out RussianNounProperties properties)
         {
             properties = default;
-            RussianNounFlags flags = 0;
+            RussianTantums flags = 0;
 
             var code = ParseSimpleGenderAndAnimacy(ref parser, out RussianGender gender, out bool isAnimate);
             if (code != ParseCode.Success) return code;
@@ -22,7 +22,7 @@ namespace GrammarSharp.Russian
             if (gender == RussianGender.Masculine && !isAnimate && parser.Skip('н'))
             {
                 parser.Skip('.');
-                flags = RussianNounFlags.IsPluraleTantum;
+                flags = RussianTantums.IsPluraleTantum;
 
                 if (parser.Skip(' ', 'о', 'т', ' '))
                 {

@@ -11,7 +11,7 @@ namespace GrammarSharp.Russian
     {
         // Note: access needed by RussianAdjective ctor, to set IsReflexive when extracting adjective stem
         internal RussianDeclension _declension;
-        private RussianAdjectiveFlags _flags;
+        private byte _flags;
 
         /// <summary>
         ///   <para>Gets or sets the adjective's declension.</para>
@@ -33,11 +33,11 @@ namespace GrammarSharp.Russian
         /// <exception cref="ArgumentException"><paramref name="value"/> is not a valid <seealso cref="RussianAdjectiveFlags"/> value.</exception>
         public RussianAdjectiveFlags Flags
         {
-            readonly get => _flags;
+            readonly get => (RussianAdjectiveFlags)_flags;
             set
             {
                 ValidateFlags(value);
-                _flags = value;
+                _flags = (byte)value;
             }
         }
 
@@ -61,7 +61,7 @@ namespace GrammarSharp.Russian
             ValidateDeclension(declension);
             ValidateFlags(flags);
             _declension = declension;
-            _flags = flags;
+            _flags = (byte)flags;
         }
 
         /// <summary>

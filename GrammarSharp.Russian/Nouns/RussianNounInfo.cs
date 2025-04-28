@@ -12,6 +12,7 @@ namespace GrammarSharp.Russian
         private RussianNounProperties _properties;
         // Note: access needed by RussianNoun ctor, to set IsReflexive when extracting adjective stem
         internal RussianDeclension _declension;
+        private byte _flags;
 
         /// <summary>
         ///   <para>Gets or sets the noun's properties.</para>
@@ -36,6 +37,19 @@ namespace GrammarSharp.Russian
                 _declension = value;
             }
         }
+        /// <summary>
+        ///   <para>Gets or sets the noun's flags.</para>
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="value"/> is not a valid <seealso cref="RussianNounFlags"/> value.</exception>
+        public RussianNounFlags Flags
+        {
+            get => (RussianNounFlags)_flags;
+            set
+            {
+                ValidateFlags(value);
+                _flags = (byte)value;
+            }
+        }
 
         /// <summary>
         ///   <para>Initializes a new instance of the <seealso cref="RussianNounInfo"/> structure with the specified <paramref name="properties"/> and <paramref name="declension"/>.</para>
@@ -49,6 +63,23 @@ namespace GrammarSharp.Russian
             ValidateDeclension(declension);
             _properties = properties;
             _declension = declension;
+        }
+        /// <summary>
+        ///   <para>Initializes a new instance of the <seealso cref="RussianNounInfo"/> structure with the specified <paramref name="properties"/>, <paramref name="declension"/> and <paramref name="flags"/>.</para>
+        /// </summary>
+        /// <param name="properties">The noun's properties.</param>
+        /// <param name="declension">The noun's declension.</param>
+        /// <param name="flags">The noun's flags.</param>
+        /// <exception cref="ArgumentException"><paramref name="declension"/> is not a noun or adjective declension.</exception>
+        /// <exception cref="ArgumentException"><paramref name="flags"/> is not a valid <see cref="RussianNounFlags"/> value.</exception>
+        public RussianNounInfo(RussianNounProperties properties, RussianDeclension declension, RussianNounFlags flags)
+        {
+            if (declension.IsZero) declension = default(RussianNounDeclension);
+            ValidateDeclension(declension);
+            ValidateFlags(flags);
+            _properties = properties;
+            _declension = declension;
+            _flags = (byte)flags;
         }
 
         /// <summary>
@@ -73,6 +104,11 @@ namespace GrammarSharp.Russian
 
             static void Throw(RussianDeclension declension, string? paramName)
                 => throw new ArgumentException($"Nouns cannot have a declension of type {declension.Type}.", paramName);
+        }
+
+        private static void ValidateFlags(RussianNounFlags flags, [CAE(nameof(flags))] string? paramName = null)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
