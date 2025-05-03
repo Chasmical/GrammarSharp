@@ -6,6 +6,10 @@ namespace GrammarSharp.Russian
     {
         internal static void ValidateAndNormalizeCase(ref RussianCase @case, ref bool plural, [CAE(nameof(@case))] string? paramName = null)
         {
+            plural |= ValidateAndNormalizeCase(ref @case, paramName);
+        }
+        internal static bool ValidateAndNormalizeCase(ref RussianCase @case, [CAE(nameof(@case))] string? paramName = null)
+        {
             if ((uint)@case > (uint)RussianCase.Prepositional)
             {
                 switch (@case)
@@ -15,8 +19,7 @@ namespace GrammarSharp.Russian
                         break;
                     case RussianCase.Translative:
                         @case = RussianCase.Nominative;
-                        plural = true;
-                        break;
+                        return true;
                     case RussianCase.Locative:
                         @case = RussianCase.Prepositional;
                         break;
@@ -25,6 +28,7 @@ namespace GrammarSharp.Russian
                         break;
                 }
             }
+            return false;
 
             static void Throw(RussianCase @case, string? paramName)
                 => throw new InvalidEnumArgumentException(paramName, (int)@case, typeof(RussianCase));

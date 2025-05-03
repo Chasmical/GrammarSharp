@@ -11,11 +11,11 @@
         None = 0,
 
         /// <summary>
-        ///   <para>Specifies a singulare tantum, that is, appears only in singular form.</para>
+        ///   <para>Specifies a singulare tantum, meaning that the word appears only in singular form.</para>
         /// </summary>
         IsSingulareTantum = 0b_10,
         /// <summary>
-        ///   <para>Specifies a plurale tantum, that is, appears only in plural form.</para>
+        ///   <para>Specifies a plurale tantum, meaning that the word appears only in plural form.</para>
         /// </summary>
         IsPluraleTantum   = 0b_11,
     }

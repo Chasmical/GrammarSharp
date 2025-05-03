@@ -3,36 +3,18 @@ using System.Text;
 
 namespace GrammarSharp.Russian
 {
+    using Agreement = RussianNumeralAgreement;
+
     internal sealed class RussianCardinal
     {
-        public static Agreement Decline(StringBuilder sb, int number, RussianCase @case, RussianNoun noun)
+        internal static Agreement Decline(StringBuilder sb, int number, RussianCase @case, RussianNounProperties props)
         {
-            RussianNounProperties props = noun.Info.Properties;
-            bool plural = props.IsPluraleTantum;
-            // TODO: handle plurale tantums
-
-            // Normalize "2nd" cases to the main 6 cases
-            RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
-
-            props.PrepareForDeclensionGenderCount(@case, plural);
-
-            var agreement = DeclineInt32(sb, props, number);
-            AppendAgreeingNoun(sb, noun, @case, agreement);
-
-            return agreement;
-        }
-
-        public static Agreement GetAgreementSimple(int number, RussianCase @case)
-        {
-            switch (number % 10)
-            {
-                case 1 when number % 100 != 11:
-                    return Agreement.DeclineSingular;
-                case 2 or 3 or 4 when number % 100 is not (>= 12 and <= 14):
-                    return @case == RussianCase.Nominative ? Agreement.PaucalCountForm : Agreement.DeclinePlural;
-                default:
-                    return @case == RussianCase.Nominative ? Agreement.PluralCountForm : Agreement.DeclinePlural;
-            }
+            // Normalize "2nd" cases to the main 6 cases (translative is plural)
+            bool plural = RussianGrammar.ValidateAndNormalizeCase(ref @case);
+            // Prepare properties, set case and number
+            props.PrepareForDeclensionGendersAndPlural(@case, plural);
+            // Decline as Int32
+            return DeclineInt32(sb, props, number);
         }
 
         private static Agreement DeclineInt32(StringBuilder sb, RussianNounProperties props, int number)
@@ -44,29 +26,35 @@ namespace GrammarSharp.Russian
                     DeclineZero(sb, props.Case);
                     return Agreement.PluralCountForm;
                 }
-                sb.Append("минус ");
+                sb.Append("минус");
                 number = -number;
             }
             int fullNumber = number;
 
             if (number >= (int)1e9)
-            {
-                int billions = Math.DivRem(number, (int)1e9, out number);
-                DeclineMillions(sb, billions, "миллиард", props.Case);
-            }
+                DeclineMillions(sb, Math.DivRem(number, (int)1e9, out number), "миллиард", props.Case);
             if (number >= (int)1e6)
-            {
-                int millions = Math.DivRem(number, (int)1e6, out number);
-                DeclineMillions(sb, millions, "миллион", props.Case);
-            }
+                DeclineMillions(sb, Math.DivRem(number, (int)1e6, out number), "миллион", props.Case);
             if (number >= 1000)
-            {
-                int thousands = Math.DivRem(number, 1000, out number);
-                DeclineThousands(sb, thousands, props.Case);
-            }
+                DeclineThousands(sb, Math.DivRem(number, 1000, out number), props.Case);
 
             if (number == 0) return Agreement.PluralCountForm;
             return DeclineBetween1And999(sb, props, number, fullNumber);
+        }
+
+        internal static Agreement GetAgreementSimple(int number, RussianCase @case)
+        {
+            number %= 1000;
+            if (number == 0) return Agreement.PluralCountForm;
+
+            if (number % 10 == 1 && number % 100 != 11)
+                return Agreement.DeclineSingular;
+            if (@case != RussianCase.Nominative)
+                return Agreement.DeclinePlural;
+
+            return number is 2 or 3 or 4 && number % 100 is not (>= 12 and <= 14)
+                ? Agreement.PaucalCountForm
+                : Agreement.PluralCountForm;
         }
 
         private static void DeclineMillions(StringBuilder sb, int millions, string stem, RussianCase @case)
@@ -110,16 +98,6 @@ namespace GrammarSharp.Russian
                 (RussianCase.Prepositional, _) => sb.Append('а').Append('х'),
                 (_, _) => sb,
             };
-        }
-        private static void AppendAgreeingNoun(StringBuilder sb, RussianNoun noun, RussianCase @case, Agreement agreement)
-        {
-            sb.Append(' ').Append(agreement switch
-            {
-                Agreement.DeclineSingular => noun.Decline(@case, false),
-                Agreement.DeclinePlural => noun.Decline(@case, true),
-                Agreement.PaucalCountForm => noun.DeclineCountForm(false),
-                _ => noun.DeclineCountForm(true),
-            });
         }
 
         private static Agreement DeclineBetween1And999(StringBuilder sb, RussianNounProperties props, int number, int fullNumber)
@@ -339,14 +317,6 @@ namespace GrammarSharp.Russian
                     sb.Append('и');
                     break;
             }
-        }
-
-        public enum Agreement
-        {
-            DeclineSingular,
-            DeclinePlural,
-            PaucalCountForm,
-            PluralCountForm,
         }
 
     }

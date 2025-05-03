@@ -144,18 +144,18 @@ namespace GrammarSharp.Russian
         internal readonly bool IsPlural => (_data & 0b_000_01_000) != 0;
         internal readonly RussianCase Case => (RussianCase)ExtraData;
 
-        internal void PrepareForDeclensionCase(RussianCase @case, bool plural)
+        internal void PrepareForDeclensionTwoNumbers(RussianCase @case, bool plural)
         {
-            // If it doesn't have a tantum, apply specified count
+            // If it doesn't have a tantum, apply specified number
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
             // Convert Common to Feminine gender for endings
             int genderFlags = Math.Min(_data & 0b_011, (int)RussianGender.Feminine);
             // Preserve animacy, and add case as extra data
             _data = (byte)((_data & 0b_100) | pluralFlag | genderFlags | ((int)@case << 5));
         }
-        internal void PrepareForDeclensionGenderCount(RussianCase @case, bool plural)
+        internal void PrepareForDeclensionGendersAndPlural(RussianCase @case, bool plural)
         {
-            // If it doesn't have a tantum, apply specified count
+            // If it doesn't have a tantum, apply specified number
             int pluralFlag = IsTantum ? _data & 0b_000_01_000 : plural ? 0b_000_01_000 : 0;
             // If plural, use Common gender (lookup optimization)
             int genderFlags = pluralFlag != 0 ? 0b_011 : Math.Min(_data & 0b_011, (int)RussianGender.Feminine);

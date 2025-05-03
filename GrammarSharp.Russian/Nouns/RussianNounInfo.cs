@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
@@ -71,7 +72,7 @@ namespace GrammarSharp.Russian
         /// <param name="declension">The noun's declension.</param>
         /// <param name="flags">The noun's flags.</param>
         /// <exception cref="ArgumentException"><paramref name="declension"/> is not a noun or adjective declension.</exception>
-        /// <exception cref="ArgumentException"><paramref name="flags"/> is not a valid <see cref="RussianNounFlags"/> value.</exception>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="flags"/> is not a valid <see cref="RussianNounFlags"/> value.</exception>
         public RussianNounInfo(RussianNounProperties properties, RussianDeclension declension, RussianNounFlags flags)
         {
             if (declension.IsZero) declension = default(RussianNounDeclension);
@@ -108,7 +109,12 @@ namespace GrammarSharp.Russian
 
         private static void ValidateFlags(RussianNounFlags flags, [CAE(nameof(flags))] string? paramName = null)
         {
-            throw new NotImplementedException();
+            const RussianNounFlags allFlags = RussianNounFlags.IsPaired;
+            if ((uint)flags > (uint)allFlags)
+                Throw(flags, paramName);
+
+            static void Throw(RussianNounFlags flags, string? paramName)
+                => throw new InvalidEnumArgumentException(paramName, (int)flags, typeof(RussianNounFlags));
         }
 
         /// <summary>

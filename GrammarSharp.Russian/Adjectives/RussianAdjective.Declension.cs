@@ -13,7 +13,7 @@ namespace GrammarSharp.Russian
             // Normalize "2nd" cases to the main 6 cases (anomalies can only be in main 6 cases)
             RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
             // Prepare the props for adjective/pronoun declension, store case in props, prepare gender-count
-            properties.PrepareForDeclensionGenderCount(@case, plural);
+            properties.PrepareForDeclensionGendersAndPlural(@case, plural);
 
             // See if the adjective has any anomalous forms for this case and gender
             if (_anomalies.GetForAdjective(@case, properties.Gender) is { } anomaly) return anomaly;
@@ -35,7 +35,7 @@ namespace GrammarSharp.Russian
         [Pure] public string? DeclineShort(bool plural, SubjProps properties, bool force = false)
         {
             // Prepare the props for adjective declension, store "7th case" in props
-            properties.PrepareForDeclensionGenderCount((RussianCase)6, plural);
+            properties.PrepareForDeclensionGendersAndPlural((RussianCase)6, plural);
 
             // See if the adjective has any anomalous forms for this count
             if (_anomalies.GetShortFormForAdjective(properties.Gender) is { } anomaly) return anomaly;

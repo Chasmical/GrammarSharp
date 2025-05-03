@@ -28,17 +28,34 @@ namespace GrammarSharp.Russian
                     props.CopyFromButKeepTantums(specialProps);
 
                 // Prepare the props for noun declension, store case in props
-                props.PrepareForDeclensionCase(@case, plural);
+                props.PrepareForDeclensionTwoNumbers(@case, plural);
 
                 return DeclineCore(Stem, decl, props);
             }
             else // if (declension.Type == RussianDeclensionType.Adjective)
             {
                 // Prepare the props for adjective declension, store case in props
-                props.PrepareForDeclensionGenderCount(@case, plural);
+                props.PrepareForDeclensionGendersAndPlural(@case, plural);
 
                 return RussianAdjective.DeclineCore(Stem, declension.AsAdjectiveUnsafeRef(), props);
             }
+        }
+        [Pure] public string Decline(RussianCase @case, RussianNumeralAgreement agreement)
+        {
+            bool plural;
+            if (agreement >= RussianNumeralAgreement.PaucalCountForm)
+            {
+                // See if the noun has an anomalous count form for this count
+                plural = agreement == RussianNumeralAgreement.PluralCountForm;
+                if (_anomalies.GetCountFormForNoun(plural) is { } anomaly) return anomaly;
+                // Otherwise, use the noun's genitive form
+                @case = RussianCase.Genitive;
+            }
+            // Decline regularly
+            else
+                plural = agreement == RussianNumeralAgreement.DeclinePlural;
+
+            return Decline(@case, plural);
         }
 
         [Pure] public string DeclineCountForm(bool plural)

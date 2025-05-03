@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using Chasm.Collections;
 using GrammarSharp.Russian;
 using Xunit;
@@ -21,7 +22,11 @@ namespace GrammarSharp.Tests
 
             foreach (var (@case, expected) in fixture.TestCases)
             {
-                string actual = RussianCardinal.Create(number, @case, noun);
+                StringBuilder sb = new();
+                var agreement = RussianCardinal.Decline(sb, number, @case, noun.Info.Properties);
+                sb.Append(' ').Append(noun.Decline(@case, agreement));
+
+                string actual = sb.ToString();
                 Output.WriteLine($"{@case.ToString().ToUpper()[..3]}: {actual}");
 
                 expectedList.Add(expected);
