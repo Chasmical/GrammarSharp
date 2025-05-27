@@ -7,17 +7,7 @@ namespace GrammarSharp.Russian
 
     internal sealed class RussianCardinal
     {
-        internal static Agreement Decline(StringBuilder sb, int number, RussianCase @case, RussianNounProperties props)
-        {
-            // Normalize "2nd" cases to the main 6 cases (translative is plural)
-            bool plural = RussianGrammar.ValidateAndNormalizeCase(ref @case);
-            // Prepare properties, set case and number
-            props.PrepareForDeclensionGendersAndPlural(@case, plural);
-            // Decline as Int32
-            return DeclineInt32(sb, props, number);
-        }
-
-        private static Agreement DeclineInt32(StringBuilder sb, RussianNounProperties props, int number)
+        internal static Agreement DeclineInt32(StringBuilder sb, RussianNounProperties props, int number)
         {
             if (number <= 0)
             {
@@ -42,19 +32,24 @@ namespace GrammarSharp.Russian
             return DeclineBetween1And999(sb, props, number, fullNumber);
         }
 
-        internal static Agreement GetAgreementSimple(int number, RussianCase @case)
+        internal static Agreement GetAgreementSimple(int number, RussianCase @case, bool isAnimate)
         {
-            number %= 1000;
-            if (number == 0) return Agreement.PluralCountForm;
+            // TODO: rework; doesn't handle 4 and 124 in accusative case properly
 
-            if (number % 10 == 1 && number % 100 != 11)
+            int num = number % 1000;
+            if (num == 0) return Agreement.PluralCountForm;
+
+            if (num % 10 == 1 && num % 100 != 11)
                 return Agreement.DeclineSingular;
             if (@case != RussianCase.Nominative)
                 return Agreement.DeclinePlural;
 
-            return number is 2 or 3 or 4 && number % 100 is not (>= 12 and <= 14)
-                ? Agreement.PaucalCountForm
-                : Agreement.PluralCountForm;
+            if (num % 10 is 2 or 3 or 4 && num % 100 is not (>= 12 and <= 14))
+            {
+                if (number <= 4 && isAnimate) return Agreement.DeclinePlural;
+                return Agreement.PaucalCountForm;
+            }
+            return Agreement.PluralCountForm;
         }
 
         private static void DeclineMillions(StringBuilder sb, int millions, string stem, RussianCase @case)

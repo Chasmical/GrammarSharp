@@ -23,7 +23,12 @@ namespace GrammarSharp.Tests
             foreach (var (@case, expected) in fixture.TestCases)
             {
                 StringBuilder sb = new();
-                var agreement = RussianCardinal.Decline(sb, number, @case, noun.Info.Properties);
+
+                var props = noun.Info.Properties;
+                RussianCase case2 = @case;
+                bool plural = RussianGrammar.ValidateAndNormalizeCase(ref case2);
+                props.PrepareForDeclensionGendersAndPlural(@case, plural);
+                var agreement = RussianCardinal.DeclineInt32(sb, props, number);
                 sb.Append(' ').Append(noun.Decline(@case, agreement));
 
                 string actual = sb.ToString();
