@@ -67,13 +67,13 @@
     public enum RussianGender
     {
         /// <summary>
-        ///   <para>Specifies a neuter grammatical gender.</para>
-        /// </summary>
-        Neuter    = 0b_00,
-        /// <summary>
         ///   <para>Specifies a masculine grammatical gender.</para>
         /// </summary>
-        Masculine = 0b_01,
+        Masculine = 0b_00,
+        /// <summary>
+        ///   <para>Specifies a neuter grammatical gender.</para>
+        /// </summary>
+        Neuter    = 0b_01,
         /// <summary>
         ///   <para>Specifies a feminine grammatical gender.</para>
         /// </summary>
