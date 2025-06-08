@@ -44,7 +44,7 @@ namespace GrammarSharp.Russian
         /// <exception cref="ArgumentException"><paramref name="value"/> is not a valid <seealso cref="RussianNounFlags"/> value.</exception>
         public RussianNounFlags Flags
         {
-            get => (RussianNounFlags)_flags;
+            readonly get => (RussianNounFlags)_flags;
             set
             {
                 ValidateFlags(value);
