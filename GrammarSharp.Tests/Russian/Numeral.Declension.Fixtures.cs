@@ -13,6 +13,8 @@ namespace GrammarSharp.Tests
 
             DeclensionFixture New(int number, string noun, string nounInfo)
                 => adapter.Add(new DeclensionFixture(number, noun, nounInfo));
+            DeclensionFixture Ord(int number, string nounInfo)
+                => adapter.Add(new DeclensionFixture(number, null, nounInfo));
 
 
 
@@ -99,17 +101,63 @@ namespace GrammarSharp.Tests
 
             #endregion
 
+            #region Ordinal 1 through 999
+
+            Ord(1, "мо 0").Nom("первый");
+            Ord(2, "мо 0").Nom("второй");
+            Ord(3, "мо 0").Nom("третий");
+            Ord(4, "мо 0").Nom("четвёртый");
+            Ord(5, "мо 0").Nom("пятый");
+            Ord(6, "мо 0").Nom("шестой");
+            Ord(7, "мо 0").Nom("седьмой");
+            Ord(8, "мо 0").Nom("восьмой");
+            Ord(9, "мо 0").Nom("девятый");
+            Ord(10, "мо 0").Nom("десятый");
+
+            Ord(11, "мо 0").Nom("одиннадцатый");
+            Ord(12, "мо 0").Nom("двенадцатый");
+            Ord(13, "мо 0").Nom("тринадцатый");
+            Ord(14, "мо 0").Nom("четырнадцатый");
+            Ord(15, "мо 0").Nom("пятнадцатый");
+            Ord(16, "мо 0").Nom("шестнадцатый");
+            Ord(17, "мо 0").Nom("семнадцатый");
+            Ord(18, "мо 0").Nom("восемнадцатый");
+            Ord(19, "мо 0").Nom("девятнадцатый");
+
+            Ord(20, "мо 0").Nom("двадцатый");
+            Ord(21, "мо 0").Nom("двадцать первый");
+            Ord(30, "мо 0").Nom("тридцатый");
+            Ord(32, "мо 0").Nom("тридцать второй");
+            Ord(40, "мо 0").Nom("сороковой");
+            Ord(43, "мо 0").Nom("сорок третий");
+            Ord(50, "мо 0").Nom("пятидесятый");
+            Ord(54, "мо 0").Nom("пятьдесят четвёртый");
+            Ord(60, "мо 0").Nom("шестидесятый");
+            Ord(65, "мо 0").Nom("шестьдесят пятый");
+            Ord(70, "мо 0").Nom("семидесятый");
+            Ord(76, "мо 0").Nom("семьдесят шестой");
+            Ord(80, "мо 0").Nom("восьмидесятый");
+            Ord(87, "мо 0").Nom("восемьдесят седьмой");
+            Ord(90, "мо 0").Nom("девяностый");
+            Ord(98, "мо 0").Nom("девяносто восьмой");
+
+            Ord(100, "мо 0").Nom("сотый");
+            Ord(101, "мо 0").Nom("сто первый");
+            Ord(211, "мо 0").Nom("двести одиннадцатый");
+
+            #endregion
+
 
 
             return adapter;
         }
 
-        public sealed class DeclensionFixture(int number, string noun, string nounInfo) : Fixture
+        public sealed class DeclensionFixture(int number, string? noun, string nounInfo) : Fixture
         {
             [Obsolete(TestUtil.DeserCtor, true)] public DeclensionFixture() : this(0, null!, null!) { }
 
             public int Number { get; } = number;
-            public string Noun { get; } = noun;
+            public string? Noun { get; } = noun;
             public string NounInfo { get; } = nounInfo;
 
             public List<(RussianCase Case, string Expected)> TestCases { get; } = [];

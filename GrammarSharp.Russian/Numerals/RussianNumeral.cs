@@ -29,5 +29,17 @@ namespace GrammarSharp.Russian
             return RussianCardinal.DeclineInt32(sb, props, number);
         }
 
+        [Pure] public static string DeclineOrdinal(int number, RussianCase @case, bool plural, RussianNounProperties props)
+        {
+            // Normalize "2nd" cases to the main 6 cases (translative is plural)
+            RussianGrammar.ValidateAndNormalizeCase(ref @case, ref plural);
+            // Prepare properties, set case and number
+            props.PrepareForDeclensionGendersAndPlural(@case, plural);
+
+            StringBuilder sb = new();
+            RussianOrdinal.DeclineInt32(sb, props, number);
+            return sb.ToString();
+        }
+
     }
 }

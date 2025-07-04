@@ -52,7 +52,7 @@ namespace GrammarSharp.Russian
             return Agreement.PluralCountForm;
         }
 
-        private static void DeclineMillions(StringBuilder sb, int millions, string stem, RussianCase @case)
+        internal static void DeclineMillions(StringBuilder sb, int millions, string stem, RussianCase @case)
         {
             var agreement = DeclineBetween1And999(sb, new(RussianGender.Masculine, @case), millions, millions);
             sb.Append(' ').Append(stem);
@@ -73,7 +73,7 @@ namespace GrammarSharp.Russian
                 (_, _) => sb,
             };
         }
-        private static void DeclineThousands(StringBuilder sb, int thousands, RussianCase @case)
+        internal static void DeclineThousands(StringBuilder sb, int thousands, RussianCase @case)
         {
             var agreement = DeclineBetween1And999(sb, new(RussianGender.Feminine, @case), thousands, thousands);
             sb.Append(" тысяч");
@@ -95,11 +95,11 @@ namespace GrammarSharp.Russian
             };
         }
 
-        private static Agreement DeclineBetween1And999(StringBuilder sb, RussianNounProperties props, int number, int fullNumber)
+        internal static Agreement DeclineBetween1And999(StringBuilder sb, RussianNounProperties props, int number, int fullNumber, bool addSpaces = true)
         {
             if (number >= 100)
             {
-                if (sb.Length > 0) sb.Append(' ');
+                if (addSpaces && sb.Length > 0) sb.Append(' ');
                 int hundreds = Math.DivRem(number, 100, out number);
                 // Append 100, 200, 300, 400, 500, 600, 700, 800, or 900
                 DeclineHundredToNineHundred(sb, props.Case, hundreds);
@@ -107,7 +107,7 @@ namespace GrammarSharp.Russian
             }
             if (number >= 20)
             {
-                if (sb.Length > 0) sb.Append(' ');
+                if (addSpaces && sb.Length > 0) sb.Append(' ');
                 int tens = Math.DivRem(number, 10, out number);
                 // Append 20, 30, 40, 50, 60, 70, 80, or 90
                 DeclineTwentyToNinety(sb, props.Case, tens);
@@ -117,7 +117,7 @@ namespace GrammarSharp.Russian
             // If number is not zero, append 1-19
             if (number != 0)
             {
-                if (sb.Length > 0) sb.Append(' ');
+                if (addSpaces && sb.Length > 0) sb.Append(' ');
 
                 switch (number)
                 {
@@ -202,7 +202,7 @@ namespace GrammarSharp.Russian
             }
             return Agreement.DeclinePlural;
         }
-        private static void DeclineTwentyToNinety(StringBuilder sb, RussianCase @case, int tens)
+        internal static void DeclineTwentyToNinety(StringBuilder sb, RussianCase @case, int tens)
         {
             switch (tens)
             {
@@ -235,7 +235,7 @@ namespace GrammarSharp.Russian
                     break;
             }
         }
-        private static void DeclineHundredToNineHundred(StringBuilder sb, RussianCase @case, int hundreds)
+        internal static void DeclineHundredToNineHundred(StringBuilder sb, RussianCase @case, int hundreds)
         {
             switch (hundreds)
             {
@@ -280,7 +280,7 @@ namespace GrammarSharp.Russian
             }
         }
 
-        private static void AppendOneToTenStem(StringBuilder sb, RussianCase @case, int number)
+        internal static void AppendOneToTenStem(StringBuilder sb, RussianCase @case, int number)
         {
             sb.Append(number switch
             {
